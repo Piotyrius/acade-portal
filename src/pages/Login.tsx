@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuthStore } from '@/store/authStore';
 import { GraduationCap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { login, fetchMe } from '@/api/endpoints/auth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -20,24 +21,24 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock login for now
-    setTimeout(() => {
-      const mockUser = {
-        id: '1',
-        email,
-        firstName: 'John',
-        lastName: 'Doe',
-        role: 'ADMIN' as const,
+    try {
+      const tokens = await login(email, password);
+      const me = await fetchMe();
+      const user = {
+        id: me.id,
+        email: me.email,
+        firstName: me.first_name,
+        lastName: me.last_name,
+        role: me.role,
       };
-      
-      setAuth(mockUser, 'mock-access-token', 'mock-refresh-token');
-      toast({
-        title: 'Login successful',
-        description: 'Welcome back!',
-      });
+      setAuth(user, tokens.access, tokens.refresh);
+      toast({ title: 'Login successful', description: 'Welcome back!' });
       navigate('/dashboard');
+    } catch (err: any) {
+      toast({ title: 'Login failed', description: 'Invalid email or password', variant: 'destructive' });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

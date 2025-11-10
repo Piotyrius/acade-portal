@@ -3,21 +3,37 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Clock, Download } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { useQuery } from '@tanstack/react-query';
+import { getWorkLogs, exportPayroll } from '@/api/endpoints/timekeeping';
+import { saveAs } from 'file-saver';
+import { useToast } from '@/hooks/use-toast';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function WorkLogs() {
   const { user } = useAuthStore();
+  const { toast } = useToast();
 
-  const workLogs = [
-    { id: 1, date: '2024-01-15', course: 'React Basics', hours: 3, rate: 50, status: 'Approved' },
-    { id: 2, date: '2024-01-14', course: 'Python Fundamentals', hours: 2.5, rate: 50, status: 'Approved' },
-    { id: 3, date: '2024-01-13', course: 'Advanced JavaScript', hours: 4, rate: 50, status: 'Pending' },
-    { id: 4, date: '2024-01-12', course: 'React Basics', hours: 3, rate: 50, status: 'Approved' },
-  ];
+  const { data } = useQuery({
+    queryKey: ['worklogs'],
+    queryFn: async () => {
+      const res = await getWorkLogs();
+      // API may return either {results:[]} or [] depending on pagination
+      const list = Array.isArray(res) ? res : res.results || [];
+      return list;
+    },
+  });
+  const workLogs = data || [];
 
-  const totalHours = workLogs.reduce((sum, log) => sum + log.hours, 0);
-  const totalEarnings = workLogs
-    .filter(log => log.status === 'Approved')
-    .reduce((sum, log) => sum + (log.hours * log.rate), 0);
+  const totalHours = workLogs.reduce((sum: number, wl: any) => sum + wl.minutes / 60, 0);
+
+  const handleExport = async () => {
+    try {
+      const blob = await exportPayroll();
+      saveAs(blob, 'payroll.csv');
+    } catch (e) {
+      toast({ title: 'Export failed', description: getErrorMessage(e), variant: 'destructive' });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -28,7 +44,7 @@ export default function WorkLogs() {
         </div>
         <div className="flex gap-2">
           {user?.role === 'ADMIN' && (
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
               Export Payroll
             </Button>
@@ -50,26 +66,6 @@ export default function WorkLogs() {
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Approved Earnings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalEarnings}</div>
-            <p className="text-xs text-muted-foreground">Ready for payment</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {workLogs.filter(l => l.status === 'Pending').length}
-            </div>
-            <p className="text-xs text-muted-foreground">Work logs</p>
-          </CardContent>
-        </Card>
       </div>
 
       <Card>
@@ -78,25 +74,22 @@ export default function WorkLogs() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {workLogs.map((log) => (
+            {workLogs.map((log: any) => (
               <div key={log.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-primary/10 p-2">
                     <Clock className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">{log.course}</p>
-                    <p className="text-sm text-muted-foreground">{log.date}</p>
+                    <p className="font-medium">{log.session ?? 'Manual'}</p>
+                    <p className="text-sm text-muted-foreground">{new Date(log.start_at).toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="font-medium">{log.hours}h</p>
-                    <p className="text-sm text-muted-foreground">${log.hours * log.rate}</p>
+                    <p className="font-medium">{(log.minutes / 60).toFixed(2)}h</p>
                   </div>
-                  <Badge variant={log.status === 'Approved' ? 'default' : 'secondary'}>
-                    {log.status}
-                  </Badge>
+                  <Badge variant="secondary">{log.source}</Badge>
                 </div>
               </div>
             ))}
