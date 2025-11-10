@@ -27,10 +27,8 @@ export function Sidebar() {
   return (
     <div className="flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-        <div className="rounded-lg bg-primary p-2">
-          <GraduationCap className="h-5 w-5 text-primary-foreground" />
-        </div>
-        <span className="text-lg font-semibold text-sidebar-foreground">Academy CRM</span>
+        <img src="/logo.svg" alt="Cyber Academy" className="h-10 w-auto" />
+        <span className="text-lg font-semibold text-sidebar-foreground">Cyber Academy</span>
       </div>
       <nav className="flex-1 space-y-1 p-4">
         {navigation.map((item) => (

@@ -15,9 +15,21 @@ import Assessments from "./pages/assessment/Assessments";
 import CertificatesList from "./pages/certificates/CertificatesList";
 import WorkLogs from "./pages/timekeeping/WorkLogs";
 import MyWorks from "./pages/gallery/MyWorks";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes (v5 renamed cacheTime to gcTime)
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnMount: false, // Don't refetch on mount if data is fresh
+      retry: 1, // Only retry once on failure
+      retryDelay: 1000, // Wait 1 second before retry
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -38,6 +50,7 @@ const App = () => (
             <Route path="/certificates/list" element={<CertificatesList />} />
             <Route path="/timekeeping/worklogs" element={<WorkLogs />} />
             <Route path="/gallery/mine" element={<MyWorks />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

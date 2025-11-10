@@ -3,15 +3,34 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Clock, Download } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { useQuery } from '@tanstack/react-query';
-import { getWorkLogs, exportPayroll } from '@/api/endpoints/timekeeping';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getWorkLogs, exportPayroll, createWorkLog } from '@/api/endpoints/timekeeping';
 import { saveAs } from 'file-saver';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function WorkLogs() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const qc = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    start_at: '',
+    end_at: '',
+    notes: '',
+  });
 
   const { data } = useQuery({
     queryKey: ['worklogs'],
@@ -24,6 +43,19 @@ export default function WorkLogs() {
   });
   const workLogs = data || [];
 
+  const createMutation = useMutation({
+    mutationFn: createWorkLog,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['worklogs'] });
+      toast({ title: 'Success', description: 'Work log created successfully' });
+      setIsDialogOpen(false);
+      setFormData({ start_at: '', end_at: '', notes: '' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
   const totalHours = workLogs.reduce((sum: number, wl: any) => sum + wl.minutes / 60, 0);
 
   const handleExport = async () => {
@@ -33,6 +65,15 @@ export default function WorkLogs() {
     } catch (e) {
       toast({ title: 'Export failed', description: getErrorMessage(e), variant: 'destructive' });
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.start_at || !formData.end_at) {
+      toast({ title: 'Error', description: 'Start and end times are required', variant: 'destructive' });
+      return;
+    }
+    createMutation.mutate(formData);
   };
 
   return (
@@ -49,7 +90,7 @@ export default function WorkLogs() {
               Export Payroll
             </Button>
           )}
-          <Button>
+          <Button onClick={() => setIsDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Log Hours
           </Button>
@@ -96,6 +137,57 @@ export default function WorkLogs() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Hours</DialogTitle>
+            <DialogDescription>Record manual work hours</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="start_at">Start Time *</Label>
+                <Input
+                  id="start_at"
+                  type="datetime-local"
+                  value={formData.start_at}
+                  onChange={(e) => setFormData({ ...formData, start_at: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_at">End Time *</Label>
+                <Input
+                  id="end_at"
+                  type="datetime-local"
+                  value={formData.end_at}
+                  onChange={(e) => setFormData({ ...formData, end_at: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={3}
+                  placeholder="Optional notes about this work session"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? 'Creating...' : 'Log Hours'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

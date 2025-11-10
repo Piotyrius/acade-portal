@@ -5,6 +5,7 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL,
+  timeout: 10000, // 10 second timeout
 });
 
 // Attach access token
@@ -70,4 +71,5 @@ api.interceptors.response.use(
 );
 
 export default api;
+
 

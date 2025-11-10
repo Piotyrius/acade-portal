@@ -1,0 +1,55 @@
+<svg width="200" height="120" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="200" height="120" fill="#4A4A4A"/>
+  
+  <!-- Base -->
+  <rect x="10" y="100" width="180" height="8" rx="4" fill="#2A3B70"/>
+  
+  <!-- Columns (6 total, 2 thick center, 4 thinner outer) -->
+  <!-- Left outer columns -->
+  <rect x="20" y="60" width="12" height="40" rx="2" fill="#2A3B70"/>
+  <rect x="40" y="60" width="12" height="40" rx="2" fill="#2A3B70"/>
+  
+  <!-- Center thick columns -->
+  <rect x="70" y="55" width="18" height="45" rx="2" fill="#2A3B70"/>
+  <rect x="95" y="55" width="18" height="45" rx="2" fill="#2A3B70"/>
+  
+  <!-- Right outer columns -->
+  <rect x="130" y="60" width="12" height="40" rx="2" fill="#2A3B70"/>
+  <rect x="150" y="60" width="12" height="40" rx="2" fill="#2A3B70"/>
+  
+  <!-- Frieze -->
+  <rect x="10" y="50" width="180" height="10" rx="5" fill="#2A3B70"/>
+  
+  <!-- Pediment -->
+  <path d="M 10 50 L 100 20 L 190 50 Z" fill="#2A3B70"/>
+  
+  <!-- Text between columns -->
+  <!-- Left gap: Roman numerals -->
+  <text x="28" y="75" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#2A3B70" text-anchor="middle">I</text>
+  <text x="28" y="85" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#2A3B70" text-anchor="middle">V</text>
+  <text x="28" y="95" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#2A3B70" text-anchor="middle">X</text>
+  
+  <!-- CYBER -->
+  <text x="79" y="70" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">C</text>
+  <text x="79" y="78" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">Y</text>
+  <text x="79" y="86" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">B</text>
+  <text x="79" y="94" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">E</text>
+  <text x="79" y="102" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">R</text>
+  
+  <!-- ACADEMY -->
+  <text x="104" y="70" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">A</text>
+  <text x="104" y="78" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">C</text>
+  <text x="104" y="86" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">A</text>
+  <text x="104" y="94" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">D</text>
+  <text x="104" y="102" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2A3B70" text-anchor="middle" letter-spacing="0.5">E</text>
+  
+  <!-- Right gap: Binary -->
+  <text x="156" y="75" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#2A3B70" text-anchor="middle">1</text>
+  <text x="156" y="85" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#2A3B70" text-anchor="middle">0</text>
+  <text x="156" y="95" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#2A3B70" text-anchor="middle">1</text>
+  
+  <!-- Georgian text below -->
+  <text x="100" y="115" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#2A3B70" text-anchor="middle">კიბერ აკადემია</text>
+</svg>
+

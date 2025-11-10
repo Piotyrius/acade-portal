@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/authStore';
-import { GraduationCap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { login, fetchMe } from '@/api/endpoints/auth';
 
@@ -46,11 +45,9 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <div className="rounded-full bg-primary p-3">
-              <GraduationCap className="h-8 w-8 text-primary-foreground" />
-            </div>
+            <img src="/logo.svg" alt="Cyber Academy" className="h-16 w-auto" />
           </div>
-          <CardTitle className="text-2xl">Academy CRM</CardTitle>
+          <CardTitle className="text-2xl">Cyber Academy</CardTitle>
           <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
         <CardContent>

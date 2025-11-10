@@ -11,4 +11,10 @@ export async function fetchMe(): Promise<UserDto> {
   return data;
 }
 
+export async function updateProfile(data: { first_name?: string; last_name?: string }): Promise<UserDto> {
+  const { data: responseData } = await api.patch('/api/v1/users/me_update/', data);
+  return responseData;
+}
+
+
 
