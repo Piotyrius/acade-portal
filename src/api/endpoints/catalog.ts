@@ -115,3 +115,4 @@ export async function deleteSession(id: string): Promise<void> {
   await api.delete(`/api/v1/catalog/sessions/${id}/`);
 }
 
+

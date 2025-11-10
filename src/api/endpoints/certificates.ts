@@ -39,3 +39,4 @@ export async function verifyCertificate(serialOrQr: string): Promise<Certificate
   return data;
 }
 
+

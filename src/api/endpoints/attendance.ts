@@ -36,3 +36,4 @@ export async function bulkMarkAttendance(payload: {
   return data;
 }
 
+
