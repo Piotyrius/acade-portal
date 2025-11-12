@@ -20,6 +20,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { examplePrograms } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
 
 export default function Programs() {
   const { toast } = useToast();
@@ -72,7 +74,9 @@ export default function Programs() {
     },
   });
 
-  const filteredPrograms = programs.filter((p) =>
+  const displayPrograms = programs.length === 0 ? examplePrograms.slice(0, 1) : programs;
+  const filteredPrograms = displayPrograms.filter((p) =>
+    !searchTerm ||
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -182,7 +186,8 @@ export default function Programs() {
         ))}
       </div>
 
-      {filteredPrograms.length === 0 && (
+      {programs.length === 0 && <ExampleBanner />}
+      {filteredPrograms.length === 0 && programs.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             {searchTerm ? 'No programs found matching your search' : 'No programs yet. Create your first program!'}

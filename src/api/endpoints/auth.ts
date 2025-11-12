@@ -20,5 +20,11 @@ export async function updateProfile(data: { first_name?: string; last_name?: str
   return responseData;
 }
 
+export async function getUsers(role?: string): Promise<UserDto[]> {
+  const params = role ? { role } : {};
+  const { data } = await api.get('/api/v1/users/', { params });
+  return data.results || data;
+}
+
 
 

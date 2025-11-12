@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, UserPlus, Check, X } from 'lucide-react';
+import { Search, UserPlus, Check, X, Eye } from 'lucide-react';
+import { exampleApplications } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getApplications, updateApplication, acceptApplication } from '@/api/endpoints/admissions';
 import { getPrograms, getCohorts } from '@/api/endpoints/catalog';
@@ -70,7 +72,8 @@ export default function Applications() {
     },
   });
 
-  const filteredApplications = applications.filter((app) =>
+  const displayApplications = applications.length === 0 ? exampleApplications.slice(0, 1) : applications;
+  const filteredApplications = displayApplications.filter((app) =>
     app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     app.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -130,6 +133,7 @@ export default function Applications() {
         </div>
       </div>
 
+      {applications.length === 0 && <ExampleBanner />}
       <Card>
         <CardHeader>
           <CardTitle>Recent Applications</CardTitle>

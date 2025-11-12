@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileCheck, Edit, Trash2 } from 'lucide-react';
+import { Plus, FileCheck, Edit, Trash2, Eye } from 'lucide-react';
+import { exampleAssessments } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAssessments, createAssessment, updateAssessment, deleteAssessment } from '@/api/endpoints/assessment';
 import { getCohorts } from '@/api/endpoints/catalog';
@@ -165,14 +167,17 @@ export default function Assessments() {
           <h2 className="text-3xl font-bold tracking-tight">Assessments</h2>
           <p className="text-muted-foreground">Create and manage course assessments</p>
         </div>
-        <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Assessment
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Assessment
+          </Button>
+        </div>
       </div>
 
+      {assessments.length === 0 && <ExampleBanner />}
       <div className="space-y-4">
-        {assessments.map((assessment) => {
+        {(assessments.length === 0 ? exampleAssessments.slice(0, 1) : assessments).map((assessment: any) => {
           const cohort = cohorts.find((c) => c.id === assessment.cohort);
           return (
             <Card key={assessment.id} className="hover:shadow-md transition-shadow">

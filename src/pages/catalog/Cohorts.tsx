@@ -2,7 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Users, Edit, Trash2, Calendar } from 'lucide-react';
+import { Search, Plus, Users, Edit, Trash2, Calendar, Eye } from 'lucide-react';
+import { exampleCohorts } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCohorts, createCohort, updateCohort, deleteCohort, generateSessions, getCourses } from '@/api/endpoints/catalog';
 import { CohortDto } from '@/api/types';
@@ -122,7 +124,8 @@ export default function Cohorts() {
     });
   };
 
-  const filteredCohorts = cohorts.filter((c) =>
+  const displayCohorts = cohorts.length === 0 ? exampleCohorts.slice(0, 1) : cohorts;
+  const filteredCohorts = displayCohorts.filter((c: any) =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (c.course_title || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -241,8 +244,9 @@ export default function Cohorts() {
         </div>
       </div>
 
+      {cohorts.length === 0 && <ExampleBanner />}
       <div className="space-y-4">
-        {filteredCohorts.map((cohort) => (
+        {filteredCohorts.map((cohort: any) => (
           <Card key={cohort.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -293,7 +297,7 @@ export default function Cohorts() {
         ))}
       </div>
 
-      {filteredCohorts.length === 0 && (
+      {filteredCohorts.length === 0 && cohorts.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             {searchTerm ? 'No cohorts found matching your search' : 'No cohorts yet. Create your first cohort!'}

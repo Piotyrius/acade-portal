@@ -2,7 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, BookOpen, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, BookOpen, Edit, Trash2, Eye } from 'lucide-react';
+import { exampleCourses } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCourses, createCourse, updateCourse, deleteCourse, getPrograms } from '@/api/endpoints/catalog';
 import { CourseDto } from '@/api/types';
@@ -77,7 +79,8 @@ export default function Courses() {
     },
   });
 
-  const filteredCourses = courses.filter((c) =>
+  const displayCourses = courses.length === 0 ? exampleCourses.slice(0, 1) : courses;
+  const filteredCourses = displayCourses.filter((c: any) =>
     c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -165,8 +168,9 @@ export default function Courses() {
         </div>
       </div>
 
+      {courses.length === 0 && <ExampleBanner />}
       <div className="space-y-4">
-        {filteredCourses.map((course) => {
+        {filteredCourses.map((course: any) => {
           const program = programs.find((p) => p.id === course.program);
           return (
             <Card key={course.id} className="hover:shadow-md transition-shadow">
@@ -204,7 +208,7 @@ export default function Courses() {
         })}
       </div>
 
-      {filteredCourses.length === 0 && (
+      {filteredCourses.length === 0 && courses.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             {searchTerm ? 'No courses found matching your search' : 'No courses yet. Create your first course!'}

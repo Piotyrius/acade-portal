@@ -12,6 +12,9 @@ import {
   GraduationCap,
   Users,
   Calendar,
+  FileText,
+  DollarSign,
+  Upload,
 } from 'lucide-react';
 
 const navigation = [
@@ -21,11 +24,17 @@ const navigation = [
   { name: 'Cohorts', href: '/catalog/cohorts', icon: Users },
   { name: 'Sessions', href: '/catalog/sessions', icon: Calendar },
   { name: 'Admissions', href: '/admissions/applications', icon: UserPlus },
+  { name: 'Enrollments', href: '/admissions/enrollments', icon: Users },
   { name: 'Attendance', href: '/attendance/list', icon: ClipboardCheck },
   { name: 'Assessment', href: '/assessment/assessments', icon: FileCheck },
+  { name: 'Submissions', href: '/assessment/submissions', icon: Upload },
+  { name: 'Grades', href: '/assessment/grades', icon: GraduationCap },
   { name: 'Certificates', href: '/certificates/list', icon: Award },
   { name: 'Timekeeping', href: '/timekeeping/worklogs', icon: Clock },
+  { name: 'Rates', href: '/timekeeping/rates', icon: DollarSign },
+  { name: 'Timesheets', href: '/timekeeping/timesheets', icon: FileText },
   { name: 'Gallery', href: '/gallery/mine', icon: Image },
+  { name: 'Documents', href: '/documents', icon: FileText },
 ];
 
 export function Sidebar() {

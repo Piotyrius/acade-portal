@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Clock, Download } from 'lucide-react';
+import { Plus, Clock, Download, Eye } from 'lucide-react';
+import { exampleWorkLogs } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
 import { useAuthStore } from '@/store/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getWorkLogs, exportPayroll, createWorkLog } from '@/api/endpoints/timekeeping';
@@ -42,6 +44,7 @@ export default function WorkLogs() {
     },
   });
   const workLogs = data || [];
+  const displayWorkLogs = workLogs.length === 0 ? exampleWorkLogs.slice(0, 1) : workLogs;
 
   const createMutation = useMutation({
     mutationFn: createWorkLog,
@@ -56,7 +59,7 @@ export default function WorkLogs() {
     },
   });
 
-  const totalHours = workLogs.reduce((sum: number, wl: any) => sum + wl.minutes / 60, 0);
+  const totalHours = displayWorkLogs.reduce((sum: number, wl: any) => sum + wl.minutes / 60, 0);
 
   const handleExport = async () => {
     try {
@@ -90,10 +93,12 @@ export default function WorkLogs() {
               Export Payroll
             </Button>
           )}
-          <Button onClick={() => setIsDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Log Hours
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Log Hours
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -109,13 +114,14 @@ export default function WorkLogs() {
         </Card>
       </div>
 
+      {workLogs.length === 0 && <ExampleBanner />}
       <Card>
         <CardHeader>
           <CardTitle>Recent Work Logs</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {workLogs.map((log: any) => (
+            {displayWorkLogs.map((log: any) => (
               <div key={log.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-primary/10 p-2">

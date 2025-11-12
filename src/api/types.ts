@@ -121,6 +121,10 @@ export interface AttendanceRecordDto {
   note: string;
   marked_by: UUID;
   marked_at: string;
+  student_name?: string;
+  session_cohort?: string;
+  session_start?: string;
+  status_display?: string;
 }
 
 // Assessment
@@ -130,9 +134,12 @@ export interface AssessmentDto {
   title: string;
   description: string;
   type: 'EXAM' | 'QUIZ' | 'PROJECT' | 'ASSIGNMENT';
+  kind?: 'EXAM' | 'QUIZ' | 'PROJECT';
   max_score: number;
   weight: number;
   due_date: string | null;
+  due_at?: string;
+  published?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -143,7 +150,11 @@ export interface SubmissionDto {
   student: UUID;
   submitted_at: string;
   file: string | null;
+  text: string;
   notes: string;
+  late_flag: boolean;
+  student_name?: string;
+  assessment_title?: string;
 }
 
 export interface GradeDto {
@@ -153,7 +164,11 @@ export interface GradeDto {
   score: number;
   max_score: number;
   percentage: string;
+  feedback?: string;
   graded_at: string;
+  student_name?: string;
+  assessment_title?: string;
+  graded_by_name?: string;
 }
 
 // Certificates

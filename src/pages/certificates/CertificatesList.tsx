@@ -2,10 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Award, Download } from 'lucide-react';
+import { Search, Award, Download, CheckCircle, ShieldCheck, Eye } from 'lucide-react';
+import { exampleCertificates } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCertificates, issueCertificate, revokeCertificate } from '@/api/endpoints/certificates';
+import { getCertificates, issueCertificate, revokeCertificate, checkEligibility, verifyCertificate } from '@/api/endpoints/certificates';
 import { getCohorts } from '@/api/endpoints/catalog';
+import { getUsers } from '@/api/endpoints/auth';
+import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
@@ -21,11 +25,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function CertificatesList() {
+  const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [issueDialogOpen, setIssueDialogOpen] = useState(false);
+  const [eligibilityDialogOpen, setEligibilityDialogOpen] = useState(false);
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ cohort: '', student: '', force: false });
+  const [eligibilityData, setEligibilityData] = useState({ student: '', cohort: '' });
+  const [verifyData, setVerifyData] = useState({ serialOrQr: '' });
+  const [eligibilityResult, setEligibilityResult] = useState<{ eligible: boolean; reason?: string } | null>(null);
+  const [verifyResult, setVerifyResult] = useState<any>(null);
 
   const { data: certificates = [], isLoading } = useQuery({
     queryKey: ['certificates'],
@@ -35,6 +46,12 @@ export default function CertificatesList() {
   const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
     queryFn: getCohorts,
+  });
+
+  const { data: students = [] } = useQuery({
+    queryKey: ['students'],
+    queryFn: () => getUsers('STUDENT'),
+    enabled: (user?.role === 'ADMIN' || user?.role === 'LECTURER') && (issueDialogOpen || eligibilityDialogOpen),
   });
 
   const issueMutation = useMutation({
@@ -64,7 +81,30 @@ export default function CertificatesList() {
     },
   });
 
-  const filteredCertificates = certificates.filter((cert) =>
+  const eligibilityMutation = useMutation({
+    mutationFn: ({ studentId, cohortId }: { studentId: string; cohortId: string }) =>
+      checkEligibility(studentId, cohortId),
+    onSuccess: (data) => {
+      setEligibilityResult(data);
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: (serialOrQr: string) => verifyCertificate(serialOrQr),
+    onSuccess: (data) => {
+      setVerifyResult(data);
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      setVerifyResult(null);
+    },
+  });
+
+  const displayCertificates = certificates.length === 0 ? exampleCertificates.slice(0, 1) : certificates;
+  const filteredCertificates = displayCertificates.filter((cert) =>
     cert.serial.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -84,6 +124,33 @@ export default function CertificatesList() {
     if (confirm('Are you sure you want to revoke this certificate?')) {
       revokeMutation.mutate({ id });
     }
+  };
+
+  const handleCheckEligibility = () => {
+    if (!eligibilityData.student || !eligibilityData.cohort) {
+      toast({
+        title: 'Error',
+        description: 'Student and cohort are required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    eligibilityMutation.mutate({
+      studentId: eligibilityData.student,
+      cohortId: eligibilityData.cohort,
+    });
+  };
+
+  const handleVerify = () => {
+    if (!verifyData.serialOrQr) {
+      toast({
+        title: 'Error',
+        description: 'Serial number or QR token is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    verifyMutation.mutate(verifyData.serialOrQr);
   };
 
   if (isLoading) {
@@ -108,10 +175,28 @@ export default function CertificatesList() {
           <h2 className="text-3xl font-bold tracking-tight">Certificates</h2>
           <p className="text-muted-foreground">Issue and manage course completion certificates</p>
         </div>
-        <Button onClick={() => setIssueDialogOpen(true)}>
-          <Award className="mr-2 h-4 w-4" />
-          Issue Certificate
-        </Button>
+        <div className="flex gap-2">
+          {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
+            <>
+              <Button variant="outline" onClick={() => setEligibilityDialogOpen(true)}>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Check Eligibility
+              </Button>
+              <Button variant="outline" onClick={() => setVerifyDialogOpen(true)}>
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Verify Certificate
+              </Button>
+            </>
+          )}
+          <div className="flex gap-2">
+            {user?.role === 'ADMIN' && (
+              <Button onClick={() => setIssueDialogOpen(true)}>
+                <Award className="mr-2 h-4 w-4" />
+                Issue Certificate
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
@@ -126,6 +211,7 @@ export default function CertificatesList() {
         </div>
       </div>
 
+      {certificates.length === 0 && <ExampleBanner />}
       <Card>
         <CardHeader>
           <CardTitle>Issued Certificates</CardTitle>
@@ -191,13 +277,35 @@ export default function CertificatesList() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="student">Student ID (optional, leave empty for bulk)</Label>
-              <Input
-                id="student"
+              <Label htmlFor="student">Student (optional, leave empty for bulk)</Label>
+              <Select
                 value={formData.student}
-                onChange={(e) => setFormData({ ...formData, student: e.target.value })}
-                placeholder="Student UUID"
+                onValueChange={(value) => setFormData({ ...formData, student: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select student (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All eligible students</SelectItem>
+                  {students.map((student: any) => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.first_name} {student.last_name} ({student.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="force"
+                checked={formData.force}
+                onChange={(e) => setFormData({ ...formData, force: e.target.checked })}
+                className="rounded border-gray-300"
               />
+              <Label htmlFor="force" className="cursor-pointer">
+                Force issue (ignore eligibility checks)
+              </Label>
             </div>
           </div>
           <DialogFooter>
@@ -210,6 +318,125 @@ export default function CertificatesList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
+        <>
+          <Dialog open={eligibilityDialogOpen} onOpenChange={setEligibilityDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Check Eligibility</DialogTitle>
+                <DialogDescription>Check if a student is eligible for a certificate</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="eligibility_student">Student *</Label>
+                  <Select
+                    value={eligibilityData.student}
+                    onValueChange={(value) => setEligibilityData({ ...eligibilityData, student: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students.map((student: any) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.first_name} {student.last_name} ({student.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="eligibility_cohort">Cohort *</Label>
+                  <Select
+                    value={eligibilityData.cohort}
+                    onValueChange={(value) => setEligibilityData({ ...eligibilityData, cohort: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select cohort" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cohorts.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {eligibilityResult && (
+                  <div className={`p-4 rounded-lg ${eligibilityResult.eligible ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                    <p className={`font-medium ${eligibilityResult.eligible ? 'text-green-800' : 'text-red-800'}`}>
+                      {eligibilityResult.eligible ? '✓ Eligible' : '✗ Not Eligible'}
+                    </p>
+                    {eligibilityResult.reason && (
+                      <p className={`text-sm mt-1 ${eligibilityResult.eligible ? 'text-green-700' : 'text-red-700'}`}>
+                        {eligibilityResult.reason}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => {
+                  setEligibilityDialogOpen(false);
+                  setEligibilityResult(null);
+                  setEligibilityData({ student: '', cohort: '' });
+                }}>
+                  Close
+                </Button>
+                <Button onClick={handleCheckEligibility} disabled={eligibilityMutation.isPending || !eligibilityData.student || !eligibilityData.cohort}>
+                  {eligibilityMutation.isPending ? 'Checking...' : 'Check Eligibility'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Verify Certificate</DialogTitle>
+                <DialogDescription>Verify a certificate by serial number or QR token</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="verify_serial">Serial Number or QR Token *</Label>
+                  <Input
+                    id="verify_serial"
+                    value={verifyData.serialOrQr}
+                    onChange={(e) => setVerifyData({ serialOrQr: e.target.value })}
+                    placeholder="Enter serial number or QR token"
+                  />
+                </div>
+                {verifyResult && (
+                  <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                    <p className="font-medium text-green-800">✓ Certificate Verified</p>
+                    <div className="mt-2 space-y-1 text-sm text-green-700">
+                      <p>Serial: {verifyResult.serial}</p>
+                      <p>Student: {verifyResult.student_name || verifyResult.student}</p>
+                      <p>Cohort: {verifyResult.cohort_name || verifyResult.cohort}</p>
+                      <p>Status: {verifyResult.status}</p>
+                      <p>Issued: {new Date(verifyResult.issued_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => {
+                  setVerifyDialogOpen(false);
+                  setVerifyResult(null);
+                  setVerifyData({ serialOrQr: '' });
+                }}>
+                  Close
+                </Button>
+                <Button onClick={handleVerify} disabled={verifyMutation.isPending || !verifyData.serialOrQr}>
+                  {verifyMutation.isPending ? 'Verifying...' : 'Verify'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }

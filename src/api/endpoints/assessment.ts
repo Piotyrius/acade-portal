@@ -39,9 +39,21 @@ export async function getSubmission(id: string): Promise<SubmissionDto> {
   return data;
 }
 
-export async function createSubmission(payload: Partial<SubmissionDto>): Promise<SubmissionDto> {
-  const { data } = await api.post('/api/v1/assessment/submissions/', payload);
-  return data;
+export async function createSubmission(assessmentId: string, payload: { text?: string; file?: File }): Promise<SubmissionDto> {
+  if (payload.file) {
+    const form = new FormData();
+    form.append('assessment', assessmentId);
+    if (payload.text) form.append('text', payload.text);
+    form.append('file', payload.file);
+    const { data } = await api.post('/api/v1/assessment/submissions/', form);
+    return data;
+  } else {
+    const { data } = await api.post('/api/v1/assessment/submissions/', {
+      assessment: assessmentId,
+      text: payload.text || '',
+    });
+    return data;
+  }
 }
 
 export async function updateSubmission(id: string, payload: Partial<SubmissionDto>): Promise<SubmissionDto> {
@@ -72,6 +84,12 @@ export async function updateGrade(id: string, payload: Partial<GradeDto>): Promi
   const { data } = await api.patch(`/api/v1/assessment/grades/${id}/`, payload);
   return data;
 }
+
+export async function moderateGrade(id: string, approved: boolean): Promise<GradeDto> {
+  const { data } = await api.post(`/api/v1/assessment/grades/${id}/moderate/`, { approved });
+  return data;
+}
+
 
 
 

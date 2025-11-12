@@ -21,6 +21,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
+import { exampleSessions } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
 
 export default function Sessions() {
   const { toast } = useToast();
@@ -99,8 +101,9 @@ export default function Sessions() {
     });
   };
 
-  const filteredSessions = sessions.filter((s) => {
-    const matchesSearch = s.cohort_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
+  const displaySessions = sessions.length === 0 ? exampleSessions.slice(0, 1) : sessions;
+  const filteredSessions = displaySessions.filter((s: any) => {
+    const matchesSearch = !searchTerm || s.cohort_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
     const matchesCohort = !selectedCohort || s.cohort === selectedCohort;
     return matchesSearch && matchesCohort;
   });
@@ -217,8 +220,9 @@ export default function Sessions() {
         )}
       </div>
 
+      {sessions.length === 0 && <ExampleBanner />}
       <div className="space-y-4">
-        {filteredSessions.map((session) => {
+        {filteredSessions.map((session: any) => {
           const startDate = new Date(session.start_at);
           const endDate = new Date(session.end_at);
           return (
@@ -262,7 +266,7 @@ export default function Sessions() {
         })}
       </div>
 
-      {filteredSessions.length === 0 && (
+      {filteredSessions.length === 0 && sessions.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             {searchTerm || selectedCohort

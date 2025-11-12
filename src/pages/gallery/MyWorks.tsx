@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Image as ImageIcon, Eye, Edit } from 'lucide-react';
+import { ExampleBanner } from '@/components/ExampleBanner';
+import { exampleWorks } from '@/utils/exampleData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMyWorks, uploadWork, publishWork } from '@/api/endpoints/gallery';
 import { useState } from 'react';
@@ -15,6 +17,7 @@ export default function MyWorks() {
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['my-works'], queryFn: getMyWorks });
   const works = data || [];
+  const displayWorks = works.length === 0 ? exampleWorks.slice(0, 1) : works;
 
   const [title, setTitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -62,8 +65,9 @@ export default function MyWorks() {
         </div>
       </div>
 
+      {works.length === 0 && <ExampleBanner />}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {works.map((work: any) => (
+        {displayWorks.map((work: any) => (
           <Card key={work.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardHeader className="p-0">
               <div className="aspect-video bg-muted flex items-center justify-center">
@@ -97,6 +101,13 @@ export default function MyWorks() {
           </Card>
         ))}
       </div>
+      {displayWorks.length === 0 && works.length > 0 && (
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            No works yet. Upload your first project!
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
