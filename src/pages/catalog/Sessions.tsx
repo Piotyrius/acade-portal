@@ -26,7 +26,7 @@ export default function Sessions() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCohort, setSelectedCohort] = useState<string>('');
+  const [selectedCohort, setSelectedCohort] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<SessionDto | null>(null);
   const [formData, setFormData] = useState({
@@ -41,7 +41,7 @@ export default function Sessions() {
 
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['sessions', selectedCohort],
-    queryFn: () => getSessions(selectedCohort || undefined),
+    queryFn: () => getSessions(selectedCohort === 'all' ? undefined : selectedCohort),
   });
 
   const { data: cohorts = [] } = useQuery({
@@ -101,14 +101,14 @@ export default function Sessions() {
 
   const filteredSessions = sessions.filter((s) => {
     const matchesSearch = (s as any).cohort_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
-    const matchesCohort = !selectedCohort || s.cohort === selectedCohort;
+    const matchesCohort = selectedCohort === 'all' || s.cohort === selectedCohort;
     return matchesSearch && matchesCohort;
   });
 
   const handleOpenCreate = () => {
     setEditingSession(null);
     resetForm();
-    if (selectedCohort) {
+    if (selectedCohort && selectedCohort !== 'all') {
       setFormData({ ...formData, cohort: selectedCohort });
     }
     setIsDialogOpen(true);
@@ -197,7 +197,7 @@ export default function Sessions() {
             <SelectValue placeholder="Filter by cohort" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Cohorts</SelectItem>
+            <SelectItem value="all">All Cohorts</SelectItem>
             {cohorts.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -205,11 +205,11 @@ export default function Sessions() {
             ))}
           </SelectContent>
         </Select>
-        {selectedCohort && (
+        {selectedCohort !== 'all' && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setSelectedCohort('')}
+            onClick={() => setSelectedCohort('all')}
             className="text-muted-foreground"
           >
             <X className="h-4 w-4" />
@@ -265,7 +265,7 @@ export default function Sessions() {
       {filteredSessions.length === 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            {searchTerm || selectedCohort
+            {searchTerm || (selectedCohort !== 'all')
               ? 'No sessions found matching your filters'
               : 'No sessions yet. Create your first session!'}
           </CardContent>
