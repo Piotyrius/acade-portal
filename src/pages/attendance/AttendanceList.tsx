@@ -13,14 +13,14 @@ export default function AttendanceList() {
 
   const { data: records = [], isLoading } = useQuery({
     queryKey: ['attendance'],
-    queryFn: getAttendanceRecords,
+    queryFn: () => getAttendanceRecords(),
     staleTime: 2 * 60 * 1000, // 2 minutes for attendance data
   });
 
   // Only fetch sessions if we have records to display
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions'],
-    queryFn: getSessions,
+    queryFn: () => getSessions(),
     enabled: records.length > 0, // Only fetch if we have attendance records
     staleTime: 5 * 60 * 1000, // 5 minutes for session data
   });

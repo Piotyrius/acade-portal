@@ -47,12 +47,12 @@ export default function Cohorts() {
 
   const { data: cohorts = [], isLoading } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
   const { data: courses = [] } = useQuery({
     queryKey: ['courses'],
-    queryFn: getCourses,
+    queryFn: () => getCourses(),
   });
 
   const createMutation = useMutation({
@@ -124,7 +124,7 @@ export default function Cohorts() {
 
   const filteredCohorts = cohorts.filter((c) =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.course_title || '').toLowerCase().includes(searchTerm.toLowerCase())
+    ((c as any).course_title || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleOpenCreate = () => {
@@ -186,8 +186,8 @@ export default function Cohorts() {
     }
   };
 
-  const getStatusColor = (status: CohortDto['status']) => {
-    const colors = {
+  const getStatusColor = (status: CohortDto['status']): "default" | "destructive" | "outline" | "secondary" => {
+    const colors: Record<CohortDto['status'], "default" | "destructive" | "outline" | "secondary"> = {
       PLANNED: 'secondary',
       ENROLLING: 'default',
       ACTIVE: 'default',
@@ -253,12 +253,12 @@ export default function Cohorts() {
                   <div>
                     <CardTitle>{cohort.name}</CardTitle>
                     <CardDescription className="mt-1">
-                      {cohort.course_title} • {cohort.lecturer_name || 'No lecturer assigned'}
+                      {(cohort as any).course_title} • {(cohort as any).lecturer_name || 'No lecturer assigned'}
                     </CardDescription>
                     <div className="flex gap-2 mt-2">
-                      <Badge variant={getStatusColor(cohort.status)}>{cohort.status_display || cohort.status}</Badge>
+                      <Badge variant={getStatusColor(cohort.status)}>{(cohort as any).status_display || cohort.status}</Badge>
                       <Badge variant="outline">
-                        {cohort.current_enrollment_count || 0} / {cohort.capacity} students
+                        {(cohort as any).current_enrollment_count || 0} / {cohort.capacity} students
                       </Badge>
                     </div>
                   </div>

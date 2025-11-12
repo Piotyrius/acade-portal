@@ -31,7 +31,7 @@ export default function Courses() {
 
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['courses'],
-    queryFn: getCourses,
+    queryFn: () => getCourses(),
   });
 
   const { data: programs = [] } = useQuery({

@@ -39,12 +39,12 @@ export default function Assessments() {
 
   const { data: assessments = [], isLoading } = useQuery({
     queryKey: ['assessments'],
-    queryFn: getAssessments,
+    queryFn: () => getAssessments(),
   });
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
   const createMutation = useMutation({

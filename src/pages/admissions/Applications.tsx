@@ -31,7 +31,7 @@ export default function Applications() {
 
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ['applications'],
-    queryFn: getApplications,
+    queryFn: () => getApplications(),
   });
 
   const { data: programs = [] } = useQuery({

@@ -29,12 +29,12 @@ export default function CertificatesList() {
 
   const { data: certificates = [], isLoading } = useQuery({
     queryKey: ['certificates'],
-    queryFn: getCertificates,
+    queryFn: () => getCertificates(),
   });
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
   const issueMutation = useMutation({

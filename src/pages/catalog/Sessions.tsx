@@ -46,7 +46,7 @@ export default function Sessions() {
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
   const createMutation = useMutation({
@@ -100,7 +100,7 @@ export default function Sessions() {
   };
 
   const filteredSessions = sessions.filter((s) => {
-    const matchesSearch = s.cohort_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
+    const matchesSearch = (s as any).cohort_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
     const matchesCohort = !selectedCohort || s.cohort === selectedCohort;
     return matchesSearch && matchesCohort;
   });
@@ -230,7 +230,7 @@ export default function Sessions() {
                       <Calendar className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <CardTitle>{session.cohort_name || 'Unknown Cohort'}</CardTitle>
+                      <CardTitle>{(session as any).cohort_name || 'Unknown Cohort'}</CardTitle>
                       <CardDescription className="mt-1">
                         {format(startDate, 'PPpp')} - {format(endDate, 'p')}
                       </CardDescription>
