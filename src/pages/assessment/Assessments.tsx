@@ -37,12 +37,25 @@ export default function Assessments() {
     due_date: '',
   });
 
-  const { data: assessments = [], isLoading } = useQuery({
+  // Mock data for preview
+  const mockAssessments = [
+    { id: '1', cohort: '1', title: 'Network Security Midterm Exam', description: 'Comprehensive exam covering network protocols and security', type: 'EXAM' as const, max_score: 100, weight: 0.3, due_date: '2024-04-15', created_at: '2024-03-01T00:00:00Z', updated_at: '2024-03-01T00:00:00Z' },
+    { id: '2', cohort: '1', title: 'Firewall Configuration Lab', description: 'Hands-on lab assignment for firewall setup', type: 'ASSIGNMENT' as const, max_score: 50, weight: 0.15, due_date: '2024-03-20', created_at: '2024-03-05T00:00:00Z', updated_at: '2024-03-05T00:00:00Z' },
+    { id: '3', cohort: '2', title: 'Penetration Testing Quiz', description: 'Quick assessment on basic pentest methodologies', type: 'QUIZ' as const, max_score: 30, weight: 0.1, due_date: '2024-03-10', created_at: '2024-02-20T00:00:00Z', updated_at: '2024-02-20T00:00:00Z' },
+    { id: '4', cohort: '2', title: 'Final Capstone Project', description: 'Complete security audit of a web application', type: 'PROJECT' as const, max_score: 150, weight: 0.4, due_date: '2024-06-01', created_at: '2024-02-15T00:00:00Z', updated_at: '2024-02-15T00:00:00Z' },
+  ];
+
+  const mockCohorts = [
+    { id: '1', course: '1', name: 'Network Security - Spring 2024', lecturer: 'lect-1', capacity: 30, start_date: '2024-03-01', end_date: '2024-05-30', status: 'ACTIVE' as const, created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+    { id: '2', course: '2', name: 'Ethical Hacking - Evening Batch', lecturer: 'lect-2', capacity: 25, start_date: '2024-02-15', end_date: '2024-06-15', status: 'ENROLLING' as const, created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z' },
+  ];
+
+  const { data: assessments = mockAssessments, isLoading } = useQuery({
     queryKey: ['assessments'],
     queryFn: () => getAssessments(),
   });
 
-  const { data: cohorts = [] } = useQuery({
+  const { data: cohorts = mockCohorts } = useQuery({
     queryKey: ['cohorts'],
     queryFn: () => getCohorts(),
   });

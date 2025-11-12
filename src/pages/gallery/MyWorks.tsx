@@ -13,8 +13,16 @@ import { getErrorMessage } from '@/lib/errors';
 export default function MyWorks() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  // Mock data for preview
+  const mockWorks = [
+    { id: '1', owner: 'user-1', title: 'Network Security Lab Report', description: 'Analysis of network vulnerabilities', media: '/mock-image.jpg', status: 'PUBLISHED' as const, is_public: true, published_at: '2024-02-15T00:00:00Z' },
+    { id: '2', owner: 'user-1', title: 'Penetration Testing Documentation', description: 'Complete pentest report with findings', media: '/mock-image.jpg', status: 'PUBLISHED' as const, is_public: true, published_at: '2024-02-10T00:00:00Z' },
+    { id: '3', owner: 'user-1', title: 'Security Audit Presentation', description: 'Slides from final project presentation', media: '/mock-image.jpg', status: 'DRAFT' as const, is_public: false, published_at: null },
+    { id: '4', owner: 'user-1', title: 'Firewall Configuration Guide', description: 'Step-by-step firewall setup', media: '/mock-image.jpg', status: 'PUBLISHED' as const, is_public: true, published_at: '2024-02-05T00:00:00Z' },
+  ];
+
   const { data } = useQuery({ queryKey: ['my-works'], queryFn: getMyWorks });
-  const works = data || [];
+  const works = data || mockWorks;
 
   const [title, setTitle] = useState('');
   const [file, setFile] = useState<File | null>(null);

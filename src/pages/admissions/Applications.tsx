@@ -29,12 +29,27 @@ export default function Applications() {
   const [selectedApp, setSelectedApp] = useState<ApplicationDto | null>(null);
   const [selectedCohort, setSelectedCohort] = useState('');
 
-  const { data: applications = [], isLoading } = useQuery({
+  // Mock data for preview
+  const mockApplications = [
+    { id: '1', program: '1', name: 'Sarah Johnson', email: 'sarah.j@email.com', phone: '+1-555-0101', status: 'PENDING' as const, notes: 'Interested in evening classes', created_at: '2024-02-01T10:30:00Z', updated_at: '2024-02-01T10:30:00Z' },
+    { id: '2', program: '1', name: 'Michael Chen', email: 'michael.chen@email.com', phone: '+1-555-0102', status: 'ACCEPTED' as const, notes: 'Previous IT experience', created_at: '2024-02-02T14:15:00Z', updated_at: '2024-02-05T09:20:00Z' },
+    { id: '3', program: '2', name: 'Emily Rodriguez', email: 'emily.r@email.com', phone: '+1-555-0103', status: 'PENDING' as const, notes: 'Completed basic course', created_at: '2024-02-03T16:45:00Z', updated_at: '2024-02-03T16:45:00Z' },
+    { id: '4', program: '3', name: 'David Kim', email: 'david.kim@email.com', phone: '+1-555-0104', status: 'ACCEPTED' as const, notes: 'Cloud certification holder', created_at: '2024-02-04T11:20:00Z', updated_at: '2024-02-06T10:15:00Z' },
+    { id: '5', program: '1', name: 'Jessica Martinez', email: 'jessica.m@email.com', phone: '+1-555-0105', status: 'REJECTED' as const, notes: 'Does not meet prerequisites', created_at: '2024-02-05T09:00:00Z', updated_at: '2024-02-07T14:30:00Z' },
+  ];
+
+  const mockPrograms = [
+    { id: '1', name: 'Cybersecurity Fundamentals', code: 'CS-101', description: '', active: true, version: '1.0', created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+    { id: '2', name: 'Advanced Penetration Testing', code: 'CS-301', description: '', active: true, version: '1.0', created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z' },
+    { id: '3', name: 'Cloud Security Architecture', code: 'CS-201', description: '', active: true, version: '1.0', created_at: '2024-01-17T00:00:00Z', updated_at: '2024-01-17T00:00:00Z' },
+  ];
+
+  const { data: applications = mockApplications, isLoading } = useQuery({
     queryKey: ['applications'],
     queryFn: () => getApplications(),
   });
 
-  const { data: programs = [] } = useQuery({
+  const { data: programs = mockPrograms } = useQuery({
     queryKey: ['programs'],
     queryFn: getPrograms,
   });

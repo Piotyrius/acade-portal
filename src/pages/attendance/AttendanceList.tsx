@@ -11,14 +11,28 @@ import { useState } from 'react';
 export default function AttendanceList() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: records = [], isLoading } = useQuery({
+  // Mock data for preview
+  const mockRecords = [
+    { id: '1', session: 'sess-1', student: 'student-101', status: 'PRESENT', note: '', marked_at: '2024-03-05T19:00:00Z', marked_by: 'lect-1', created_at: '2024-03-05T19:00:00Z', updated_at: '2024-03-05T19:00:00Z' },
+    { id: '2', session: 'sess-1', student: 'student-102', status: 'PRESENT', note: '', marked_at: '2024-03-05T19:00:00Z', marked_by: 'lect-1', created_at: '2024-03-05T19:00:00Z', updated_at: '2024-03-05T19:00:00Z' },
+    { id: '3', session: 'sess-1', student: 'student-103', status: 'LATE', note: 'Arrived 15 minutes late', marked_at: '2024-03-05T19:15:00Z', marked_by: 'lect-1', created_at: '2024-03-05T19:15:00Z', updated_at: '2024-03-05T19:15:00Z' },
+    { id: '4', session: 'sess-1', student: 'student-104', status: 'ABSENT', note: 'No notification', marked_at: '2024-03-05T20:00:00Z', marked_by: 'lect-1', created_at: '2024-03-05T20:00:00Z', updated_at: '2024-03-05T20:00:00Z' },
+    { id: '5', session: 'sess-2', student: 'student-101', status: 'PRESENT', note: '', marked_at: '2024-03-07T19:00:00Z', marked_by: 'lect-1', created_at: '2024-03-07T19:00:00Z', updated_at: '2024-03-07T19:00:00Z' },
+  ];
+
+  const mockSessions = [
+    { id: 'sess-1', cohort: '1', start_at: '2024-03-05T19:00:00Z', end_at: '2024-03-05T21:00:00Z', location: 'Lab A-301', online_link: '', is_cancelled: false, cancellation_reason: '', created_at: '2024-02-15T00:00:00Z', updated_at: '2024-02-15T00:00:00Z' },
+    { id: 'sess-2', cohort: '1', start_at: '2024-03-07T19:00:00Z', end_at: '2024-03-07T21:00:00Z', location: 'Lab A-301', online_link: '', is_cancelled: false, cancellation_reason: '', created_at: '2024-02-15T00:00:00Z', updated_at: '2024-02-15T00:00:00Z' },
+  ];
+
+  const { data: records = mockRecords, isLoading } = useQuery({
     queryKey: ['attendance'],
     queryFn: () => getAttendanceRecords(),
     staleTime: 2 * 60 * 1000, // 2 minutes for attendance data
   });
 
   // Only fetch sessions if we have records to display
-  const { data: sessions = [] } = useQuery({
+  const { data: sessions = mockSessions } = useQuery({
     queryKey: ['sessions'],
     queryFn: () => getSessions(),
     enabled: records.length > 0, // Only fetch if we have attendance records

@@ -32,6 +32,14 @@ export default function WorkLogs() {
     notes: '',
   });
 
+  // Mock data for preview
+  const mockWorkLogs = [
+    { id: '1', lecturer: 'lect-1', session: 'sess-1', start_at: '2024-03-05T19:00:00Z', end_at: '2024-03-05T21:00:00Z', minutes: 120, source: 'SESSION' as const, notes: 'Network Security class' },
+    { id: '2', lecturer: 'lect-1', session: 'sess-2', start_at: '2024-03-07T19:00:00Z', end_at: '2024-03-07T21:00:00Z', minutes: 120, source: 'SESSION' as const, notes: 'Network Security class' },
+    { id: '3', lecturer: 'lect-1', session: null, start_at: '2024-03-08T14:00:00Z', end_at: '2024-03-08T16:00:00Z', minutes: 120, source: 'MANUAL' as const, notes: 'Grading assignments and preparing materials' },
+    { id: '4', lecturer: 'lect-1', session: 'sess-3', start_at: '2024-03-09T18:00:00Z', end_at: '2024-03-09T20:00:00Z', minutes: 120, source: 'SESSION' as const, notes: 'Ethical Hacking class' },
+  ];
+
   const { data } = useQuery({
     queryKey: ['worklogs'],
     queryFn: async () => {
@@ -41,7 +49,7 @@ export default function WorkLogs() {
       return list;
     },
   });
-  const workLogs = data || [];
+  const workLogs = data || mockWorkLogs;
 
   const createMutation = useMutation({
     mutationFn: createWorkLog,

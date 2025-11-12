@@ -29,12 +29,26 @@ export default function Courses() {
   const [editingCourse, setEditingCourse] = useState<CourseDto | null>(null);
   const [formData, setFormData] = useState({ program: '', title: '', code: '', hours: 1, credits: '', description: '' });
 
-  const { data: courses = [], isLoading } = useQuery({
+  // Mock data for preview
+  const mockCourses = [
+    { id: '1', program: '1', title: 'Introduction to Network Security', code: 'CS101-01', hours: 40, credits: 3, syllabus_version: '1.0', description: 'Fundamentals of network protocols and security', created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+    { id: '2', program: '1', title: 'Ethical Hacking Basics', code: 'CS101-02', hours: 60, credits: 4, syllabus_version: '1.0', description: 'Learn ethical hacking techniques and methodologies', created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z' },
+    { id: '3', program: '2', title: 'Web Application Penetration Testing', code: 'CS301-01', hours: 80, credits: 5, syllabus_version: '1.0', description: 'Advanced techniques for testing web application security', created_at: '2024-01-17T00:00:00Z', updated_at: '2024-01-17T00:00:00Z' },
+    { id: '4', program: '3', title: 'AWS Security Best Practices', code: 'CS201-01', hours: 50, credits: 4, syllabus_version: '1.0', description: 'Secure cloud infrastructure on AWS platform', created_at: '2024-01-18T00:00:00Z', updated_at: '2024-01-18T00:00:00Z' },
+  ];
+
+  const mockPrograms = [
+    { id: '1', name: 'Cybersecurity Fundamentals', code: 'CS-101', description: '', active: true, version: '1.0', created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+    { id: '2', name: 'Advanced Penetration Testing', code: 'CS-301', description: '', active: true, version: '1.0', created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z' },
+    { id: '3', name: 'Cloud Security Architecture', code: 'CS-201', description: '', active: true, version: '1.0', created_at: '2024-01-17T00:00:00Z', updated_at: '2024-01-17T00:00:00Z' },
+  ];
+
+  const { data: courses = mockCourses, isLoading } = useQuery({
     queryKey: ['courses'],
     queryFn: () => getCourses(),
   });
 
-  const { data: programs = [] } = useQuery({
+  const { data: programs = mockPrograms } = useQuery({
     queryKey: ['programs'],
     queryFn: getPrograms,
   });

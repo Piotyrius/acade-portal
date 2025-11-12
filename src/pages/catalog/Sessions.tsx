@@ -39,12 +39,26 @@ export default function Sessions() {
     cancellation_reason: '',
   });
 
-  const { data: sessions = [], isLoading } = useQuery({
+  // Mock data for preview
+  const mockSessions = [
+    { id: '1', cohort: '1', start_at: '2024-03-05T19:00:00Z', end_at: '2024-03-05T21:00:00Z', location: 'Lab A-301', online_link: '', is_cancelled: false, cancellation_reason: '', created_at: '2024-02-15T00:00:00Z', updated_at: '2024-02-15T00:00:00Z', cohort_name: 'Network Security - Spring 2024' },
+    { id: '2', cohort: '1', start_at: '2024-03-07T19:00:00Z', end_at: '2024-03-07T21:00:00Z', location: 'Lab A-301', online_link: '', is_cancelled: false, cancellation_reason: '', created_at: '2024-02-15T00:00:00Z', updated_at: '2024-02-15T00:00:00Z', cohort_name: 'Network Security - Spring 2024' },
+    { id: '3', cohort: '2', start_at: '2024-02-20T18:00:00Z', end_at: '2024-02-20T20:00:00Z', location: 'Room B-102', online_link: 'https://meet.google.com/xyz', is_cancelled: false, cancellation_reason: '', created_at: '2024-02-10T00:00:00Z', updated_at: '2024-02-10T00:00:00Z', cohort_name: 'Ethical Hacking - Evening Batch' },
+    { id: '4', cohort: '2', start_at: '2024-02-22T18:00:00Z', end_at: '2024-02-22T20:00:00Z', location: 'Room B-102', online_link: 'https://meet.google.com/xyz', is_cancelled: true, cancellation_reason: 'Instructor unavailable', created_at: '2024-02-10T00:00:00Z', updated_at: '2024-02-20T00:00:00Z', cohort_name: 'Ethical Hacking - Evening Batch' },
+  ];
+
+  const mockCohorts = [
+    { id: '1', course: '1', name: 'Network Security - Spring 2024', lecturer: 'lect-1', capacity: 30, start_date: '2024-03-01', end_date: '2024-05-30', status: 'ACTIVE' as const, created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+    { id: '2', course: '2', name: 'Ethical Hacking - Evening Batch', lecturer: 'lect-2', capacity: 25, start_date: '2024-02-15', end_date: '2024-06-15', status: 'ENROLLING' as const, created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z' },
+    { id: '3', course: '3', name: 'Web Pen Testing - Advanced', lecturer: 'lect-3', capacity: 20, start_date: '2024-04-01', end_date: '2024-07-31', status: 'PLANNED' as const, created_at: '2024-01-17T00:00:00Z', updated_at: '2024-01-17T00:00:00Z' },
+  ];
+
+  const { data: sessions = mockSessions, isLoading } = useQuery({
     queryKey: ['sessions', selectedCohort],
     queryFn: () => getSessions(selectedCohort === 'all' ? undefined : selectedCohort),
   });
 
-  const { data: cohorts = [] } = useQuery({
+  const { data: cohorts = mockCohorts } = useQuery({
     queryKey: ['cohorts'],
     queryFn: () => getCohorts(),
   });
