@@ -10,11 +10,16 @@ import {
   Clock,
   Image,
   GraduationCap,
+  Users,
+  Calendar,
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Catalog', href: '/catalog/programs', icon: BookOpen },
+  { name: 'Programs', href: '/catalog/programs', icon: BookOpen },
+  { name: 'Courses', href: '/catalog/courses', icon: GraduationCap },
+  { name: 'Cohorts', href: '/catalog/cohorts', icon: Users },
+  { name: 'Sessions', href: '/catalog/sessions', icon: Calendar },
   { name: 'Admissions', href: '/admissions/applications', icon: UserPlus },
   { name: 'Attendance', href: '/attendance/list', icon: ClipboardCheck },
   { name: 'Assessment', href: '/assessment/assessments', icon: FileCheck },

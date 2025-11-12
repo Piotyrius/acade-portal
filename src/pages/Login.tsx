@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { login, fetchMe } from '@/api/endpoints/auth';
+import { login } from '@/api/endpoints/auth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,27 +14,49 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { toast } = useToast();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const tokens = await login(email, password);
-      const me = await fetchMe();
+      const response = await login(email, password);
+      // The login response includes both tokens and user data
+      if (!response.user) {
+        throw new Error('User data not received from server');
+      }
       const user = {
-        id: me.id,
-        email: me.email,
-        firstName: me.first_name,
-        lastName: me.last_name,
-        role: me.role,
+        id: response.user.id,
+        email: response.user.email,
+        firstName: response.user.first_name,
+        lastName: response.user.last_name,
+        role: response.user.role,
       };
-      setAuth(user, tokens.access, tokens.refresh);
+      // Set auth with tokens and user data
+      setAuth(user, response.access, response.refresh);
+      
+      // Verify token is stored
+      const storedToken = useAuthStore.getState().accessToken;
+      if (!storedToken) {
+        console.error('Token was not stored correctly');
+        throw new Error('Failed to store authentication token');
+      }
+      
       toast({ title: 'Login successful', description: 'Welcome back!' });
       navigate('/dashboard');
     } catch (err: any) {
-      toast({ title: 'Login failed', description: 'Invalid email or password', variant: 'destructive' });
+      const errorMessage = err.response?.data?.detail || err.response?.data?.message || err.message || 'Invalid email or password';
+      toast({ title: 'Login failed', description: errorMessage, variant: 'destructive' });
+      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }

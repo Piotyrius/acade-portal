@@ -1,7 +1,11 @@
 import api from '@/api/client';
 import { TokenPair, UserDto } from '@/api/types';
 
-export async function login(email: string, password: string): Promise<TokenPair> {
+export interface LoginResponse extends TokenPair {
+  user: UserDto;
+}
+
+export async function login(email: string, password: string): Promise<LoginResponse> {
   const { data } = await api.post('/api/v1/auth/login/', { email, password });
   return data;
 }

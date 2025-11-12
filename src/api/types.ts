@@ -14,6 +14,7 @@ export interface UserDto {
 export interface TokenPair {
   access: string;
   refresh: string;
+  user?: UserDto;
 }
 
 export interface WorkLogDto {

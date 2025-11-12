@@ -14,6 +14,11 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    // Log for debugging - remove in production
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('No access token found for request:', config.url);
+    }
   }
   return config;
 });

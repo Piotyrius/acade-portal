@@ -9,6 +9,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Programs from "./pages/catalog/Programs";
 import Courses from "./pages/catalog/Courses";
+import Cohorts from "./pages/catalog/Cohorts";
+import Sessions from "./pages/catalog/Sessions";
 import Applications from "./pages/admissions/Applications";
 import AttendanceList from "./pages/attendance/AttendanceList";
 import Assessments from "./pages/assessment/Assessments";
@@ -40,17 +42,25 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route element={<AppShell />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/catalog/programs" element={<Programs />} />
-            <Route path="/catalog/courses" element={<Courses />} />
-            <Route path="/admissions/applications" element={<Applications />} />
-            <Route path="/attendance/list" element={<AttendanceList />} />
-            <Route path="/assessment/assessments" element={<Assessments />} />
-            <Route path="/certificates/list" element={<CertificatesList />} />
-            <Route path="/timekeeping/worklogs" element={<WorkLogs />} />
-            <Route path="/gallery/mine" element={<MyWorks />} />
-            <Route path="/profile" element={<Profile />} />
+          <Route
+            element={
+              <RequireAuth>
+                <AppShell />
+              </RequireAuth>
+            }
+          >
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="catalog/programs" element={<Programs />} />
+            <Route path="catalog/courses" element={<Courses />} />
+            <Route path="catalog/cohorts" element={<Cohorts />} />
+            <Route path="catalog/sessions" element={<Sessions />} />
+            <Route path="admissions/applications" element={<Applications />} />
+            <Route path="attendance/list" element={<AttendanceList />} />
+            <Route path="assessment/assessments" element={<Assessments />} />
+            <Route path="certificates/list" element={<CertificatesList />} />
+            <Route path="timekeeping/worklogs" element={<WorkLogs />} />
+            <Route path="gallery/mine" element={<MyWorks />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
