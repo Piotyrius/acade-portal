@@ -31,7 +31,15 @@ export default function Programs() {
   const [editingProgram, setEditingProgram] = useState<ProgramDto | null>(null);
   const [formData, setFormData] = useState({ name: '', code: '', description: '', active: true });
 
-  const { data: programs = [], isLoading } = useQuery({
+  // Mock data for preview
+  const mockPrograms = [
+    { id: '1', name: 'Cybersecurity Fundamentals', code: 'CS-101', description: 'Learn the basics of cybersecurity, including network security, cryptography, and ethical hacking', active: true, version: '1.0', created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+    { id: '2', name: 'Advanced Penetration Testing', code: 'CS-301', description: 'Master advanced penetration testing techniques and tools for enterprise environments', active: true, version: '1.0', created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z' },
+    { id: '3', name: 'Cloud Security Architecture', code: 'CS-201', description: 'Design and implement secure cloud infrastructure on AWS, Azure, and GCP', active: true, version: '1.0', created_at: '2024-01-17T00:00:00Z', updated_at: '2024-01-17T00:00:00Z' },
+    { id: '4', name: 'Incident Response & Forensics', code: 'CS-401', description: 'Respond to security incidents and conduct digital forensics investigations', active: false, version: '1.0', created_at: '2024-01-18T00:00:00Z', updated_at: '2024-01-18T00:00:00Z' },
+  ];
+
+  const { data: programs = mockPrograms, isLoading } = useQuery({
     queryKey: ['programs'],
     queryFn: getPrograms,
   });

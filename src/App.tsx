@@ -49,13 +49,7 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route
-            element={
-              <RequireAuth>
-                <AppShell />
-              </RequireAuth>
-            }
-          >
+          <Route element={<AppShell />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="catalog/programs" element={<Programs />} />
             <Route path="catalog/courses" element={<Courses />} />

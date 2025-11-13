@@ -47,14 +47,28 @@ export default function Cohorts() {
     exclude_holidays: true,
   });
 
-  const { data: cohorts = [], isLoading } = useQuery({
+  // Mock data for preview
+  const mockCohorts = [
+    { id: '1', course: '1', name: 'Network Security - Spring 2024', lecturer: 'lect-1', capacity: 30, start_date: '2024-03-01', end_date: '2024-05-30', status: 'ACTIVE' as const, created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z', course_title: 'Introduction to Network Security', lecturer_name: 'Dr. Sarah Johnson', current_enrollment_count: 24, status_display: 'Active' },
+    { id: '2', course: '2', name: 'Ethical Hacking - Evening Batch', lecturer: 'lect-2', capacity: 25, start_date: '2024-02-15', end_date: '2024-06-15', status: 'ENROLLING' as const, created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z', course_title: 'Ethical Hacking Basics', lecturer_name: 'Prof. Michael Chen', current_enrollment_count: 18, status_display: 'Enrolling' },
+    { id: '3', course: '3', name: 'Web Pen Testing - Advanced', lecturer: 'lect-3', capacity: 20, start_date: '2024-04-01', end_date: '2024-07-31', status: 'PLANNED' as const, created_at: '2024-01-17T00:00:00Z', updated_at: '2024-01-17T00:00:00Z', course_title: 'Web Application Penetration Testing', lecturer_name: 'Dr. Emily Rodriguez', current_enrollment_count: 0, status_display: 'Planned' },
+    { id: '4', course: '1', name: 'Network Security - Fall 2023', lecturer: 'lect-1', capacity: 30, start_date: '2023-09-01', end_date: '2023-12-15', status: 'COMPLETED' as const, created_at: '2023-08-15T00:00:00Z', updated_at: '2023-12-15T00:00:00Z', course_title: 'Introduction to Network Security', lecturer_name: 'Dr. Sarah Johnson', current_enrollment_count: 28, status_display: 'Completed' },
+  ];
+
+  const mockCourses = [
+    { id: '1', program: '1', title: 'Introduction to Network Security', code: 'CS101-01', hours: 40, credits: 3, description: '', created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+    { id: '2', program: '1', title: 'Ethical Hacking Basics', code: 'CS101-02', hours: 60, credits: 4, description: '', created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z' },
+    { id: '3', program: '2', title: 'Web Application Penetration Testing', code: 'CS301-01', hours: 80, credits: 5, description: '', created_at: '2024-01-17T00:00:00Z', updated_at: '2024-01-17T00:00:00Z' },
+  ];
+
+  const { data: cohorts = mockCohorts, isLoading } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
-  const { data: courses = [] } = useQuery({
+  const { data: courses = mockCourses } = useQuery({
     queryKey: ['courses'],
-    queryFn: getCourses,
+    queryFn: () => getCourses(),
   });
 
   const createMutation = useMutation({
@@ -127,7 +141,7 @@ export default function Cohorts() {
   const displayCohorts = cohorts.length === 0 ? exampleCohorts.slice(0, 1) : cohorts;
   const filteredCohorts = displayCohorts.filter((c: any) =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.course_title || '').toLowerCase().includes(searchTerm.toLowerCase())
+    ((c as any).course_title || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleOpenCreate = () => {
@@ -189,8 +203,8 @@ export default function Cohorts() {
     }
   };
 
-  const getStatusColor = (status: CohortDto['status']) => {
-    const colors = {
+  const getStatusColor = (status: CohortDto['status']): "default" | "destructive" | "outline" | "secondary" => {
+    const colors: Record<CohortDto['status'], "default" | "destructive" | "outline" | "secondary"> = {
       PLANNED: 'secondary',
       ENROLLING: 'default',
       ACTIVE: 'default',
@@ -257,12 +271,12 @@ export default function Cohorts() {
                   <div>
                     <CardTitle>{cohort.name}</CardTitle>
                     <CardDescription className="mt-1">
-                      {cohort.course_title} • {cohort.lecturer_name || 'No lecturer assigned'}
+                      {(cohort as any).course_title} • {(cohort as any).lecturer_name || 'No lecturer assigned'}
                     </CardDescription>
                     <div className="flex gap-2 mt-2">
-                      <Badge variant={getStatusColor(cohort.status)}>{cohort.status_display || cohort.status}</Badge>
+                      <Badge variant={getStatusColor(cohort.status)}>{(cohort as any).status_display || cohort.status}</Badge>
                       <Badge variant="outline">
-                        {cohort.current_enrollment_count || 0} / {cohort.capacity} students
+                        {(cohort as any).current_enrollment_count || 0} / {cohort.capacity} students
                       </Badge>
                     </div>
                   </div>

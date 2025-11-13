@@ -35,8 +35,8 @@ export default function Profile() {
   useEffect(() => {
     if (displayUser) {
       setFormData({
-        first_name: displayUser.firstName || displayUser.first_name || '',
-        last_name: displayUser.lastName || displayUser.last_name || '',
+        first_name: (displayUser as any).firstName || (displayUser as any).first_name || '',
+        last_name: (displayUser as any).lastName || (displayUser as any).last_name || '',
         email: displayUser.email || '',
       });
     }
@@ -77,7 +77,7 @@ export default function Profile() {
   };
 
   const initials = displayUser
-    ? `${displayUser.firstName?.[0] || displayUser.first_name?.[0] || ''}${displayUser.lastName?.[0] || displayUser.last_name?.[0] || ''}`
+    ? `${(displayUser as any).firstName?.[0] || (displayUser as any).first_name?.[0] || ''}${(displayUser as any).lastName?.[0] || (displayUser as any).last_name?.[0] || ''}`
     : 'U';
 
   if (isLoading && !user) {
@@ -106,7 +106,7 @@ export default function Profile() {
               </Avatar>
               <div>
                 <h3 className="text-lg font-semibold">
-                  {displayUser?.firstName || displayUser?.first_name} {displayUser?.lastName || displayUser?.last_name}
+                  {(displayUser as any)?.firstName || (displayUser as any)?.first_name} {(displayUser as any)?.lastName || (displayUser as any)?.last_name}
                 </h3>
                 <p className="text-sm text-muted-foreground">{displayUser?.email}</p>
                 <Badge variant="secondary" className="mt-2">
@@ -122,7 +122,7 @@ export default function Profile() {
                   <div>
                     <p className="text-sm font-medium">Full Name</p>
                     <p className="text-sm text-muted-foreground">
-                      {displayUser?.firstName || displayUser?.first_name} {displayUser?.lastName || displayUser?.last_name}
+                      {(displayUser as any)?.firstName || (displayUser as any)?.first_name} {(displayUser as any)?.lastName || (displayUser as any)?.last_name}
                     </p>
                   </div>
                 </div>
