@@ -1,0 +1,109 @@
+/* Basic styling for Sessions page */
+.sessions-container {
+  padding: 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f9fbfc 100%);
+  min-height: 100vh;
+}
+
+.sessions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sessions-header h1 {
+    font-weight: 400;
+  margin: 0;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.controls input, .controls select {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn.muted { background: #6b7280 }
+.btn.small { padding: 4px 6px; font-size: 0.9rem }
+.btn.danger { background: #dc2626 }
+
+.session-form {
+  display: block;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.session-form input { padding: 8px 10px; border: 1px solid #e6e9ee; border-radius: 6px; width:100% }
+.form-actions { display:flex; gap:8px; align-items:center; margin-top:12px }
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: #fff;
+  width: 720px;
+  max-width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(16,24,40,0.2);
+  overflow: hidden;
+}
+
+.modal-header { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid #f1f5f9 }
+.modal-header h3 { margin:0; font-weight:600 }
+.modal-close { background:transparent; border:none; font-size:20px; cursor:pointer }
+.modal-body { padding:16px 20px }
+
+.modal-form .form-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px }
+.modal-form .label { font-size:12px; color:#374151; margin-bottom:6px }
+
+@media (max-width:720px) {
+  .modal { width: 100%; }
+  .modal-form .form-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width:480px) {
+  .modal-form .form-grid { grid-template-columns: 1fr; }
+}
+
+.sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sessions-table th, .sessions-table td {
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.sessions-table { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 6px 18px rgba(15,23,42,0.05); }
+.sessions-table thead { background: #f8fafc }
+.sessions-table th { font-weight: 600; font-size: 13px; color:#111827 }
+.sessions-table td { color:#374151 }
+.sessions-table .actions { display:flex; gap:8px }
+.sessions-table .empty { text-align:center; color:#6b7280 }

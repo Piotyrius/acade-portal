@@ -1,24 +1,43 @@
-import logo from './logo.svg';
-import './App.css';
+import { Routes, Route } from 'react-router-dom'
+import Sidebar from './layout/Sidebar'
+import AppShell from './layout/AppShell';
+import { Navigate } from 'react-router-dom';
+
+import { Dashboard } from './pages/dashboard/Dashboard'
+import { Programs } from './pages/programs/Programs'
+import { Sessions } from './pages/sessions/Sessions'
+import { Admissions } from './pages/admissions/Admissions'
+import { Assessment } from './pages/assessment/Assessment'
+import { Attendance } from './pages/attendance/Attendance'
+import { Certificates } from './pages/certificates/Certificates'
+import { Cohorts } from './pages/cohorts/Cohorts'
+import { Cources } from './pages/cources/Cources'
+import { Gallery } from './pages/gallery/Gallery'
+import { Timekeeping } from './pages/timekeeping/Timekeeping'
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+
+      <Routes>
+        <Route path='/catalog' element={ <AppShell /> }>
+          <Route index element={ <Dashboard /> } />
+          <Route path='dashboard' element={ <Dashboard /> } />
+          <Route path='programs' element={ <Programs /> } />
+          <Route path='sessions' element={ <Sessions /> } />
+          <Route path='admissions' element={ <Admissions /> } />
+          <Route path='assessment' element={ <Assessment /> } />
+          <Route path='attendance' element={ <Attendance /> } />
+          <Route path='certificates' element={ <Certificates /> } />
+          <Route path='cohorts' element={ <Cohorts /> } />
+          <Route path='cources' element={ <Cources /> } />
+          <Route path='gallery' element={ <Gallery /> } />
+          <Route path='timekeeping' element={ <Timekeeping /> } />
+        </Route>
+        <Route path='*' element={ <Navigate to={'/catalog/dashboard'} /> } />
+      </Routes>
+
+    </>
   );
 }
 
