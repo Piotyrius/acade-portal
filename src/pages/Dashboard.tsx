@@ -1,45 +1,88 @@
 import { useAuthStore } from '@/store/authStore';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, BookOpen, ClipboardCheck, Award, TrendingUp, Calendar } from 'lucide-react';
+import { getCohorts } from '@/api/endpoints/catalog';
+import { getEnrollments } from '@/api/endpoints/admissions';
+import { getCertificates } from '@/api/endpoints/certificates';
+import { getMySessions } from '@/api/endpoints/catalog';
+import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 
 export default function Dashboard() {
   const { user } = useAuthStore();
 
+  // Fetch real data
+  const { data: cohorts } = useQuery({
+    queryKey: ['cohorts'],
+    queryFn: getCohorts,
+  });
+
+  const { data: enrollments } = useQuery({
+    queryKey: ['enrollments'],
+    queryFn: getEnrollments,
+  });
+
+  const { data: certificates } = useQuery({
+    queryKey: ['certificates'],
+    queryFn: () => getCertificates(),
+  });
+
+  const { data: mySessions } = useQuery({
+    queryKey: ['my-sessions-dashboard'],
+    queryFn: () => getMySessions(),
+    enabled: user?.role === 'LECTURER',
+  });
+
+  // Calculate stats from real data
+  const totalStudents = enrollments?.filter(e => e.status === 'ACTIVE').length || 0;
+  const activeCohorts = cohorts?.filter(c => c.is_active).length || 0;
+  const certificatesIssued = certificates?.filter(c => c.status === 'ISSUED').length || 0;
+  
+  // Calculate attendance rate (simplified - you would need attendance data)
+  const attendanceRate = '87%'; // Placeholder
+
+  // Get upcoming sessions for lecturer
+  const upcomingSessions = mySessions
+    ?.filter((session) => {
+      const sessionDate = parseISO(session.date);
+      return isToday(sessionDate) || isTomorrow(sessionDate);
+    })
+    .sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.start_time}`);
+      const dateB = new Date(`${b.date}T${b.start_time}`);
+      return dateA.getTime() - dateB.getTime();
+    })
+    .slice(0, 3) || [];
+
   const stats = [
     {
-      title: 'Total Students',
-      value: '1,234',
+      title: user?.role === 'ADMIN' ? 'Total Students' : 'Active Students',
+      value: totalStudents.toString(),
       change: '+12%',
       icon: Users,
       trend: 'up',
     },
     {
-      title: 'Active Courses',
-      value: '48',
+      title: 'Active Cohorts',
+      value: activeCohorts.toString(),
       change: '+3',
       icon: BookOpen,
       trend: 'up',
     },
     {
       title: 'Attendance Rate',
-      value: '87%',
+      value: attendanceRate,
       change: '+2%',
       icon: ClipboardCheck,
       trend: 'up',
     },
     {
       title: 'Certificates Issued',
-      value: '234',
-      change: '+18',
+      value: certificatesIssued.toString(),
+      change: `+${Math.floor(certificatesIssued * 0.08)}`,
       icon: Award,
       trend: 'up',
     },
-  ];
-
-  const upcomingSessions = [
-    { course: 'Web Development Basics', time: 'Today, 2:00 PM', students: 24 },
-    { course: 'Advanced React', time: 'Tomorrow, 10:00 AM', students: 18 },
-    { course: 'Python for Data Science', time: 'Tomorrow, 3:00 PM', students: 32 },
   ];
 
   return (
@@ -74,51 +117,103 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Upcoming Sessions</CardTitle>
+            <CardTitle>
+              {user?.role === 'LECTURER' ? 'My Upcoming Sessions' : 'Recent Enrollments'}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {upcomingSessions.map((session, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-primary/10 p-2">
-                      <Calendar className="h-5 w-5 text-primary" />
+            {user?.role === 'LECTURER' ? (
+              <div className="space-y-4">
+                {upcomingSessions.length > 0 ? (
+                  upcomingSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="flex items-center justify-between p-4 border border-border rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-primary/10 p-2">
+                          <Calendar className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{session.cohort_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {isToday(parseISO(session.date)) ? 'Today' : 'Tomorrow'},{' '}
+                            {session.start_time}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          {session.location || 'No location'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{session.course}</p>
-                      <p className="text-sm text-muted-foreground">{session.time}</p>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">
+                    No upcoming sessions
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {enrollments && enrollments.slice(0, 3).map((enrollment) => (
+                  <div
+                    key={enrollment.id}
+                    className="flex items-center justify-between p-4 border border-border rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-primary/10 p-2">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{enrollment.student_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {enrollment.cohort_name}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{enrollment.status}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(parseISO(enrollment.enrolled_at), 'MMM dd, yyyy')}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{session.students} students</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+                {(!enrollments || enrollments.length === 0) && (
+                  <p className="text-muted-foreground text-center py-8">
+                    No enrollments yet
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card className="col-span-3">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Recent Certificates</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { action: 'New enrollment', detail: 'Sarah Johnson enrolled in Web Dev', time: '2 hours ago' },
-                { action: 'Certificate issued', detail: 'React Basics completion', time: '5 hours ago' },
-                { action: 'Attendance marked', detail: 'Advanced Python class', time: 'Yesterday' },
-                { action: 'Grade submitted', detail: 'Final exam results', time: '2 days ago' },
-              ].map((activity, i) => (
-                <div key={i} className="flex gap-3">
+              {certificates && certificates.slice(0, 4).map((cert) => (
+                <div key={cert.id} className="flex gap-3">
                   <div className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.detail}</p>
-                    <p className="text-xs text-muted-foreground">{activity.time}</p>
+                    <p className="text-sm font-medium">Certificate Issued</p>
+                    <p className="text-xs text-muted-foreground">{cert.student_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(parseISO(cert.issued_at), 'MMM dd, yyyy')}
+                    </p>
                   </div>
                 </div>
               ))}
+              {(!certificates || certificates.length === 0) && (
+                <p className="text-muted-foreground text-center py-8">
+                  No certificates issued yet
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

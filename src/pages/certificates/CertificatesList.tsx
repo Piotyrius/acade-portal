@@ -128,7 +128,7 @@ export default function CertificatesList() {
       return;
     }
     const payload: any = { cohort_id: formData.cohort, force: formData.force };
-    if (formData.student) {
+    if (formData.student && formData.student !== 'all') {
       payload.student_id = formData.student;
     }
     issueMutation.mutate(payload);
@@ -300,7 +300,7 @@ export default function CertificatesList() {
                   <SelectValue placeholder="Select student (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All eligible students</SelectItem>
+                  <SelectItem value="all">All eligible students</SelectItem>
                   {students.map((student: any) => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.first_name} {student.last_name} ({student.email})

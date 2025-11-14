@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Image as ImageIcon, Eye, Edit } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Image as ImageIcon, Eye, Edit, Trash2 } from 'lucide-react';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { exampleWorks } from '@/utils/exampleData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +12,15 @@ import { getMyWorks, uploadWork, publishWork } from '@/api/endpoints/gallery';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import api from '@/api/client';
 
 export default function MyWorks() {
   const { toast } = useToast();
@@ -21,6 +31,9 @@ export default function MyWorks() {
 
   const [title, setTitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingWork, setEditingWork] = useState<any>(null);
+  const [editFormData, setEditFormData] = useState({ title: '', description: '' });
 
   const uploadMut = useMutation({
     mutationFn: (payload: { title: string; file: File }) => uploadWork(payload),
@@ -41,6 +54,45 @@ export default function MyWorks() {
     },
     onError: (e: any) => toast({ title: 'Publish failed', description: getErrorMessage(e), variant: 'destructive' }),
   });
+
+  const updateMut = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { title: string; description?: string } }) =>
+      api.patch(`/api/v1/gallery/works/${id}/`, data),
+    onSuccess: () => {
+      toast({ title: 'Updated', description: 'Work updated successfully' });
+      qc.invalidateQueries({ queryKey: ['my-works'] });
+      setIsEditDialogOpen(false);
+      setEditingWork(null);
+    },
+    onError: (e: any) => toast({ title: 'Update failed', description: getErrorMessage(e), variant: 'destructive' }),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/v1/gallery/works/${id}/`),
+    onSuccess: () => {
+      toast({ title: 'Deleted', description: 'Work deleted successfully' });
+      qc.invalidateQueries({ queryKey: ['my-works'] });
+    },
+    onError: (e: any) => toast({ title: 'Delete failed', description: getErrorMessage(e), variant: 'destructive' }),
+  });
+
+  const handleOpenEdit = (work: any) => {
+    setEditingWork(work);
+    setEditFormData({ title: work.title, description: work.description || '' });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateWork = () => {
+    if (editingWork) {
+      updateMut.mutate({ id: editingWork.id, data: editFormData });
+    }
+  };
+
+  const handleDeleteWork = (id: string) => {
+    if (confirm('Are you sure you want to delete this work? This action cannot be undone.')) {
+      deleteMut.mutate(id);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -88,15 +140,19 @@ export default function MyWorks() {
                 <Eye className="h-4 w-4" />
                 <span>—</span>
               </div>
-              {work.status !== 'PUBLISHED' ? (
-                <Button variant="default" size="sm" onClick={() => publishMut.mutate(work.id)} disabled={publishMut.isPending}>
-                  {publishMut.isPending ? 'Publishing...' : 'Publish'}
-                </Button>
-              ) : (
-                <Button variant="ghost" size="sm">
+              <div className="flex gap-2">
+                {work.status !== 'PUBLISHED' && (
+                  <Button variant="default" size="sm" onClick={() => publishMut.mutate(work.id)} disabled={publishMut.isPending}>
+                    {publishMut.isPending ? 'Publishing...' : 'Publish'}
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(work)}>
                   <Edit className="h-4 w-4" />
                 </Button>
-              )}
+                <Button variant="destructive" size="sm" onClick={() => handleDeleteWork(work.id)} disabled={deleteMut.isPending}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </CardFooter>
           </Card>
         ))}
@@ -108,6 +164,44 @@ export default function MyWorks() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Work</DialogTitle>
+            <DialogDescription>Update your work details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title *</Label>
+              <Input
+                id="edit-title"
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                placeholder="Work title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editFormData.description}
+                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                placeholder="Describe your work..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateWork} disabled={!editFormData.title || updateMut.isPending}>
+              {updateMut.isPending ? 'Updating...' : 'Update'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

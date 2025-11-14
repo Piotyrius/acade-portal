@@ -26,5 +26,36 @@ export async function getUsers(role?: string): Promise<UserDto[]> {
   return data.results || data;
 }
 
+export async function createUser(payload: {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  role: 'ADMIN' | 'LECTURER' | 'STUDENT';
+}): Promise<UserDto> {
+  const { data } = await api.post('/api/v1/users/', payload);
+  return data;
+}
+
+export async function updateUser(id: string, payload: Partial<{
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  role: 'ADMIN' | 'LECTURER' | 'STUDENT';
+  is_active: boolean;
+}>): Promise<UserDto> {
+  const { data } = await api.patch(`/api/v1/users/${id}/`, payload);
+  return data;
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  await api.delete(`/api/v1/users/${id}/`);
+}
+
+
+
+
 
 

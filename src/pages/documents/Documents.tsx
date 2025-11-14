@@ -26,6 +26,8 @@ export default function Documents() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedKind, setSelectedKind] = useState<string>('all');
+  const [selectedVisibility, setSelectedVisibility] = useState<string>('all');
   const [formData, setFormData] = useState({
     kind: '',
     description: '',
@@ -39,6 +41,11 @@ export default function Documents() {
   });
 
   const displayDocuments = documents.length === 0 ? exampleDocuments.slice(0, 1) : documents;
+  const filteredDocuments = displayDocuments.filter((doc: any) => {
+    const matchesKind = selectedKind === 'all' || doc.kind === selectedKind;
+    const matchesVisibility = selectedVisibility === 'all' || doc.visibility === selectedVisibility;
+    return matchesKind && matchesVisibility;
+  });
 
   const createMutation = useMutation({
     mutationFn: createDocument,
@@ -102,6 +109,28 @@ export default function Documents() {
           <p className="text-muted-foreground">Manage your documents and files</p>
         </div>
         <div className="flex gap-2">
+          <Select value={selectedKind} onValueChange={setSelectedKind}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Filter by kind" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Kinds</SelectItem>
+              <SelectItem value="CONSENT">Consent</SelectItem>
+              <SelectItem value="ID">ID</SelectItem>
+              <SelectItem value="OTHER">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedVisibility} onValueChange={setSelectedVisibility}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Filter by visibility" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Visibility</SelectItem>
+              <SelectItem value="PRIVATE">Private</SelectItem>
+              <SelectItem value="LECTURER">Lecturer</SelectItem>
+              <SelectItem value="ADMIN">Admin</SelectItem>
+            </SelectContent>
+          </Select>
           <Button onClick={() => setIsDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Upload Document
@@ -117,11 +146,11 @@ export default function Documents() {
         <CardContent>
           {isLoading ? (
             <p className="text-muted-foreground">Loading...</p>
-          ) : displayDocuments.length === 0 ? (
+          ) : filteredDocuments.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No documents found</p>
           ) : (
             <div className="space-y-4">
-              {displayDocuments.map((doc: any) => (
+              {filteredDocuments.map((doc: any) => (
                 <div key={doc.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="rounded-lg bg-primary/10 p-2">
@@ -171,13 +200,19 @@ export default function Documents() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="kind">Kind *</Label>
-                <Input
-                  id="kind"
+                <Select
                   value={formData.kind}
-                  onChange={(e) => setFormData({ ...formData, kind: e.target.value })}
-                  placeholder="e.g., Syllabus, Assignment, Certificate"
-                  required
-                />
+                  onValueChange={(value) => setFormData({ ...formData, kind: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select document kind" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CONSENT">Consent</SelectItem>
+                    <SelectItem value="ID">ID</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description *</Label>

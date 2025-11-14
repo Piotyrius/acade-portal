@@ -1,7 +1,14 @@
 import api from '@/api/client';
+import axios from 'axios';
 import { ApplicationDto, EnrollmentDto } from '@/api/types';
 
-// Applications
+// Applications (Public - no auth required)
+export async function submitPublicApplication(payload: Partial<ApplicationDto>): Promise<ApplicationDto> {
+  const { data } = await axios.post('http://localhost:8000/api/v1/admissions/applications/', payload);
+  return data;
+}
+
+// Applications (Authenticated)
 export async function getApplications(programId?: string, status?: string): Promise<ApplicationDto[]> {
   const params: Record<string, string> = {};
   if (programId) params.program = programId;

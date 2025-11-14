@@ -115,6 +115,23 @@ export async function deleteSession(id: string): Promise<void> {
   await api.delete(`/api/v1/catalog/sessions/${id}/`);
 }
 
+// Lecturer-specific endpoints
+export async function getMyCohorts(): Promise<CohortDto[]> {
+  const { data } = await api.get('/api/v1/catalog/cohorts/me/');
+  return data.results || data;
+}
+
+export async function getMySessions(params?: { date_from?: string; date_to?: string }): Promise<SessionDto[]> {
+  const { data } = await api.get('/api/v1/catalog/sessions/me/', { params });
+  return data.results || data;
+}
+
+
+
+
+
+
+
 
 
 

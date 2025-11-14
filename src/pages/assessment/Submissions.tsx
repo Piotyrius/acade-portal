@@ -4,14 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, FileText, Download, Eye } from 'lucide-react';
+import { Plus, Upload, FileText, Download, Eye, X, File } from 'lucide-react';
 import { exampleSubmissions } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSubmissions, createSubmission, updateSubmission, SubmissionDto } from '@/api/endpoints/assessment';
 import { getAssessments } from '@/api/endpoints/assessment';
 import { useAuthStore } from '@/store/authStore';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -29,7 +29,9 @@ export default function Submissions() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedAssessment, setSelectedAssessment] = useState<string>('');
+  const [selectedAssessment, setSelectedAssessment] = useState<string>('all');
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     assessment: '',
     text: '',
@@ -98,8 +100,40 @@ export default function Submissions() {
     });
   };
 
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFormData({ ...formData, file: e.dataTransfer.files[0] });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({ ...formData, file: e.target.files[0] });
+    }
+  };
+
+  const removeFile = () => {
+    setFormData({ ...formData, file: null });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const displaySubmissions = submissions.length === 0 ? exampleSubmissions.slice(0, 1) : submissions;
-  const filteredSubmissions = selectedAssessment
+  const filteredSubmissions = selectedAssessment && selectedAssessment !== 'all'
     ? displaySubmissions.filter((s: any) => s.assessment === selectedAssessment)
     : displaySubmissions;
 
@@ -116,7 +150,7 @@ export default function Submissions() {
               <SelectValue placeholder="Filter by assessment" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Assessments</SelectItem>
+              <SelectItem value="all">All Assessments</SelectItem>
               {assessments.map((assessment: any) => (
                 <SelectItem key={assessment.id} value={assessment.id}>
                   {assessment.title}
@@ -226,11 +260,67 @@ export default function Submissions() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="file">File Upload</Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    onChange={(e) => setFormData({ ...formData, file: e.target.files?.[0] || null })}
-                  />
+                  <div
+                    className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+                      dragActive
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      id="file"
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    {formData.file ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-primary/10 p-2">
+                            <File className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{formData.file.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(formData.file.size / 1024).toFixed(2)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={removeFile}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">
+                            Drag and drop your file here, or{' '}
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="text-primary hover:underline"
+                            >
+                              browse
+                            </button>
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Supports PDF, DOC, DOCX, and other common file types
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <DialogFooter>

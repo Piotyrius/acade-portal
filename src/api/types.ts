@@ -9,6 +9,10 @@ export interface UserDto {
   first_name: string;
   last_name: string;
   role: UserRole;
+  phone?: string;
+  is_active?: boolean;
+  is_staff?: boolean;
+  is_superuser?: boolean;
 }
 
 export interface TokenPair {
@@ -75,6 +79,11 @@ export interface CohortDto {
   status: 'PLANNED' | 'ENROLLING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   created_at: string;
   updated_at: string;
+  // Computed fields from backend
+  course_name?: string;
+  lecturer_name?: string;
+  enrollment_count?: number;
+  is_active?: boolean;
 }
 
 export interface SessionDto {
@@ -88,6 +97,12 @@ export interface SessionDto {
   cancellation_reason: string;
   created_at: string;
   updated_at: string;
+  // Computed fields from backend
+  cohort_name?: string;
+  date?: string;
+  start_time?: string;
+  end_time?: string;
+  status?: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
 }
 
 // Admissions
@@ -97,9 +112,16 @@ export interface ApplicationDto {
   name: string;
   email: string;
   phone: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  schedule_pref?: string;
+  experience_level?: string;
+  referral_source?: string;
+  notes?: string;
+  status: 'NEW' | 'IN_REVIEW' | 'ACCEPTED' | 'REJECTED';
   created_at: string;
   updated_at: string;
+  program_name?: string;
+  program_code?: string;
+  status_display?: string;
 }
 
 export interface EnrollmentDto {
@@ -110,6 +132,9 @@ export interface EnrollmentDto {
   enrolled_at: string;
   activated_at: string | null;
   completed_at: string | null;
+  // Computed fields from backend
+  student_name?: string;
+  cohort_name?: string;
 }
 
 // Attendance
@@ -182,6 +207,11 @@ export interface CertificateDto {
   issued_at: string;
   revoked_at: string | null;
   revocation_reason: string | null;
+  // Computed fields from backend
+  student_name?: string;
+  cohort_name?: string;
+  serial_number?: string;
+  qr_code?: string;
 }
 
 

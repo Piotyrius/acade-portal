@@ -31,7 +31,7 @@ export default function Grades() {
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGrade, setEditingGrade] = useState<GradeDto | null>(null);
-  const [selectedAssessment, setSelectedAssessment] = useState<string>('');
+  const [selectedAssessment, setSelectedAssessment] = useState<string>('all');
   const [formData, setFormData] = useState({
     assessment: '',
     student: '',
@@ -142,7 +142,7 @@ export default function Grades() {
   };
 
   const displayGrades = grades.length === 0 ? exampleGrades.slice(0, 1) : grades;
-  const filteredGrades = selectedAssessment
+  const filteredGrades = selectedAssessment && selectedAssessment !== 'all'
     ? displayGrades.filter((g: any) => g.assessment === selectedAssessment)
     : displayGrades;
 
@@ -205,7 +205,7 @@ export default function Grades() {
               <SelectValue placeholder="Filter by assessment" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Assessments</SelectItem>
+              <SelectItem value="all">All Assessments</SelectItem>
               {assessments.map((assessment: any) => (
                 <SelectItem key={assessment.id} value={assessment.id}>
                   {assessment.title}

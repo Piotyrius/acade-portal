@@ -25,6 +25,12 @@ import StudentPortal from "./pages/StudentPortal";
 import Documents from "./pages/documents/Documents";
 import Rates from "./pages/timekeeping/Rates";
 import Timesheets from "./pages/timekeeping/Timesheets";
+import Reporting from "./pages/reporting/Reporting";
+import Users from "./pages/users/Users";
+import VerifyCertificate from "./pages/public/VerifyCertificate";
+import ApplyPage from "./pages/public/ApplyPage";
+import PublicGallery from "./pages/public/PublicGallery";
+import LecturerDashboard from "./pages/lecturer/LecturerDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -48,6 +54,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/verify" element={<VerifyCertificate />} />
+          <Route path="/apply" element={<ApplyPage />} />
+          <Route path="/gallery" element={<PublicGallery />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route element={<AppShell />}>
             <Route path="dashboard" element={<Dashboard />} />
@@ -69,6 +78,9 @@ const App = () => (
             <Route path="profile" element={<Profile />} />
             <Route path="student/portal" element={<StudentPortal />} />
             <Route path="documents" element={<Documents />} />
+            <Route path="reporting" element={<Reporting />} />
+            <Route path="users" element={<Users />} />
+            <Route path="lecturer/dashboard" element={<LecturerDashboard />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
