@@ -4,7 +4,7 @@ import './Layout.css'
 
 import { TbLayoutDashboard } from "react-icons/tb";
 import { IoBookOutline } from "react-icons/io5";
-import { FiAward, FiBook, FiUsers, FiCalendar, FiUserPlus, FiCheckCircle, FiBarChart2, FiClock, FiImage } from "react-icons/fi";
+import { FiAward, FiBook, FiUsers, FiCalendar, FiUserPlus, FiCheckCircle, FiBarChart2, FiClock, FiImage, FiClipboard } from "react-icons/fi";
 
 import CyberLogo from '../assets/images/academy-logo.jpg'
 
@@ -30,6 +30,7 @@ const Sidebar = () => {
         <Link to={'/catalog/certificates'} className='links' > <FiAward className='link-icon' /> Certificates</Link>
         <Link to={'/catalog/timekeeping'} className='links' > <FiClock className='link-icon' /> Timekeeping</Link>
         <Link to={'/catalog/gallery'} className='links' > <FiImage className='link-icon' /> Gallery</Link>
+        <Link to={'/catalog/enrollments'} className='links' > <FiClipboard className='link-icon' /> Enrollments</Link>
       </div>
 
 

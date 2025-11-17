@@ -1,63 +1,154 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './Cohorts.css'
 import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiChevronDown, FiUsers, FiCalendar } from 'react-icons/fi'
+import axios from '../../api/axios'
 
 export const Cohorts = () => {
-  const [cohorts, setCohorts] = useState([
-    { id: 1, name: 'Cohort A - 2025', program: 'Cybersecurity', startDate: '2025-11-01', endDate: '2026-02-01', students: 42, status: 'Active' },
-    { id: 2, name: 'Cohort B - 2025', program: 'Fullstack Dev', startDate: '2025-12-01', endDate: '2026-03-01', students: 38, status: 'Active' },
-    { id: 3, name: 'Cohort C - 2026', program: 'Cloud Computing', startDate: '2026-01-15', endDate: '2026-04-15', students: 0, status: 'Planned' },
-  ])
+  const [cohorts, setCohorts] = useState([])
+  const [courses, setCourses] = useState([])
+  const [lecturers, setLecturers] = useState([])
+  const [form, setForm] = useState({
+    name: '', 
+    capacity: '', 
+    start_date: '', 
+    end_date: '', 
+    status: '', 
+    course: '',
+    lecturer: '' 
+  })
 
   const [showModal, setShowModal] = useState(false)
-  const [editingId, setEditingId] = useState(null)
-  const [expandedId, setExpandedId] = useState(null)
   const [search, setSearch] = useState('')
-  const [form, setForm] = useState({ name: '', program: '', startDate: '', endDate: '', students: 0, status: 'Active' })
+  const [editingId, setEditingId] = useState(null)
 
-  const filtered = cohorts.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
-    c.program.toLowerCase().includes(search.toLowerCase())
-  )
+  const [expandedId, setExpandedId] = useState(null)
 
-  function openCreate() {
-    setEditingId(null)
-    setForm({ name: '', program: '', startDate: '', endDate: '', students: 0, status: 'Active' })
-    setShowModal(true)
+  useEffect(() => {
+
+    const fetchCohorts = async () => {
+      try{
+
+        const res = await axios.get('catalog/cohorts/')
+        setCohorts(res.data.results)
+
+      }catch(err){
+        console.error(err)
+      }
+    }
+
+    const fetchCourses = async () => {
+      try{
+
+        const res = await axios.get('catalog/courses/')
+        setCourses(res.data.results)
+
+      }catch(err){
+        console.error(err)
+      }
+    }
+
+    const fetchLecturers = async () => {
+      try{
+
+        const res = await axios.get('users/?role=LECTURER')
+        setLecturers(res.data.results)
+        
+      }catch(err) {
+        console.error(err)
+      }
+    }
+
+    fetchLecturers()
+    fetchCourses()
+    fetchCohorts()
+
+  }, [])
+
+  const handleOpenEdit = async (id) => {
+    try{
+
+      const res = await axios.get(`catalog/cohorts/${id}/`)
+      const cohort = res.data
+
+      setForm({
+        name: cohort.name || '', 
+        capacity: cohort.capacity || '', 
+        start_date: cohort.start_date || '', 
+        end_date: cohort.end_date || '', 
+        status: cohort.status || '', 
+        course: cohort.course || '', 
+        lecturer: cohort.lecturer || '', 
+      })
+
+      setEditingId(id)
+      setShowModal(true)
+
+    }catch(err){
+      console.error(err)
+    }
   }
 
-  function openEdit(cohort) {
-    setEditingId(cohort.id)
-    setForm(cohort)
-    setShowModal(true)
-  }
-
-  function handleSave(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (editingId) {
-      setCohorts(cohorts.map(c => c.id === editingId ? { ...c, ...form } : c))
-    } else {
-      setCohorts([{ id: Date.now(), ...form }, ...cohorts])
+    try{
+
+      if(editingId){
+
+        const res = await axios.put(`catalog/cohorts/${editingId}/`, form)
+        setCohorts(prev => prev.map(p => p.id === editingId ? { ...p, ...res.data } : p))
+
+
+        setShowModal(false)
+        setEditingId(null)
+        setForm({ name: '', capacity: '', start_date: '', end_date: '', status: '', course: '', lecturer: null })
+
+      }else{
+
+        const res = await axios.post('catalog/cohorts/', form)
+
+        setShowModal(false)
+        setEditingId(null)
+        setForm({ name: '', capacity: '', start_date: '', end_date: '', status: '', course: '', lecturer: null })
+
+      }
+
+    }catch(err){
+      console.error(err)
     }
-    setShowModal(false)
   }
 
-  function handleDelete(id) {
-    if (window.confirm('Delete this cohort?')) {
-      setCohorts(cohorts.filter(c => c.id !== id))
+  const handleDelete = async (cohortId) => {
+    try{
+
+      const res = await axios.delete(`catalog/cohorts/${cohortId}/`)
+      setCohorts(prev => prev.filter(c => c.id !== cohortId));
+
+    }catch(err){
+      console.error(err)
     }
   }
 
-  const getDurationDays = (start, end) => {
-    const d1 = new Date(start)
-    const d2 = new Date(end)
-    const days = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24))
-    return days > 0 ? `${days} days` : '-'
+  const handlePopupOpen = () => {
+    setShowModal(true)
   }
 
-  const getStatusBg = (status) => {
-    return status === 'Active' ? 'active' : status === 'Planned' ? 'planned' : 'completed'
+  const handleChange = (e) => {
+    setForm({...form, [e.target.name]: e.target.value})
   }
+
+
+  const filteredCohorts = cohorts.filter((cohort) => {
+    const lowerCaseSearch = search.toLowerCase()
+    return (
+      cohort.name.toLowerCase().includes(lowerCaseSearch)
+    )
+  })
+
+  const getCohortName = (id) => {
+    const c = courses.find(course => course.id === id)
+    return c ? c.title : id
+  }
+
 
   return (
     <div className="cohorts-container">
@@ -66,7 +157,7 @@ export const Cohorts = () => {
           <h1>Cohorts</h1>
           <p className="subtitle">Manage your student cohorts</p>
         </div>
-        <button className="btn-primary" onClick={openCreate}>
+        <button className="btn-primary" onClick={handlePopupOpen}>
           <FiPlus size={18} /> New Cohort
         </button>
       </header>
@@ -83,13 +174,13 @@ export const Cohorts = () => {
       </div>
 
       <div className="cohorts-list">
-        {filtered.length === 0 ? (
+        {filteredCohorts.length === 0 ? (
           <div className="empty-state">
             <FiUsers size={40} />
             <p>No cohorts found</p>
           </div>
         ) : (
-          filtered.map(cohort => (
+          filteredCohorts.map(cohort => (
             <div key={cohort.id} className="cohort-item">
               <div 
                 className="cohort-summary"
@@ -101,45 +192,42 @@ export const Cohorts = () => {
                 
                 <div className="cohort-main">
                   <h3>{cohort.name}</h3>
-                  <p className="cohort-program">{cohort.program}</p>
+                  <p className="cohort-program">{getCohortName(cohort.course)}</p>
                 </div>
 
                 <div className="cohort-stats">
                   <div className="stat">
-                    <span className="label">Students</span>
-                    <span className="number">{cohort.students}</span>
-                  </div>
-                  <div className="stat">
-                    <span className="label">Duration</span>
-                    <span className="number">{getDurationDays(cohort.startDate, cohort.endDate)}</span>
+                    <span className="label">Capacity</span>
+                    <span className="number"> {cohort.capacity} </span>
                   </div>
                 </div>
 
-                <span className={`status ${getStatusBg(cohort.status)}`}>{cohort.status}</span>
+                <span className={`status`}>{cohort.status}</span>
 
-                <button className="expand-btn" onClick={e => { e.stopPropagation(); setExpandedId(expandedId === cohort.id ? null : cohort.id) }}>
+                <button className="expand-btn">
                   <FiChevronDown size={18} style={{ transform: expandedId === cohort.id ? 'rotate(180deg)' : 'rotate(0)' }} />
                 </button>
               </div>
+
 
               {expandedId === cohort.id && (
                 <div className="cohort-details">
                   <div className="detail-row">
                     <div className="detail-col">
                       <span className="detail-label"><FiCalendar size={14} /> Start Date</span>
-                      <span className="detail-value">{new Date(cohort.startDate).toLocaleDateString()}</span>
+                      <span className="detail-value">{new Date(cohort.start_date).toLocaleDateString()}</span>
                     </div>
                     <div className="detail-col">
                       <span className="detail-label"><FiCalendar size={14} /> End Date</span>
-                      <span className="detail-value">{new Date(cohort.endDate).toLocaleDateString()}</span>
+                      <span className="detail-value">{new Date(cohort.end_date).toLocaleDateString()}</span>
                     </div>
                   </div>
 
                   <div className="detail-actions">
-                    <button className="btn-edit" onClick={() => openEdit(cohort)}>
+                    <button className="btn-edit" onClick={() => handleOpenEdit(cohort.id)} >
                       <FiEdit2 size={16} /> Edit
                     </button>
-                    <button className="btn-delete" onClick={() => handleDelete(cohort.id)}>
+                    <button className="btn-delete" onClick={() => handleDelete(cohort.id)} >
                       <FiTrash2 size={16} /> Delete
                     </button>
                   </div>
@@ -154,30 +242,66 @@ export const Cohorts = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingId ? 'Edit Cohort' : 'New Cohort'}</h2>
+              <h2>{editingId ? 'Edit Session' : 'New Session'}</h2>
               <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
             </div>
-            
-            <form className="modal-form" onSubmit={handleSave}>
+
+            <form className="modal-form" onSubmit={handleSubmit}>
+
               <div className="form-group">
-                <label>Cohort Name *</label>
+                <label>Session Name *</label>
                 <input
                   required
                   type="text"
-                  placeholder="e.g., Cohort A - 2025"
+                  name='name'
+                  placeholder="e.g., Frontend Evening Group"
                   value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
+                  onChange={handleChange}
                 />
               </div>
 
               <div className="form-group">
-                <label>Program *</label>
+                <label>Course *</label>
+                <select
+                  required
+                  value={form.course}
+                  name='course'
+                  onChange={handleChange}
+                >
+                  <option value=''> Select Course </option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}> {c.title} </option>
+                  ))}
+                </select>
+                
+              </div>
+
+              <div className="form-group">
+                <label>Lecturer *</label>
+                
+                <select
+                  required
+                  value={form.lecturer}
+                  name='lecturer'
+                  onChange={handleChange}
+                >
+                  <option value=''> Select lecturer </option>
+                  {lecturers.map((l) => (
+                    <option key={l.id} value={l.id}> {l.first_name} {l.last_name} </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Capacity *</label>
                 <input
                   required
-                  type="text"
-                  placeholder="e.g., Cybersecurity"
-                  value={form.program}
-                  onChange={e => setForm({ ...form, program: e.target.value })}
+                  type="number"
+                  min="1"
+                  placeholder="e.g., 25"
+                  value={form.capacity}
+                  name='capacity'
+                  onChange={handleChange}
                 />
               </div>
 
@@ -187,8 +311,9 @@ export const Cohorts = () => {
                   <input
                     required
                     type="date"
-                    value={form.startDate}
-                    onChange={e => setForm({ ...form, startDate: e.target.value })}
+                    value={form.start_date}
+                    onChange={handleChange}
+                    name='start_date'
                   />
                 </div>
 
@@ -197,29 +322,27 @@ export const Cohorts = () => {
                   <input
                     required
                     type="date"
-                    value={form.endDate}
-                    onChange={e => setForm({ ...form, endDate: e.target.value })}
+                    value={form.end_date}
+                    onChange={handleChange}
+                    name='end_date'
                   />
                 </div>
               </div>
 
               <div className="form-group">
-                <label>Students</label>
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={form.students}
-                  onChange={e => setForm({ ...form, students: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Status</label>
-                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                  <option>Active</option>
-                  <option>Planned</option>
-                  <option>Completed</option>
+                <label>Status *</label>
+                <select
+                  required
+                  value={form.status}
+                  name='status'
+                  onChange={handleChange}
+                >
+                  <option value="">Select status...</option>
+                  <option value="PLANNED">Planned</option>
+                  <option value="ENROLLING">Enrolling</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
                 </select>
               </div>
 
@@ -231,10 +354,12 @@ export const Cohorts = () => {
                   Cancel
                 </button>
               </div>
+
             </form>
           </div>
         </div>
       )}
+
     </div>
   )
 }

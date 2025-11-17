@@ -1,148 +1,140 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiCheck, FiX as FiClose } from 'react-icons/fi';
 import './Attendance.css';
+import axios from '../../api/axios'
 
 export const Attendance = () => {
-  const [attendanceRecords, setAttendanceRecords] = useState([
-    {
-      id: 1,
-      studentName: 'John Doe',
-      course: 'Web Development',
-      date: '2025-11-13',
-      status: 'present',
-      time: '09:00 AM'
-    },
-    {
-      id: 2,
-      studentName: 'Jane Smith',
-      course: 'Data Science',
-      date: '2025-11-13',
-      status: 'absent',
-      time: '09:15 AM'
-    },
-    {
-      id: 3,
-      studentName: 'Mike Johnson',
-      course: 'Web Development',
-      date: '2025-11-13',
-      status: 'late',
-      time: '09:45 AM'
-    },
-    {
-      id: 4,
-      studentName: 'Sarah Williams',
-      course: 'Mobile Development',
-      date: '2025-11-13',
-      status: 'present',
-      time: '09:05 AM'
-    }
-  ]);
+  const [attendance, setAttendance] = useState([])
 
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterDate, setFilterDate] = useState('');
+  const [showModal, setShowModal] = useState(false)
+
+  const [editingId, setEditingId] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterDate, setFilterDate] = useState('')
 
   const [formData, setFormData] = useState({
-    studentName: '',
-    course: '',
-    date: '',
-    status: 'present',
-    time: ''
-  });
+    student: '',
+    session: '',
+    note: '',
+    status: '',
+  })
 
-  const filteredRecords = useMemo(() => {
-    return attendanceRecords.filter(record => {
-      const matchesSearch = 
-        record.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.course.toLowerCase().includes(searchTerm.toLowerCase());
+
+  useEffect(() => {
+
+    const fetchAttandance = async () => {
+      try{
+
+        const res = await axios.get('attendance/attendance/')
+        setAttendance(res.data.results)
+
+      }catch(err){
+        console.error(err)
+      }
+    }
+
+    fetchAttandance()
+
+  }, [])
+
+
+  const handleOpenEdit = async (id) => {
+    try{
       
-      const matchesFilter = filterStatus === 'all' || record.status === filterStatus;
-      const matchesDate = !filterDate || record.date === filterDate;
-      
-      return matchesSearch && matchesFilter && matchesDate;
-    });
-  }, [attendanceRecords, searchTerm, filterStatus, filterDate]);
+      const res = await axios.get(`attendance/attendance/${id}/`)
+      const attendance = res.data
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+      setFormData({
+        student: attendance.student || '',
+        session: attendance.session || '',
+        note: attendance.note || '',
+        status: attendance.status || '',
+      })
 
-  const handleAddClick = () => {
-    setFormData({
-      studentName: '',
-      course: '',
-      date: '',
-      status: 'present',
-      time: ''
-    });
-    setEditingId(null);
-    setShowModal(true);
-  };
+      setEditingId(id)
+      setShowModal(true)
 
-  const handleEditClick = (record) => {
-    setFormData(record);
-    setEditingId(record.id);
-    setShowModal(true);
-  };
+    }catch(err){
+      console.error(err)
+    }
+  }
 
-  const handleSave = () => {
-    if (!formData.studentName || !formData.course || !formData.date) {
-      alert('Please fill in all required fields');
-      return;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    try{
+
+      if(editingId){
+
+        const res = await axios.put(`attendance/attendance/${editingId}/`, formData)
+        setAttendance(prev => prev.map(p => p.id === editingId ? { ...p, ...res.data } : p))
+
+        setShowModal(false)
+        setFormData({
+          student: '',
+          session: '',
+          note: '',
+          status: '',
+        })
+        setEditingId(null)
+
+      }else{
+
+        const res = await axios.post('attendance/attendance/', formData)
+        setAttendance(prev => [...prev, res.data])
+
+        setShowModal(false)
+        setFormData({
+          student: '',
+          session: '',
+          note: '',
+          status: '',
+        })
+
+      }
+
+    }catch(err){
+      console.error(err)
     }
 
-    if (editingId) {
-      setAttendanceRecords(attendanceRecords.map(record =>
-        record.id === editingId ? { ...formData, id: editingId } : record
-      ));
-    } else {
-      setAttendanceRecords([...attendanceRecords, { ...formData, id: Date.now() }]);
+  }
+
+  const handleDelete = async (id) => {
+    try{
+
+      const res = await axios.delete(`attendance/attendance/${id}/`)
+      setAttendance((prev) => {
+        return prev.filter(a => a !== id)
+      })
+
+    }catch(err){
+      console.error(err)
     }
+  }
 
-    setShowModal(false);
-  };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      setAttendanceRecords(attendanceRecords.filter(record => record.id !== id));
-    }
-  };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'present':
-        return 'status-present';
-      case 'absent':
-        return 'status-absent';
-      case 'late':
-        return 'status-late';
-      default:
-        return 'status-present';
-    }
-  };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'present':
-        return <FiCheck />;
-      case 'absent':
-        return <FiClose />;
-      case 'late':
-        return '⏱';
-      default:
-        return null;
-    }
-  };
 
-  // Statistics
+
+
+  const handleOpenPopup = () => {
+    setShowModal(true)
+  }
+
+  const handleChange = (e) => {
+    setFormData({...formData, [e.target.name]: e.target.value})
+  }
+
+
+
   const stats = {
-    total: filteredRecords.length,
-    present: filteredRecords.filter(r => r.status === 'present').length,
-    absent: filteredRecords.filter(r => r.status === 'absent').length,
-    late: filteredRecords.filter(r => r.status === 'late').length
+    total: attendance.length,
+    present: attendance.filter(r => r.status === 'PRESENT').length,
+    absent: attendance.filter(r => r.status === 'absent').length,
+    late: attendance.filter(r => r.status === 'late').length
   };
 
   return (
@@ -152,7 +144,7 @@ export const Attendance = () => {
           <h1>Attendance Management</h1>
           <p className="subtitle">Track student attendance and manage records</p>
         </div>
-        <button className="btn-primary" onClick={handleAddClick}>
+        <button className="btn-primary" onClick={handleOpenPopup}>
           <FiPlus /> New Record
         </button>
       </header>
@@ -221,8 +213,8 @@ export const Attendance = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredRecords.length > 0 ? (
-              filteredRecords.map(record => (
+            {attendance.length > 0 ? (
+              attendance.map(record => (
                 <tr key={record.id}>
                   <td>
                     <div className="student-name">{record.studentName}</div>
@@ -231,8 +223,8 @@ export const Attendance = () => {
                   <td>{record.date}</td>
                   <td>{record.time}</td>
                   <td>
-                    <span className={`status ${getStatusColor(record.status)}`}>
-                      <span className="status-icon">{getStatusIcon(record.status)}</span>
+                    <span className={`status`}>
+                      <span className="status-icon"></span>
                       {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
                     </span>
                   </td>
@@ -240,7 +232,7 @@ export const Attendance = () => {
                     <div className="action-buttons">
                       <button
                         className="btn-edit"
-                        onClick={() => handleEditClick(record)}
+                        onClick={() => handleOpenEdit(record.id)}
                         title="Edit"
                       >
                         <FiEdit2 />
@@ -277,53 +269,42 @@ export const Attendance = () => {
               </button>
             </div>
 
-            <form className="modal-form">
+            <form className="modal-form" onSubmit={handleSubmit}>
               <div className="form-row">
                 <div className="form-group">
                   <label>Student Name *</label>
                   <input
                     type="text"
-                    name="studentName"
-                    value={formData.studentName}
-                    onChange={handleInputChange}
+                    name="student"
+                    value={formData.student}
+                    onChange={handleChange}
                     placeholder="Enter student name"
                   />
                 </div>
+
                 <div className="form-group">
-                  <label>Course *</label>
+                  <label>Session *</label>
                   <select
                     name="course"
-                    value={formData.course}
-                    onChange={handleInputChange}
+                    value={formData.session}
+                    onChange={handleChange}
                   >
-                    <option value="">Select course</option>
-                    <option value="Web Development">Web Development</option>
-                    <option value="Data Science">Data Science</option>
-                    <option value="Mobile Development">Mobile Development</option>
-                    <option value="UI/UX Design">UI/UX Design</option>
+                    
                   </select>
                 </div>
+
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Date *</label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Time</label>
-                  <input
-                    type="time"
-                    name="time"
-                    value={formData.time}
-                    onChange={handleInputChange}
-                  />
-                </div>
+              <div className="form-group">
+                <label>Note *</label>
+
+                <textarea
+                  name="note"
+                  value={formData.note}
+                  onChange={handleChange}
+                  placeholder="Notes"
+                />
+
               </div>
 
               <div className="form-group">
@@ -331,22 +312,22 @@ export const Attendance = () => {
                 <div className="status-buttons">
                   <button
                     type="button"
-                    className={`status-btn ${formData.status === 'present' ? 'active' : ''}`}
-                    onClick={() => setFormData(prev => ({ ...prev, status: 'present' }))}
+                    className={`status-btn ${formData.status === 'PRESENT' ? 'active' : ''}`}
+                    onClick={() => setFormData(prev => ({ ...prev, status: 'PRESENT' }))}
                   >
                     ✓ Present
                   </button>
                   <button
                     type="button"
-                    className={`status-btn ${formData.status === 'late' ? 'active' : ''}`}
-                    onClick={() => setFormData(prev => ({ ...prev, status: 'late' }))}
+                    className={`status-btn ${formData.status === 'LATE' ? 'active' : ''}`}
+                    onClick={() => setFormData(prev => ({ ...prev, status: 'LATE' }))}
                   >
                     ⏱ Late
                   </button>
                   <button
                     type="button"
-                    className={`status-btn ${formData.status === 'absent' ? 'active' : ''}`}
-                    onClick={() => setFormData(prev => ({ ...prev, status: 'absent' }))}
+                    className={`status-btn ${formData.status === 'ABSENT' ? 'active' : ''}`}
+                    onClick={() => setFormData(prev => ({ ...prev, status: 'ABSENT' }))}
                   >
                     ✕ Absent
                   </button>
@@ -355,9 +336,8 @@ export const Attendance = () => {
 
               <div className="form-actions">
                 <button
-                  type="button"
+                  type="submit"
                   className="btn-primary"
-                  onClick={handleSave}
                 >
                   {editingId ? 'Update' : 'Create'} Record
                 </button>

@@ -1,141 +1,192 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiDownload, FiAward } from 'react-icons/fi';
 import './Certificates.css';
+import axios from 'axios';
 
 export const Certificates = () => {
-  const [certificates, setCertificates] = useState([
-    {
-      id: 1,
-      studentName: 'John Doe',
-      course: 'Web Development Masterclass',
-      issueDate: '2025-10-15',
-      expiryDate: '2026-10-15',
-      status: 'active',
-      certificateCode: 'CERT-2025-001',
-      score: 92
-    },
-    {
-      id: 2,
-      studentName: 'Jane Smith',
-      course: 'Advanced Python',
-      issueDate: '2025-09-20',
-      expiryDate: '2026-09-20',
-      status: 'active',
-      certificateCode: 'CERT-2025-002',
-      score: 88
-    },
-    {
-      id: 3,
-      studentName: 'Mike Johnson',
-      course: 'React Advanced Patterns',
-      issueDate: '2025-08-10',
-      expiryDate: '2026-08-10',
-      status: 'active',
-      certificateCode: 'CERT-2025-003',
-      score: 95
-    },
-    {
-      id: 4,
-      studentName: 'Sarah Williams',
-      course: 'Data Science Basics',
-      issueDate: '2024-10-15',
-      expiryDate: '2025-10-15',
-      status: 'expired',
-      certificateCode: 'CERT-2024-001',
-      score: 85
-    }
-  ]);
+  const [certificates, setCertificates] = useState([])
+  const [showModal, setShowModal] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [students, setStudents] = useState([])
+  const [cohorts, setCohorts] = useState([])
 
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({
+    pdf_file: null,
+    status: "",
+    revoked_at: "",
+    revoked_reason: "",
+    student: "",
+    cohort: "",
+  })
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const [formData, setFormData] = useState({
-    studentName: '',
-    course: '',
-    issueDate: '',
-    expiryDate: '',
-    status: 'active',
-    certificateCode: '',
-    score: ''
-  });
 
-  const filteredCertificates = useMemo(() => {
-    return certificates.filter(cert => {
-      const matchesSearch = 
-        cert.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cert.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cert.certificateCode.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesFilter = filterStatus === 'all' || cert.status === filterStatus;
-      
-      return matchesSearch && matchesFilter;
-    });
-  }, [certificates, searchTerm, filterStatus]);
+  useEffect(() => {
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+    const fetchCertificates = async () => {
+      try{
+
+        const res = await axios.get('certificates/certificates/')
+        setCertificates(res.data.results)
+
+      }catch(err){
+        console.error(err)
+      }
+    }
+
+    const fetchStudents = async () => {
+      try{
+
+        const res = await axios.get('users/')
+        setStudents(res.data.results.filter((u) => u.role === "STUDENT"));
+
+      }catch(err){
+        console.error(err)
+      }
+    }
+
+    const fetchCohorts = async () => {
+      try{
+
+        const res = await axios.get('catalog/cohorts/')
+        setCohorts(res.data.results)
+        
+      }catch(err){
+        console.error(err)
+      }
+    }
+
+    fetchCohorts()
+    fetchCertificates()
+    fetchStudents()
+
+  }, [])
+
+  const handleOpenEdit = async (id) => {
+    try{
+
+      const res = await axios.get(`certificates/certificates/${id}/`)
+      const certificate = res.data
+
+      setFormData({
+        pdf_file: null,
+        status: certificate.status || '',
+        revoked_at: certificate.revoked_at || '',
+        revoked_reason: certificate.revoked_reason || '',
+        student: certificate.student || '',
+        cohort: certificate.cohort || '',
+      })
+
+      setEditingId(id)
+      setShowModal(true)
+
+    }catch(err){
+      console.error(err)
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try{
+
+      const fd = new FormData()
+      fd.append("pdf_file", formData.pdf_file)
+      fd.append("status", formData.status)
+      fd.append("revoked_at", formData.revoked_at || "")
+      fd.append("revoked_reason", formData.revoked_reason || "")
+      fd.append("student", formData.student)
+      fd.append("cohort", formData.cohort)
+
+      if(editingId){
+
+        try{
+
+          const res = await axios.put(`certificates/certificates/${editingId}/`, fd, {
+            headers: { "Content-Type": "multipart/form-data" }
+          })
+          setCertificates(prev => prev.map(p => p.id === editingId ? { ...p, ...res.data } : p))
+
+
+          setShowModal(false)
+          setEditingId(null)
+          setFormData({
+            pdf_file: null,
+            status: "",
+            revoked_at: "",
+            revoked_reason: "",
+            student: "",
+            cohort: "",
+          })
+
+        }catch(err){
+          console.error(err)
+        }
+
+      }else{
+
+        try{
+
+          const res = await axios.post('certificates/certificates/', fd, {
+            headers: { "Content-Type": "multipart/form-data" }
+          })
+          setCertificates(prev => [...prev, res.data])
+
+          setShowModal(false)
+          setFormData({
+            pdf_file: null,
+            status: "",
+            revoked_at: "",
+            revoked_reason: "",
+            student: "",
+            cohort: "",
+          })
+
+        }catch(err){
+          console.error(err)
+        }
+
+      }
+
+    }catch(err){
+      console.error(err)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    try{
+
+      const res = await axios.delete(`certificates/certificates/${id}/`)
+      setCertificates((prev) => {
+        return prev.filter(c => c.id !== id)
+      })
+
+    }catch(err){
+      console.error(err)
+    }
+  }
+
+  const handleChange = (e) => {
+    setFormData({...formData, [e.target.name]: e.target.value})
+  }
+
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, pdf_file: e.target.files[0] });
+  }
+
 
   const handleAddClick = () => {
-    setFormData({
-      studentName: '',
-      course: '',
-      issueDate: '',
-      expiryDate: '',
-      status: 'active',
-      certificateCode: '',
-      score: ''
-    });
-    setEditingId(null);
-    setShowModal(true);
-  };
+    setShowModal(true)
+  }
 
-  const handleEditClick = (cert) => {
-    setFormData(cert);
-    setEditingId(cert.id);
-    setShowModal(true);
-  };
 
-  const handleSave = () => {
-    if (!formData.studentName || !formData.course || !formData.issueDate || !formData.certificateCode) {
-      alert('Please fill in all required fields');
-      return;
-    }
 
-    if (editingId) {
-      setCertificates(certificates.map(cert =>
-        cert.id === editingId ? { ...formData, id: editingId } : cert
-      ));
-    } else {
-      setCertificates([...certificates, { ...formData, id: Date.now() }]);
-    }
-
-    setShowModal(false);
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this certificate?')) {
-      setCertificates(certificates.filter(cert => cert.id !== id));
-    }
-  };
-
-  const handleDownload = (cert) => {
-    alert(`Downloading certificate: ${cert.certificateCode}`);
-  };
-
-  const getStatusColor = (status) => {
-    return status === 'active' ? 'status-active' : 'status-expired';
-  };
-
-  // Statistics
-  const stats = {
-    total: filteredCertificates.length,
-    active: filteredCertificates.filter(c => c.status === 'active').length,
-    expired: filteredCertificates.filter(c => c.status === 'expired').length
-  };
+  // const stats = {
+  //   total: filteredCertificates.length,
+  //   active: filteredCertificates.filter(c => c.status === 'active').length,
+  //   expired: filteredCertificates.filter(c => c.status === 'expired').length
+  // };
 
   return (
     <div className="certificates-container">
@@ -154,21 +205,21 @@ export const Certificates = () => {
         <div className="stat-card">
           <div className="stat-icon"><FiAward /></div>
           <div className="stat-content">
-            <div className="stat-number">{stats.total}</div>
+            {/* <div className="stat-number">{stats.total}</div> */}
             <div className="stat-label">Total Certificates</div>
           </div>
         </div>
         <div className="stat-card stat-active">
           <div className="stat-icon"><FiAward /></div>
           <div className="stat-content">
-            <div className="stat-number">{stats.active}</div>
+            {/* <div className="stat-number">{stats.active}</div> */}
             <div className="stat-label">Active</div>
           </div>
         </div>
         <div className="stat-card stat-expired">
           <div className="stat-icon"><FiAward /></div>
           <div className="stat-content">
-            <div className="stat-number">{stats.expired}</div>
+            {/* <div className="stat-number"> {stats.expired} </div> */}
             <div className="stat-label">Expired</div>
           </div>
         </div>
@@ -199,56 +250,82 @@ export const Certificates = () => {
       </div>
 
       <div className="certificates-grid">
-        {filteredCertificates.length > 0 ? (
-          filteredCertificates.map(cert => (
+        {certificates.length > 0 ? (
+          certificates.map(cert => (
             <div key={cert.id} className="certificate-card">
+              
               <div className="certificate-header">
                 <div className="cert-icon">
                   <FiAward />
                 </div>
-                <span className={`status ${getStatusColor(cert.status)}`}>
-                  {cert.status === 'active' ? 'Active' : 'Expired'}
+                <span className={`status ${cert.status === "ISSUED" ? "status-issued" : "status-revoked"}`}>
+                  {cert.status === "ISSUED" ? "Issued" : "Revoked"}
                 </span>
               </div>
-
+          
               <div className="certificate-body">
-                <h3 className="cert-code">{cert.certificateCode}</h3>
-                <p className="student-name">{cert.studentName}</p>
-                <p className="course-name">{cert.course}</p>
-
-                <div className="cert-details">
-                  <div className="detail-item">
-                    <span className="detail-label">Issued</span>
-                    <span className="detail-value">{cert.issueDate}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Expires</span>
-                    <span className="detail-value">{cert.expiryDate}</span>
-                  </div>
-                  {cert.score && (
-                    <div className="detail-item">
-                      <span className="detail-label">Score</span>
-                      <span className="detail-value score">{cert.score}%</span>
-                    </div>
+          
+                <div className="cert-row">
+                  <span className="cert-label">Student</span>
+                  <span className="cert-value">{cert.student}</span>
+                </div>
+          
+                <div className="cert-row">
+                  <span className="cert-label">Cohort</span>
+                  <span className="cert-value">{cert.cohort}</span>
+                </div>
+          
+                <div className="cert-row">
+                  <span className="cert-label">PDF</span>
+                  {cert.pdf_file ? (
+                    <a
+                      href={cert.pdf_file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cert-download-link"
+                    >
+                      Open PDF
+                    </a>
+                  ) : (
+                    <span className="cert-value">No file</span>
                   )}
                 </div>
+                
+                {cert.status === "REVOKED" && (
+                  <>
+                    <div className="cert-row">
+                      <span className="cert-label">Revoked At</span>
+                      <span className="cert-value">{cert.revoked_at || "—"}</span>
+                    </div>
+                
+                    <div className="cert-row">
+                      <span className="cert-label">Reason</span>
+                      <span className="cert-value">{cert.revoked_reason || "—"}</span>
+                    </div>
+                  </>
+                )}
               </div>
-
+              
               <div className="certificate-footer">
-                <button
+                
+                <a
+                  href={cert.pdf_file}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-download"
-                  onClick={() => handleDownload(cert)}
-                  title="Download"
+                  title="Download PDF"
                 >
                   <FiDownload /> Download
-                </button>
+                </a>
+              
                 <button
                   className="btn-edit"
-                  onClick={() => handleEditClick(cert)}
+                  onClick={() => handleOpenEdit(cert.id)}
                   title="Edit"
                 >
                   <FiEdit2 />
                 </button>
+              
                 <button
                   className="btn-delete"
                   onClick={() => handleDelete(cert.id)}
@@ -257,6 +334,7 @@ export const Certificates = () => {
                   <FiTrash2 />
                 </button>
               </div>
+              
             </div>
           ))
         ) : (
@@ -265,6 +343,7 @@ export const Certificates = () => {
             <p>No certificates found</p>
           </div>
         )}
+
       </div>
 
       {showModal && (
@@ -277,107 +356,60 @@ export const Certificates = () => {
               </button>
             </div>
 
-            <form className="modal-form">
-              <div className="form-group">
-                <label>Student Name *</label>
-                <input
-                  type="text"
-                  name="studentName"
-                  value={formData.studentName}
-                  onChange={handleInputChange}
-                  placeholder="Enter student name"
-                />
-              </div>
+            <form onSubmit={handleSubmit}>
 
-              <div className="form-group">
-                <label>Course *</label>
-                <input
-                  type="text"
-                  name="course"
-                  value={formData.course}
-                  onChange={handleInputChange}
-                  placeholder="Enter course name"
-                />
-              </div>
+              <label>PDF File *</label>
+              <input type="file" accept="application/pdf" onChange={handleFileChange} />
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Certificate Code *</label>
-                  <input
-                    type="text"
-                    name="certificateCode"
-                    value={formData.certificateCode}
-                    onChange={handleInputChange}
-                    placeholder="e.g., CERT-2025-001"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Score</label>
-                  <input
-                    type="number"
-                    name="score"
-                    value={formData.score}
-                    onChange={handleInputChange}
-                    placeholder="0"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-              </div>
+              <label>Status</label>
+              <select name="status" value={formData.status} onChange={handleChange}>
+                <option value="ISSUED">ISSUED</option>
+                <option value="REVOKED">REVOKED</option>
+              </select>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Issue Date *</label>
-                  <input
-                    type="date"
-                    name="issueDate"
-                    value={formData.issueDate}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Expiry Date</label>
-                  <input
-                    type="date"
-                    name="expiryDate"
-                    value={formData.expiryDate}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
+              <label>Student *</label>
+              <select name="student" value={formData.student} onChange={handleChange}>
+                <option value="">Select student</option>
+                {students.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.first_name} {s.last_name}
+                  </option>
+                ))}
+              </select>
 
-              <div className="form-group">
-                <label>Status</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                >
-                  <option value="active">Active</option>
-                  <option value="expired">Expired</option>
-                </select>
-              </div>
+              <label>Cohort *</label>
+              <select name="cohort" value={formData.cohort} onChange={handleChange}>
+                <option value="">Select cohort</option>
+                {cohorts.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
 
-              <div className="form-actions">
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={handleSave}
-                >
-                  {editingId ? 'Update' : 'Issue'} Certificate
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
+              <label>Revoked At</label>
+              <input
+                type="datetime-local"
+                name="revoked_at"
+                value={formData.revoked_at}
+                onChange={handleChange}
+              />
+
+              <label>Revoked Reason</label>
+              <textarea
+                name="revoked_reason"
+                value={formData.revoked_reason}
+                onChange={handleChange}
+              />
+
+              <button className="btn-primary" type="submit">
+                {editingId ? "Save Changes" : "Issue Certificate"}
+              </button>
             </form>
+
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}

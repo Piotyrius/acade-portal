@@ -1,167 +1,303 @@
-import React, { useState, useMemo } from 'react'
-import './Sessions.css'
+  import React, { useState, useEffect, useMemo } from 'react';
+  import './Sessions.css';
+  import axios from '../../api/axios';
+  import { FiPlus, FiSearch, FiEdit2, FiTrash2 } from 'react-icons/fi';
 
-export const Sessions = () => {
-  const initialSessions = [
-    { id: 1, title: 'Intro to Cybersecurity', program: 'Programs', date: '2025-11-20', start: '09:00', end: '11:00', instructor: 'A. Smith' },
-    { id: 2, title: 'Network Fundamentals', program: 'Programs', date: '2025-11-22', start: '13:00', end: '15:00', instructor: 'B. Jones' },
-  ]
+  export const Sessions = () => {
 
-  const [sessions, setSessions] = useState(initialSessions)
-  const [query, setQuery] = useState('')
-  const [filterProgram, setFilterProgram] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState({ title: '', program: '', date: '', start: '', end: '', instructor: '' })
 
-  const programs = useMemo(() => {
-    return Array.from(new Set(sessions.map(s => s.program))).filter(Boolean)
-  }, [sessions])
+    const [sessions, setSessions] = useState([]);
+    const [cohorts, setCohorts] = useState([]);
 
-  const filtered = sessions.filter(s => {
-    const matchesQuery = query === '' || s.title.toLowerCase().includes(query.toLowerCase())
-    const matchesProgram = !filterProgram || s.program === filterProgram
-    return matchesQuery && matchesProgram
-  })
+    const [showModal, setShowModal] = useState(false)
+    const [editingId, setEditingId] = useState(null)
+    const [search, setSearch] = useState('')
 
-  function handleChange(e) {
-    const { name, value } = e.target
-    setForm(f => ({ ...f, [name]: value }))
-  }
+    const [form, setForm] = useState({
+      start_at: '',
+      end_at: '',
+      location: '',
+      online_link: '',
+      is_cancelled: false,
+      cancellation_reason: '',
+      cohort: ''
+    })
 
-  function handleAdd(e) {
-    e.preventDefault()
-    const newSession = { id: Date.now(), ...form }
-    setSessions(s => [newSession, ...s])
-    setForm({ title: '', program: '', date: '', start: '', end: '', instructor: '' })
-    setShowForm(false)
-  }
 
-  function handleDelete(id) {
-    if (!window.confirm('Delete this session?')) return
-    setSessions(s => s.filter(x => x.id !== id))
-  }
+    useEffect(() => {
 
-  function startEdit(session) {
-    setEditingId(session.id)
-    setForm({ title: session.title, program: session.program, date: session.date, start: session.start, end: session.end, instructor: session.instructor })
-    setShowForm(true)
-  }
+      const fetchSessions = async () => {
+        try {
 
-  function saveEdit(e) {
-    e.preventDefault()
-    setSessions(s => s.map(x => (x.id === editingId ? { ...x, ...form } : x)))
-    setEditingId(null)
-    setForm({ title: '', program: '', date: '', start: '', end: '', instructor: '' })
-    setShowForm(false)
-  }
+          const res = await axios.get('catalog/sessions/')
+          setSessions(res.data.results)
+          
+        } catch(err){
+          console.error(err)
+        }
+      }
 
-  function cancelEdit() {
-    setEditingId(null)
-    setForm({ title: '', program: '', date: '', start: '', end: '', instructor: '' })
-    setShowForm(false)
-  }
+      const fetchCohort = async () => {
+        try{
 
-  function Modal({ children, onClose, title }) {
+          const res = await axios.get('catalog/cohorts/')
+          setCohorts(res.data.results)
+          
+        }catch(err){
+          console.error(err)
+        }
+      }
+      
+      fetchCohort()
+      fetchSessions()
+
+    }, [])
+
+
+    const handleOpenEdit = async (id) => {
+      try{
+
+        const res = await axios.get(`catalog/sessions/${id}/`)
+        const session = res.data
+
+        setForm({
+          start_at: session.start_at || '',
+          end_at: session.end_at || '',
+          location: session.location || '',
+          online_link: session.online_link || '',
+          cohort: session.cohort || '',
+        })
+
+        setEditingId(id)
+        setShowModal(true)
+
+      }catch(err){
+        console.error(err)
+      }
+    }
+
+    const handleSubmit = async (e) => {
+      e.preventDefault()
+      try{
+
+        if(editingId){
+
+          try{
+
+            const res = await axios.put(`catalog/sessions/${editingId}/`, form)
+            setSessions(prev =>
+              prev.map(s => (s.id === editingId ? res.data : s))
+            )
+
+
+            setShowModal(false)
+            setEditingId(null)
+            setForm({    
+              start_at: '',
+              end_at: '',
+              location: '',
+              online_link: '',
+              cohort: ''
+            })
+
+          }catch(err){
+            console.error(err.response?.data || err.message);
+          }
+
+        }else{
+
+          try{
+
+            const res = await axios.post('catalog/sessions/', form)
+            setSessions(prev => [...prev, res.data])
+            
+
+            setShowModal(false)
+            setForm({    
+              start_at: '',
+              end_at: '',
+              location: '',
+              online_link: '',
+              cohort: ''
+            })
+            
+          }catch(err){
+            console.error(err.response?.data || err.message);
+          }
+
+        }
+
+      }catch(err){
+        console.error(err.response?.data || err.message);
+      }
+    }
+
+
+    const handleDelete = async (id) => {
+      try{    
+
+        const res = await axios.delete(`catalog/sessions/${id}/`)
+        setSessions(prev => prev.filter(s => s.id !== id))
+
+      }catch(err){
+        console.error(err.response?.data || err.message);
+      }
+    }
+
+    const filteredSessions = useMemo(() => {
+      if (!search.trim()) return sessions
+    
+      const lower = search.toLowerCase()
+    
+      return sessions.filter(s =>
+        s.location?.toLowerCase().includes(lower) ||
+        s.online_link?.toLowerCase().includes(lower) ||
+        s.cohort?.toLowerCase().includes(lower)
+      )
+    }, [sessions, search])
+
+
+    const handleOpenPopup = () => {
+      setShowModal(true)
+      }
+
+    const closeModal = () => {
+      setShowModal(false)
+      setEditingId(null)
+    }
+
+    const handleChange = (e) => {
+      setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    const getCohortName = (id) => {
+      const c = cohorts.find(cohort => cohort.id === id)
+      return c ? c.name : id
+    }
+
     return (
-      <div className="modal-overlay" onMouseDown={onClose}>
-        <div className="modal" onMouseDown={e => e.stopPropagation()}>
-          <div className="modal-header">
-            <h3>{title}</h3>
-            <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
-          </div>
-          <div className="modal-body">{children}</div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="sessions-container">
-      <header className="sessions-header">
-        <h1>Sessions</h1>
-        
-        <div className="controls">
-          <input placeholder="Search title..." value={query} onChange={e => setQuery(e.target.value)} />
-          <select value={filterProgram} onChange={e => setFilterProgram(e.target.value)}>
-            <option value="">All programs</option>
-            {programs.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-          <button className="btn" onClick={() => { setShowForm(s => !s); setEditingId(null); setForm({ title: '', program: '', date: '', start: '', end: '', instructor: '' }) }}>
-            {showForm ? 'Close' : 'Add session'}
+      <div className="sessions-container">
+        <div className="sessions-header">
+          <h1>Sessions</h1>
+          <button className="btn-primary" onClick={handleOpenPopup}>
+            <FiPlus size={18} /> New Session
           </button>
         </div>
-      </header>
 
-      {showForm && (
-        <Modal title={editingId ? 'Edit session' : 'Add session'} onClose={() => { setShowForm(false); cancelEdit() }}>
-          <form className="session-form modal-form" onSubmit={editingId ? saveEdit : handleAdd}>
-            <div className="form-grid">
-              <label>
-                <div className="label">Title</div>
-                <input name="title" required placeholder="Title" value={form.title} onChange={handleChange} />
-              </label>
-              <label>
-                <div className="label">Program</div>
-                <input name="program" placeholder="Program" value={form.program} onChange={handleChange} />
-              </label>
-              <label>
-                <div className="label">Date</div>
-                <input name="date" type="date" required value={form.date} onChange={handleChange} />
-              </label>
-              <label>
-                <div className="label">Start</div>
-                <input name="start" type="time" required value={form.start} onChange={handleChange} />
-              </label>
-              <label>
-                <div className="label">End</div>
-                <input name="end" type="time" required value={form.end} onChange={handleChange} />
-              </label>
-              <label>
-                <div className="label">Instructor</div>
-                <input name="instructor" placeholder="Instructor" value={form.instructor} onChange={handleChange} />
-              </label>
-            </div>
-            <div className="form-actions">
-              <button className="btn" type="submit">{editingId ? 'Save' : 'Create'}</button>
-              <button type="button" className="btn muted" onClick={() => { setShowForm(false); cancelEdit() }}>Cancel</button>
-            </div>
-          </form>
-        </Modal>
-      )}
+        <div className="sessions-controls">
+          <div className="search-box">
+            <FiSearch size={18} />
+            <input
+              placeholder="Search sessions..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
 
-      <table className="sessions-table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Program</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Instructor</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.length === 0 && (
-            <tr><td colSpan={6} className="empty">No sessions found</td></tr>
+        </div>
+
+        {/* SESSIONS GRID */}
+        <div className="sessions-grid">
+          {filteredSessions.length === 0 ? (
+            <div className="empty-state">No sessions found</div>
+          ) : (
+            filteredSessions.map(session => (
+              <div className="session-card" key={session.id}>
+                <div className="card-header">
+                  <h3>
+                    Session {new Date(session.start_at).toLocaleDateString()}
+                  </h3>
+                  <span className="status-badge">{session.status}</span>
+                </div>
+
+                <div className="card-info">
+                  <p><strong>Cohort:</strong> {getCohortName(session.cohort)}</p>
+                  <p><strong>Start:</strong> {new Date(session.start_at).toLocaleString()}</p>
+                  <p><strong>End:</strong> {new Date(session.end_at).toLocaleString()}</p>
+                </div>
+
+                {session.online_link && (
+                  <p  className='online_link'><span>Online Link:</span> <a href={session.online_link} target="_blank">Join</a></p>
+                )}
+
+                {session.location && (
+                  <p className='session_location'><span>Location:</span> {session.location}</p>
+                )}
+
+                <div className="card-actions">
+                  <button className="btn-action edit" onClick={() => handleOpenEdit(session.id)}>
+                    <FiEdit2 size={16} />
+                  </button>
+                  <button className="btn-action delete" onClick={() => handleDelete(session.id)}>
+                    <FiTrash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))
           )}
-          {filtered.map(s => (
-            <tr key={s.id}>
-              <td>{s.title}</td>
-              <td>{s.program}</td>
-              <td>{s.date}</td>
-              <td>{s.start} - {s.end}</td>
-              <td>{s.instructor}</td>
-              <td className="actions">
-                <button className="btn small" onClick={() => startEdit(s)}>Edit</button>
-                <button className="btn small danger" onClick={() => handleDelete(s.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
+        </div>
 
-export default Sessions
+        {/* MODAL */}
+        {showModal && (
+          <div className="modal-overlay" onClick={closeModal}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>{editingId ? 'Edit Session' : 'New Session'}</h2>
+                <button className="close-btn" onClick={closeModal}>×</button>
+              </div>
+
+              <form className="modal-form" onSubmit={handleSubmit}>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Start Date *</label>
+                    <input type="datetime-local" name="start_at" value={form.start_at} onChange={handleChange} required />
+                  </div>
+
+                  <div className="form-group">
+                    <label>End Date *</label>
+                    <input type="datetime-local" name="end_at" value={form.end_at} onChange={handleChange} required />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Cohort *</label>
+                  <select name="cohort" value={form.cohort} onChange={handleChange} required>
+                    <option value="">Select Cohort...</option>
+                    {cohorts.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Location</label>
+                    <input type="text" name="location" value={form.location} onChange={handleChange}  />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Online link</label>
+                    <input type="text" name="online_link" value={form.online_link} onChange={handleChange} />
+                  </div>
+                </div>
+
+
+                <div className="form-actions">
+                  <button className="btn-primary" type="submit">
+                    {editingId ? 'Update' : 'Create'}
+                  </button>
+                  <button className="btn-secondary" onClick={closeModal} type="button">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+      </div>
+    );
+  };
+
+  export default Sessions;
