@@ -36,9 +36,16 @@ export default function Timesheets() {
     status: 'OPEN' as 'OPEN' | 'SUBMITTED' | 'APPROVED' | 'PAID',
   });
 
-  const { data: timesheets = [] } = useQuery({
+  // Mock data for preview
+  const mockTimesheets = [
+    { id: '1', lecturer: 'lect-1', period_start: '2024-03-01', period_end: '2024-03-15', status: 'SUBMITTED' as const, total_minutes: 2520, amount_minor: 210000, currency: 'USD', submitted_at: '2024-03-16T10:00:00Z', approved_at: null, paid_at: null, created_at: '2024-03-01T00:00:00Z', updated_at: '2024-03-16T10:00:00Z' },
+    { id: '2', lecturer: 'lect-2', period_start: '2024-03-01', period_end: '2024-03-15', status: 'APPROVED' as const, total_minutes: 2280, amount_minor: 190000, currency: 'USD', submitted_at: '2024-03-16T09:00:00Z', approved_at: '2024-03-17T14:00:00Z', paid_at: null, created_at: '2024-03-01T00:00:00Z', updated_at: '2024-03-17T14:00:00Z' },
+    { id: '3', lecturer: 'lect-1', period_start: '2024-02-15', period_end: '2024-02-29', status: 'PAID' as const, total_minutes: 2400, amount_minor: 200000, currency: 'USD', submitted_at: '2024-03-01T10:00:00Z', approved_at: '2024-03-02T14:00:00Z', paid_at: '2024-03-05T12:00:00Z', created_at: '2024-02-15T00:00:00Z', updated_at: '2024-03-05T12:00:00Z' },
+  ];
+
+  const { data: timesheets = mockTimesheets } = useQuery({
     queryKey: ['timesheets'],
-    queryFn: getTimesheets,
+    queryFn: () => getTimesheets(undefined, undefined),
   });
 
   const displayTimesheets = timesheets.length === 0 ? exampleTimesheets.slice(0, 1) : timesheets;
@@ -161,13 +168,13 @@ export default function Timesheets() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between timesheets_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Timesheets</h2>
           <p className="text-muted-foreground">Manage timesheet periods and status</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => handleOpenDialog()}>
+        <div className="flex gap-2 timesheet_btn_wrapper">
+          <Button onClick={() => handleOpenDialog()} className='create_timesheet_btn'>
             <Plus className="mr-2 h-4 w-4" />
             Create Timesheet
           </Button>
@@ -189,7 +196,7 @@ export default function Timesheets() {
                 const hours = (timesheet.total_minutes / 60).toFixed(2);
                 const amount = (timesheet.amount_minor / 100).toFixed(2);
                 return (
-                  <div key={timesheet.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div key={timesheet.id} className="flex items-center justify-between p-4 border border-border rounded-lg timesheet_item">
                     <div className="flex items-center gap-3">
                       <div className="rounded-lg bg-primary/10 p-2">
                         <FileText className="h-5 w-5 text-primary" />

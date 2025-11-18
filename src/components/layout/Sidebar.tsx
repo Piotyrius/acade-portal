@@ -60,12 +60,12 @@ export function Sidebar() {
   });
 
   return (
-    <div className="flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
+    <div className="sidebar_wrapper">
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
         <img src="/logo.svg" alt="Cyber Academy" className="h-10 w-auto" />
         <span className="text-lg font-semibold text-sidebar-foreground">Cyber Academy</span>
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+      <nav className="sidebar_link_wrapper">
         {visibleNavigation.map((item) => (
           <NavLink
             key={item.name}

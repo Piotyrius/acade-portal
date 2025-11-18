@@ -265,7 +265,7 @@ export default function Cohorts() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex gap-4">
-                  <div className="rounded-lg bg-primary/10 p-3">
+                  <div className="rounded-lg bg-primary/10 p-3 cohort_icon">
                     <Users className="h-6 w-6 text-primary" />
                   </div>
                   <div>

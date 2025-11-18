@@ -191,13 +191,13 @@ export default function Users() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between add_user_wrapper">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground">Manage system users and their roles</p>
+          <h1 className="text-3xl font-bold tracking-tight user_title">User Management</h1>
+          <p className="text-muted-foreground user_description">Manage system users and their roles</p>
         </div>
-        <Button onClick={() => { resetForm(); setIsCreateOpen(true); }}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button onClick={() => { resetForm(); setIsCreateOpen(true); }} className='add_user_btn'>
+          <Plus />
           Add User
         </Button>
       </div>

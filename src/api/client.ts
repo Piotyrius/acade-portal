@@ -1,82 +1,93 @@
-import axios from 'axios';
-import { useAuthStore } from '@/store/authStore';
+import axios from "axios";
+import { useAuthStore } from "@/store/authStore";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// --- ALWAYS use env value if provided ---
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.trim() ||
+  "https://academy-crm.onrender.com";
 
-export const api = axios.create({
-  baseURL,
-  timeout: 10000, // 10 second timeout
+console.log("🔗 Using API:", API_BASE_URL);
+
+// --- Create axios instance ---
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
 });
 
-// Attach access token
+// --- Attach token ---
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
+
   if (token) {
-    if (!config.headers) {
-      config.headers = {} as any;
-    }
+    // config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    // Log for debugging - remove in production
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('No access token found for request:', config.url);
-    }
   }
+
   return config;
 });
 
+// --- Refresh token handling ---
 let isRefreshing = false;
-let pendingRequests: Array<(token: string | null) => void> = [];
+let pending: Array<(token: string | null) => void> = [];
 
-function subscribeTokenRefresh(cb: (token: string | null) => void) {
-  pendingRequests.push(cb);
+function subscribe(cb: (token: string | null) => void) {
+  pending.push(cb);
 }
-function onRefreshed(token: string | null) {
-  pendingRequests.forEach((cb) => cb(token));
-  pendingRequests = [];
+function notify(token: string | null) {
+  pending.forEach((cb) => cb(token));
+  pending = [];
 }
 
-// Refresh on 401
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
+
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
-      const { refreshToken, clearAuth, setAuth, user } = useAuthStore.getState();
-      if (!refreshToken) {
-        clearAuth();
+
+      const auth = useAuthStore.getState();
+
+      if (!auth.refreshToken) {
+        auth.clearAuth();
         return Promise.reject(error);
       }
+
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          subscribeTokenRefresh((newToken) => {
-            if (!newToken) return reject(error);
+        return new Promise((resolve) => {
+          subscribe((newToken) => {
             original.headers.Authorization = `Bearer ${newToken}`;
             resolve(api(original));
           });
         });
       }
+
       isRefreshing = true;
+
       try {
-        const resp = await axios.post(`${baseURL}/api/v1/auth/refresh/`, { refresh: refreshToken });
-        const newAccess = resp.data.access as string;
-        setAuth(user!, newAccess, refreshToken);
-        onRefreshed(newAccess);
-        original.headers.Authorization = `Bearer ${newAccess}`;
+        const resp = await axios.post(
+          `${API_BASE_URL}/api/v1/auth/refresh/`,
+          { refresh: auth.refreshToken }
+        );
+
+        const newAccess = resp.data.access;
+        auth.setAuth(auth.user!, newAccess, auth.refreshToken);
+
+        notify(newAccess);
+
+        original.headers.Authorization = `Bearer newAccess`;
         return api(original);
       } catch (e) {
-        clearAuth();
-        onRefreshed(null);
+        auth.clearAuth();
+        notify(null);
         return Promise.reject(e);
       } finally {
         isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   }
 );
 
 export default api;
-
-

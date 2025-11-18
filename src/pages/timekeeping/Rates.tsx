@@ -38,7 +38,7 @@ export default function Rates() {
 
   const { data: rates = [] } = useQuery({
     queryKey: ['rates'],
-    queryFn: getRates,
+    queryFn: () => getRates(undefined),
     enabled: user?.role === 'ADMIN', // Only admins can view rates
   });
 

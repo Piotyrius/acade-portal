@@ -36,6 +36,14 @@ export async function bulkMarkAttendance(payload: {
   return data;
 }
 
+export async function deleteAttendanceRecord(id: string): Promise<void> {
+  await api.delete(`/api/v1/attendance/attendance/${id}/`);
+}
+
+
+
+
+
 
 
 

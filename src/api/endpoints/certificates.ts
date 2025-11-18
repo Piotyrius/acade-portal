@@ -29,7 +29,14 @@ export async function revokeCertificate(id: string, reason?: string): Promise<Ce
   return data;
 }
 
-export async function checkEligibility(studentId: string, cohortId: string): Promise<{ eligible: boolean; reason?: string }> {
+export async function checkEligibility(studentId: string, cohortId: string): Promise<{
+  student_id: string;
+  student_name: string;
+  cohort_id: string;
+  cohort_name: string;
+  eligible: boolean;
+  details: any;
+}> {
   const { data } = await api.get(`/api/v1/certificates/certificates/eligibility/${studentId}/${cohortId}/`);
   return data;
 }
@@ -38,6 +45,14 @@ export async function verifyCertificate(serialOrQr: string): Promise<Certificate
   const { data } = await api.get(`/api/v1/certificates/certificates/verify/${serialOrQr}/`);
   return data;
 }
+
+export async function deleteCertificate(id: string): Promise<void> {
+  await api.delete(`/api/v1/certificates/certificates/${id}/`);
+}
+
+
+
+
 
 
 

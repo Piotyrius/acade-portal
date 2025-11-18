@@ -42,12 +42,12 @@ export default function Grades() {
 
   const { data: grades = [] } = useQuery({
     queryKey: ['grades'],
-    queryFn: getGrades,
+    queryFn: () => getGrades(),
   });
 
   const { data: assessments = [] } = useQuery({
     queryKey: ['assessments'],
-    queryFn: getAssessments,
+    queryFn: () => getAssessments(),
   });
 
   const { data: students = [] } = useQuery({

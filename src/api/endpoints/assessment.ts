@@ -1,6 +1,8 @@
 import api from '@/api/client';
 import { AssessmentDto, SubmissionDto, GradeDto } from '@/api/types';
 
+export type { SubmissionDto, GradeDto };
+
 // Assessments
 export async function getAssessments(cohortId?: string): Promise<AssessmentDto[]> {
   const params = cohortId ? { cohort: cohortId } : {};
@@ -61,6 +63,10 @@ export async function updateSubmission(id: string, payload: Partial<SubmissionDt
   return data;
 }
 
+export async function deleteSubmission(id: string): Promise<void> {
+  await api.delete(`/api/v1/assessment/submissions/${id}/`);
+}
+
 // Grades
 export async function getGrades(assessmentId?: string, studentId?: string): Promise<GradeDto[]> {
   const params: Record<string, string> = {};
@@ -88,6 +94,10 @@ export async function updateGrade(id: string, payload: Partial<GradeDto>): Promi
 export async function moderateGrade(id: string, approved: boolean): Promise<GradeDto> {
   const { data } = await api.post(`/api/v1/assessment/grades/${id}/moderate/`, { approved });
   return data;
+}
+
+export async function deleteGrade(id: string): Promise<void> {
+  await api.delete(`/api/v1/assessment/grades/${id}/`);
 }
 
 

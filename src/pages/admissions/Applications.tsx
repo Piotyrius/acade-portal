@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Search, UserPlus, Check, X, Eye } from 'lucide-react';
-import { exampleApplications } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getApplications, updateApplication, acceptApplication } from '@/api/endpoints/admissions';
@@ -32,12 +31,12 @@ export default function Applications() {
   const [selectedCohort, setSelectedCohort] = useState('');
 
   // Mock data for preview
-  const mockApplications = [
-    { id: '1', program: '1', name: 'Sarah Johnson', email: 'sarah.j@email.com', phone: '+1-555-0101', status: 'PENDING' as const, notes: 'Interested in evening classes', created_at: '2024-02-01T10:30:00Z', updated_at: '2024-02-01T10:30:00Z' },
-    { id: '2', program: '1', name: 'Michael Chen', email: 'michael.chen@email.com', phone: '+1-555-0102', status: 'ACCEPTED' as const, notes: 'Previous IT experience', created_at: '2024-02-02T14:15:00Z', updated_at: '2024-02-05T09:20:00Z' },
-    { id: '3', program: '2', name: 'Emily Rodriguez', email: 'emily.r@email.com', phone: '+1-555-0103', status: 'PENDING' as const, notes: 'Completed basic course', created_at: '2024-02-03T16:45:00Z', updated_at: '2024-02-03T16:45:00Z' },
-    { id: '4', program: '3', name: 'David Kim', email: 'david.kim@email.com', phone: '+1-555-0104', status: 'ACCEPTED' as const, notes: 'Cloud certification holder', created_at: '2024-02-04T11:20:00Z', updated_at: '2024-02-06T10:15:00Z' },
-    { id: '5', program: '1', name: 'Jessica Martinez', email: 'jessica.m@email.com', phone: '+1-555-0105', status: 'REJECTED' as const, notes: 'Does not meet prerequisites', created_at: '2024-02-05T09:00:00Z', updated_at: '2024-02-07T14:30:00Z' },
+  const mockApplications: ApplicationDto[] = [
+    { id: '1', program: '1', name: 'Sarah Johnson', email: 'sarah.j@email.com', phone: '+1-555-0101', status: 'PENDING', created_at: '2024-02-01T10:30:00Z', updated_at: '2024-02-01T10:30:00Z' },
+    { id: '2', program: '1', name: 'Michael Chen', email: 'michael.chen@email.com', phone: '+1-555-0102', status: 'ACCEPTED', created_at: '2024-02-02T14:15:00Z', updated_at: '2024-02-05T09:20:00Z' },
+    { id: '3', program: '2', name: 'Emily Rodriguez', email: 'emily.r@email.com', phone: '+1-555-0103', status: 'PENDING', created_at: '2024-02-03T16:45:00Z', updated_at: '2024-02-03T16:45:00Z' },
+    { id: '4', program: '3', name: 'David Kim', email: 'david.kim@email.com', phone: '+1-555-0104', status: 'ACCEPTED', created_at: '2024-02-04T11:20:00Z', updated_at: '2024-02-06T10:15:00Z' },
+    { id: '5', program: '1', name: 'Jessica Martinez', email: 'jessica.m@email.com', phone: '+1-555-0105', status: 'REJECTED', created_at: '2024-02-05T09:00:00Z', updated_at: '2024-02-07T14:30:00Z' },
   ];
 
   const mockPrograms = [
@@ -87,7 +86,7 @@ export default function Applications() {
     },
   });
 
-  const displayApplications = applications.length === 0 ? exampleApplications.slice(0, 1) : applications;
+  const displayApplications = applications;
   const filteredApplications = displayApplications.filter((app) =>
     app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     app.email.toLowerCase().includes(searchTerm.toLowerCase())

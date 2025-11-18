@@ -37,7 +37,7 @@ export default function Documents() {
 
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ['documents'],
-    queryFn: getDocuments,
+    queryFn: () => getDocuments(undefined),
   });
 
   const displayDocuments = documents.length === 0 ? exampleDocuments.slice(0, 1) : documents;
@@ -103,14 +103,14 @@ export default function Documents() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between  documents_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
           <p className="text-muted-foreground">Manage your documents and files</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 documents_filter_wrapper">
           <Select value={selectedKind} onValueChange={setSelectedKind}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[170px] documents_filter">
               <SelectValue placeholder="Filter by kind" />
             </SelectTrigger>
             <SelectContent>
@@ -121,7 +121,7 @@ export default function Documents() {
             </SelectContent>
           </Select>
           <Select value={selectedVisibility} onValueChange={setSelectedVisibility}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[170px] documents_filter">
               <SelectValue placeholder="Filter by visibility" />
             </SelectTrigger>
             <SelectContent>
@@ -131,7 +131,7 @@ export default function Documents() {
               <SelectItem value="ADMIN">Admin</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => setIsDialogOpen(true)}>
+          <Button onClick={() => setIsDialogOpen(true)} className="w-[170px] documents_filter">
             <Plus className="mr-2 h-4 w-4" />
             Upload Document
           </Button>
@@ -151,26 +151,35 @@ export default function Documents() {
           ) : (
             <div className="space-y-4">
               {filteredDocuments.map((doc: any) => (
-                <div key={doc.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-primary/10 p-2">
+                <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg document_item gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="rounded-lg bg-primary/10 p-2 flex-shrink-0">
                       <FileText className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <p className="font-medium">{doc.kind}</p>
-                      <p className="text-sm text-muted-foreground">{doc.description}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{doc.kind}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{doc.description}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(doc.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={getVisibilityVariant(doc.visibility)}>{doc.visibility}</Badge>
+                  <div className="flex items-center gap-4 flex-shrink-0 sm:ml-auto">
+                    <Badge variant={getVisibilityVariant(doc.visibility)} className="whitespace-nowrap">
+                      {doc.visibility}
+                    </Badge>
                     {doc.file && (
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                         <a href={doc.file} download target="_blank" rel="noopener noreferrer">
                           <Download className="mr-2 h-4 w-4" />
                           Download
+                        </a>
+                      </Button>
+                    )}
+                    {doc.file && (
+                      <Button variant="outline" size="sm" asChild className="sm:hidden">
+                        <a href={doc.file} download target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4" />
                         </a>
                       </Button>
                     )}

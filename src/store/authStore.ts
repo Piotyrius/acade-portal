@@ -22,18 +22,43 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
       setAuth: (user, accessToken, refreshToken) =>
-        set({ user, accessToken, refreshToken, isAuthenticated: true }),
+        set({ 
+          user, 
+          accessToken, 
+          refreshToken, 
+          isAuthenticated: !!(user && accessToken) 
+        }),
       clearAuth: () =>
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false }),
+        set({ 
+          user: null, 
+          accessToken: null, 
+          refreshToken: null, 
+          isAuthenticated: false 
+        }),
     }),
     {
       name: 'auth-storage',
+      // Rehydrate and validate on load
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Recalculate isAuthenticated based on actual data
+          state.isAuthenticated = !!(state.user && state.accessToken);
+          
+          // If we have stale/invalid data, clear it
+          if (!state.user || !state.accessToken) {
+            state.user = null;
+            state.accessToken = null;
+            state.refreshToken = null;
+            state.isAuthenticated = false;
+          }
+        }
+      },
     }
   )
 );

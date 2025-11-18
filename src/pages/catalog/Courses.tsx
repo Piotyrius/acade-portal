@@ -181,7 +181,7 @@ export default function Courses() {
           />
         </div>
       </div>
-
+      
       {courses.length === 0 && <ExampleBanner />}
       <div className="space-y-4">
         {filteredCourses.map((course: any) => {

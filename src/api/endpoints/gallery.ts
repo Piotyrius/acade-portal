@@ -16,6 +16,20 @@ export async function uploadWork(payload: { title: string; description?: string;
   return data;
 }
 
+export async function getWork(id: string): Promise<WorkDto> {
+  const { data } = await api.get(`/api/v1/gallery/works/${id}/`);
+  return data;
+}
+
+export async function updateWork(id: string, payload: Partial<WorkDto>): Promise<WorkDto> {
+  const { data } = await api.patch(`/api/v1/gallery/works/${id}/`, payload);
+  return data;
+}
+
+export async function deleteWork(id: string): Promise<void> {
+  await api.delete(`/api/v1/gallery/works/${id}/`);
+}
+
 export async function publishWork(id: string): Promise<WorkDto> {
   const { data } = await api.patch(`/api/v1/gallery/works/${id}/publish/`);
   return data;

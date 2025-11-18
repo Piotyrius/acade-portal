@@ -40,12 +40,12 @@ export default function Submissions() {
 
   const { data: submissions = [] } = useQuery({
     queryKey: ['submissions'],
-    queryFn: getSubmissions,
+    queryFn: () => getSubmissions(),
   });
 
   const { data: assessments = [] } = useQuery({
     queryKey: ['assessments'],
-    queryFn: getAssessments,
+    queryFn: () => getAssessments(),
   });
 
   const createMutation = useMutation({

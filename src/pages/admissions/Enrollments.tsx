@@ -51,9 +51,9 @@ export default function Enrollments() {
     enabled: user?.role === 'ADMIN' || user?.role === 'LECTURER',
   });
 
-  const { data: cohorts = [] } = useQuery({
+  const { data: cohorts } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
   const activateMutation = useMutation({
@@ -146,6 +146,8 @@ export default function Enrollments() {
         return 'default';
       case 'WITHDRAWN':
         return 'destructive';
+      case 'PENDING':
+        return 'secondary';
       case 'WAITLISTED':
         return 'secondary';
       default:
@@ -155,7 +157,7 @@ export default function Enrollments() {
 
   const displayEnrollments = enrollments.length === 0 ? exampleEnrollments.slice(0, 1) : enrollments;
   const filteredEnrollments = displayEnrollments.filter((enrollment: any) => {
-    const cohort = cohorts.find((c: any) => c.id === enrollment.cohort);
+    const cohort = cohorts?.find((c: any) => c.id === enrollment.cohort);
     return (
       searchTerm === '' ||
       enrollment.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -205,6 +207,7 @@ export default function Enrollments() {
           className="px-3 py-2 border border-border rounded-md"
         >
           <option value="">All Statuses</option>
+          <option value="PENDING">Pending</option>
           <option value="ACTIVE">Active</option>
           <option value="COMPLETED">Completed</option>
           <option value="WITHDRAWN">Withdrawn</option>
@@ -223,7 +226,7 @@ export default function Enrollments() {
               <p className="text-muted-foreground text-center py-8">No enrollments found</p>
             ) : (
               filteredEnrollments.map((enrollment: any) => {
-                const cohort = cohorts.find((c: any) => c.id === enrollment.cohort);
+                const cohort = cohorts?.find((c: any) => c.id === enrollment.cohort);
                 return (
                   <div
                     key={enrollment.id}
@@ -254,12 +257,13 @@ export default function Enrollments() {
                       </Badge>
                       {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
                         <div className="flex gap-1">
-                          {enrollment.status === 'WAITLISTED' && (
+                          {(enrollment.status === 'PENDING' || enrollment.status === 'WAITLISTED') && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleActivate(enrollment.id)}
                               disabled={activateMutation.isPending}
+                              title="Activate Enrollment"
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -303,7 +307,7 @@ export default function Enrollments() {
           <CardContent>
             <div className="space-y-4">
               {waitlist.map((enrollment: any) => {
-                const cohort = cohorts.find((c: any) => c.id === enrollment.cohort);
+                const cohort = cohorts?.find((c: any) => c.id === enrollment.cohort);
                 return (
                   <div
                     key={enrollment.id}
@@ -344,7 +348,7 @@ export default function Enrollments() {
             {filteredEnrollments
               .filter((e: any) => e.status === 'WAITLISTED')
               .map((enrollment: any) => {
-                const cohort = cohorts.find((c: any) => c.id === enrollment.cohort);
+                const cohort = cohorts?.find((c: any) => c.id === enrollment.cohort);
                 return (
                   <div key={enrollment.id} className="flex items-center gap-2 p-2 border rounded">
                     <Checkbox

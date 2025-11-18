@@ -20,7 +20,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { examplePrograms } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 
 export default function Programs() {
@@ -82,7 +81,7 @@ export default function Programs() {
     },
   });
 
-  const displayPrograms = programs.length === 0 ? examplePrograms.slice(0, 1) : programs;
+  const displayPrograms = programs;
   const filteredPrograms = displayPrograms.filter((p) =>
     !searchTerm ||
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,9 +108,9 @@ export default function Programs() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingProgram) {
-      updateMutation.mutate({ id: editingProgram.id, data: formData });
+      updateMutation.mutate({ id: editingProgram.id, data: { ...formData, version: '1.0' } });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate({ ...formData, version: '1.0' });
     }
   };
 

@@ -96,21 +96,22 @@ export default function MyWorks() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+
+      <div className="flex items-center justify-between gallery_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">My Works</h2>
           <p className="text-muted-foreground">Upload and manage your project portfolio</p>
         </div>
-        <div className="flex items-end gap-2">
-          <div className="space-y-2">
+        <div className="flex items-end gap-2 header_upload_btns">
+          <div className="space-y-1">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" placeholder="Project title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input id="title" className='gallery_add_btn' placeholder="Project title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="file">File</Label>
-            <Input id="file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <Input id="file" type="file" className='gallery_add_btn' onChange={(e) => setFile(e.target.files?.[0] || null)} />
           </div>
-          <Button onClick={() => file && title && uploadMut.mutate({ title, file })} disabled={!file || !title || uploadMut.isPending}>
+          <Button className='gallery_add_btn' onClick={() => file && title && uploadMut.mutate({ title, file })} disabled={!file || !title || uploadMut.isPending}>
             <Plus className="mr-2 h-4 w-4" />
             {uploadMut.isPending ? 'Uploading...' : 'Upload'}
           </Button>
