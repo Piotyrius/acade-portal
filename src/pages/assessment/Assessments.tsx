@@ -116,7 +116,7 @@ export default function Assessments() {
       type: 'QUIZ',
       max_score: 100,
       weight: 1,
-      due_date: '',
+      due_at: '',
     });
     setIsDialogOpen(true);
   };
