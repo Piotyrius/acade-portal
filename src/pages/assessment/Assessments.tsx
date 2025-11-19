@@ -36,7 +36,7 @@ export default function Assessments() {
     type: 'QUIZ' as 'EXAM' | 'QUIZ' | 'PROJECT' | 'ASSIGNMENT',
     max_score: 100,
     weight: 1,
-    due_date: '',
+    due_at: '',
   });
 
   // Mock data for preview
@@ -75,7 +75,7 @@ export default function Assessments() {
         type: 'QUIZ',
         max_score: 100,
         weight: 1,
-        due_date: '',
+        due_at: '',
       });
     },
     onError: (error) => {
@@ -121,16 +121,30 @@ export default function Assessments() {
     setIsDialogOpen(true);
   };
 
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '';
+    // Pad month, day, hours, minutes
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const min = pad(d.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  };
+
   const handleOpenEdit = (assessment: AssessmentDto) => {
     setEditingAssessment(assessment);
     setFormData({
-      cohort: assessment.cohort,
-      title: assessment.title,
+      cohort: assessment.cohort || '',
+      title: assessment.title || '',
       description: assessment.description || '',
-      type: assessment.type,
-      max_score: assessment.max_score,
-      weight: assessment.weight,
-      due_date: assessment.due_date || '',
+      type: assessment.type || 'QUIZ',
+      max_score: typeof assessment.max_score === 'number' ? assessment.max_score : 100,
+      weight: typeof assessment.weight === 'number' ? assessment.weight : 1,
+      due_at: formatDateForInput(assessment.due_at || assessment.due_date || ''),
     });
     setIsDialogOpen(true);
   };
@@ -139,7 +153,7 @@ export default function Assessments() {
     e.preventDefault();
     const payload = {
       ...formData,
-      due_date: formData.due_date || null,
+      due_at: formData.due_at || null,
     };
     if (editingAssessment) {
       updateMutation.mutate({ id: editingAssessment.id, data: payload });
@@ -201,17 +215,25 @@ export default function Assessments() {
                       <FileCheck className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <CardTitle>{assessment.title}</CardTitle>
+                      <CardTitle>
+                        {assessment.title}
+                        <span className="ml-2 px-2 py-1 rounded bg-muted text-xs font-semibold align-middle">
+                          {assessment.type === 'EXAM' && 'Exam'}
+                          {assessment.type === 'QUIZ' && 'Quiz'}
+                          {assessment.type === 'PROJECT' && 'Project'}
+                          {assessment.type === 'ASSIGNMENT' && 'Assignment'}
+                        </span>
+                      </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
                         {cohort?.name || 'Unknown Cohort'} • Due:{' '}
-                        {assessment.due_date ? new Date(assessment.due_date).toLocaleDateString() : 'No due date'}
+                        {assessment.due_at ? new Date(assessment.due_at).toLocaleDateString() : 'No due date'}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge variant="outline">{assessment.type}</Badge>
                     <div className="text-right">
-                      <p className="text-sm font-medium">Max: {assessment.max_score}</p>
+                      <p className="text-sm font-medium">Max: {typeof assessment.max_score === 'number' && !isNaN(assessment.max_score) ? assessment.max_score : 0}</p>
                       <p className="text-xs text-muted-foreground">Weight: {assessment.weight}</p>
                     </div>
                     <div className="flex gap-2">
@@ -316,12 +338,12 @@ export default function Assessments() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="due_date">Due Date</Label>
+                <Label htmlFor="due_at">Due Date</Label>
                 <Input
-                  id="due_date"
+                  id="due_at"
                   type="datetime-local"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  value={formData.due_at}
+                  onChange={(e) => setFormData({ ...formData, due_at: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
