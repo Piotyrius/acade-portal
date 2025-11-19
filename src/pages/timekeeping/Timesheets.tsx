@@ -196,9 +196,9 @@ export default function Timesheets() {
                 const hours = (timesheet.total_minutes / 60).toFixed(2);
                 const amount = (timesheet.amount_minor / 100).toFixed(2);
                 return (
-                  <div key={timesheet.id} className="flex items-center justify-between p-4 border border-border rounded-lg timesheet_item">
+                  <div key={timesheet.id} className="flex items-center justify-between p-4 border border-border rounded-lg  timesheets_item">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-primary/10 p-2">
+                      <div className="rounded-lg bg-primary/10 p-2 timesheets_icon">
                         <FileText className="h-5 w-5 text-primary" />
                       </div>
                       <div>
@@ -215,7 +215,7 @@ export default function Timesheets() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={getStatusVariant(timesheet.status)}>{timesheet.status}</Badge>
+                      <Badge className='timesheed_icon' variant={getStatusVariant(timesheet.status)}>{timesheet.status}</Badge>
                       <Button variant="outline" size="sm" onClick={() => handleOpenDialog(timesheet)}>
                         <Edit className="h-4 w-4" />
                       </Button>

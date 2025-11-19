@@ -201,16 +201,16 @@ export default function Courses() {
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div className="text-right">
                       <p className="text-sm font-medium">{course.hours}h</p>
                       <p className="text-xs text-muted-foreground">Hours</p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(course)}>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" className='edit_icon' size="sm" onClick={() => handleOpenEdit(course)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(course.id)}>
+                      <Button variant="ghost" className='delete_icon' size="sm" onClick={() => handleDelete(course.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
