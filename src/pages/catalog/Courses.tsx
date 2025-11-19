@@ -159,12 +159,12 @@ export default function Courses() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between courses_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Courses</h2>
           <p className="text-muted-foreground">Browse and manage courses</p>
         </div>
-        <Button onClick={handleOpenCreate}>
+        <Button onClick={handleOpenCreate} className='courses_plus_btn'>
           <Plus className="mr-2 h-4 w-4" />
           Add Course
         </Button>
@@ -191,7 +191,7 @@ export default function Courses() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex gap-4">
-                    <div className="rounded-lg bg-primary/10 p-3">
+                    <div className="rounded-lg bg-primary/10 p-3 flex items-center">
                       <BookOpen className="h-6 w-6 text-primary" />
                     </div>
                     <div>

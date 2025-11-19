@@ -18,6 +18,15 @@ export function AppShell() {
   return (
     <div className={`layout ${open ? "menu-open" : ""}`}>
       <Sidebar />
+
+      {open && (
+        <div
+          className='sidebar_overlay'
+          onClick={() => setOpen(false)}
+        >
+        </div>
+      )}
+
       <div className="layout-main">
         <Topbar onMenuClick={() => setOpen(!open)} />
         <main className="layout-content">

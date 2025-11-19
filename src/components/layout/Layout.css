@@ -73,6 +73,23 @@
     align-items: center;
 }
 
+.sidebar_overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9;
+}
+
+@media (max-width: 390px) {
+    .card_title {
+        font-size: 0.8rem !important;
+    }  
+    
+    .card_description {
+        font-size: 0.6rem !important;
+    }
+}
+
 
 
 @media (max-width: 500px) {
@@ -109,6 +126,34 @@
     .timesheet_item {
         flex-direction: column;
         gap: 10px;
+    }
+
+    .programs_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 13px;
+    }
+
+    .programs_plus_btn {
+        width: 100%;
+    }
+
+    .courses_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 13px;
+    }
+
+    .courses_plus_btn {
+        width: 100%;
+    }
+
+    .card_title {
+        font-size: 1rem;
+    }  
+    
+    .card_description {
+        font-size: 0.6rem ;
     }
 
 }
@@ -167,14 +212,6 @@
         display: none;
     }
 
-    .cohort_cart_title {
-        font-size: 1.2rem !important;
-    }  
-    
-    .cohort_cart_description {
-        font-size: 0.7rem !important;
-    }
-
     .documents_header_wrapper {
         flex-wrap: wrap;
         flex-direction: column;
@@ -200,6 +237,11 @@
     .sidebar_wrapper {
         position: relative;
         transform: none;
+    }
+
+    
+    .sidebar_overlay {
+        display: none;
     }
 
 }
