@@ -2,8 +2,8 @@ import api from '@/api/client';
 import { ProgramDto, CourseDto, CohortDto, SessionDto } from '@/api/types';
 
 // Programs
-export async function getPrograms(): Promise<ProgramDto[]> {
-  const { data } = await api.get('/api/v1/catalog/programs/');
+export async function getPrograms(params?: { active?: boolean }): Promise<ProgramDto[]> {
+  const { data } = await api.get('/api/v1/catalog/programs/', { params });
   return data.results || data;
 }
 

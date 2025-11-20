@@ -202,8 +202,8 @@ export default function Sessions() {
           <SelectContent>
             <SelectItem value="all">All Cohorts</SelectItem>
             {cohorts?.map((cohort) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
+              <SelectItem key={cohort.id} value={cohort.id}>
+                {cohort.name}
               </SelectItem>
             ))}
           </SelectContent>

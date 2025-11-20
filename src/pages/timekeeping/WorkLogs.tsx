@@ -10,7 +10,7 @@ import { getWorkLogs, exportPayroll, createWorkLog } from '@/api/endpoints/timek
 import { saveAs } from 'file-saver';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+import { getUsers } from '@/api/endpoints/auth';
+
 export default function WorkLogs() {
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -32,7 +34,20 @@ export default function WorkLogs() {
     start_at: '',
     end_at: '',
     notes: '',
+    lecturer: '',
+    minutes: '',
   });
+
+  const [lecturers, setLecturers] = useState<any[]>([]);
+  const [lecturersLoading, setLecturersLoading] = useState(false);
+
+  useEffect(() => {
+    setLecturersLoading(true);
+    getUsers('LECTURER')
+      .then((data) => setLecturers(data))
+      .catch(() => setLecturers([]))
+      .finally(() => setLecturersLoading(false));
+  }, []);
 
   const { data } = useQuery({
     queryKey: ['worklogs'],
@@ -72,11 +87,14 @@ export default function WorkLogs() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.start_at || !formData.end_at) {
-      toast({ title: 'Error', description: 'Start and end times are required', variant: 'destructive' });
+    if (!formData.start_at || !formData.end_at || !formData.lecturer || !formData.minutes) {
+      toast({ title: 'Error', description: 'Start, end times, lecturer, and minutes are required', variant: 'destructive' });
       return;
     }
-    createMutation.mutate(formData);
+    createMutation.mutate({
+      ...formData,
+      minutes: Number(formData.minutes),
+    });
   };
 
   return (
@@ -152,6 +170,36 @@ export default function WorkLogs() {
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="lecturer">Lecturer *</Label>
+                <select
+                  id="lecturer"
+                  value={formData.lecturer}
+                  onChange={(e) => setFormData({ ...formData, lecturer: e.target.value })}
+                  required
+                  className="w-full border rounded px-2 py-2"
+                  disabled={lecturersLoading}
+                >
+                  <option value="">{lecturersLoading ? 'Loading...' : 'Select a lecturer'}</option>
+                  {lecturers.map((lect: any) => (
+                    <option key={lect.id} value={lect.id}>
+                      {lect.first_name} {lect.last_name} ({lect.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="minutes">Minutes *</Label>
+                <Input
+                  id="minutes"
+                  type="number"
+                  min="1"
+                  value={formData.minutes}
+                  onChange={(e) => setFormData({ ...formData, minutes: e.target.value })}
+                  required
+                  placeholder="Enter minutes worked"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="start_at">Start Time *</Label>
                 <Input

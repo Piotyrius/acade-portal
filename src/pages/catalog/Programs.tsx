@@ -26,6 +26,7 @@ export default function Programs() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<ProgramDto | null>(null);
   const [formData, setFormData] = useState({ name: '', code: '', description: '', active: true });
@@ -39,8 +40,16 @@ export default function Programs() {
   ];
 
   const { data: programs = mockPrograms, isLoading } = useQuery({
-    queryKey: ['programs'],
-    queryFn: getPrograms,
+    queryKey: ['programs', filter],
+    queryFn: async () => {
+      if (filter === 'active') {
+        return await getPrograms({ active: true });
+      } else if (filter === 'inactive') {
+        return await getPrograms({ active: false });
+      } else {
+        return await getPrograms();
+      }
+    },
   });
 
   const createMutation = useMutation({
@@ -162,6 +171,15 @@ export default function Programs() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <select
+          className="border rounded px-2 py-1 text-sm"
+          value={filter}
+          onChange={e => setFilter(e.target.value as 'all' | 'active' | 'inactive')}
+        >
+          <option value="all">All Programs</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -193,11 +211,16 @@ export default function Programs() {
         ))}
       </div>
 
-      {programs.length === 0 && <ExampleBanner />}
-      {filteredPrograms.length === 0 && programs.length > 0 && (
+      {filteredPrograms.length === 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            {searchTerm ? 'No programs found matching your search' : 'No programs yet. Create your first program!'}
+            {searchTerm
+              ? 'No programs found matching your search'
+              : filter === 'active'
+                ? 'No active programs found.'
+                : filter === 'inactive'
+                  ? 'No inactive programs found.'
+                  : 'No programs yet. Create your first program!'}
           </CardContent>
         </Card>
       )}
