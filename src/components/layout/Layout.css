@@ -274,7 +274,7 @@
 .menu_icon {
   display: none;
 }
-
+}
 @media (max-width: 600px) {
   .topbar_welcome {
     display: none;
