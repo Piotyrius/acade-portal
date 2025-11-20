@@ -67,7 +67,7 @@ export default function WorkLogs() {
       qc.invalidateQueries({ queryKey: ['worklogs'] });
       toast({ title: 'Success', description: 'Work log created successfully' });
       setIsDialogOpen(false);
-      setFormData({ start_at: '', end_at: '', notes: '' });
+      setFormData({ start_at: '', end_at: '', notes: '', lecturer: '', minutes: '' });
     },
     onError: (error) => {
       toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
