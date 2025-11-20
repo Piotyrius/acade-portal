@@ -184,12 +184,12 @@ export default function CertificatesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between certificates_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Certificates</h2>
           <p className="text-muted-foreground">Issue and manage course completion certificates</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 certificate_btn_wrapper">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
             <>
               <Button variant="outline" onClick={() => setEligibilityDialogOpen(true)}>
@@ -204,7 +204,7 @@ export default function CertificatesList() {
           )}
           <div className="flex gap-2">
             {user?.role === 'ADMIN' && (
-              <Button onClick={() => setIssueDialogOpen(true)}>
+              <Button onClick={() => setIssueDialogOpen(true)} className='issue_certificate_btn'>
                 <Award className="mr-2 h-4 w-4" />
                 Issue Certificate
               </Button>
@@ -214,7 +214,7 @@ export default function CertificatesList() {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 max-w-sm certificate_search">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search certificates..."
@@ -233,9 +233,9 @@ export default function CertificatesList() {
         <CardContent>
           <div className="space-y-4">
             {filteredCertificates.map((cert) => (
-              <div key={cert.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+              <div key={cert.id} className="flex items-center justify-between p-4 border border-border rounded-lg certificate_item">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-primary/10 p-2">
+                  <div className="rounded-lg bg-primary/10 p-2 certificate_icon">
                     <Award className="h-5 w-5 text-primary" />
                   </div>
                   <div>

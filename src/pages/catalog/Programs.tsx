@@ -141,12 +141,12 @@ export default function Programs() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between programs_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Programs</h2>
           <p className="text-muted-foreground">Manage your educational programs</p>
         </div>
-        <Button onClick={handleOpenCreate}>
+        <Button onClick={handleOpenCreate} className='programs_plus_btn'>
           <Plus className="mr-2 h-4 w-4" />
           Add Program
         </Button>

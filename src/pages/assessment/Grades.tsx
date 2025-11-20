@@ -194,14 +194,14 @@ export default function Grades() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between grade_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Grades</h2>
           <p className="text-muted-foreground">Manage assessment grades</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 grade_btn_wrapper">
           <Select value={selectedAssessment} onValueChange={setSelectedAssessment}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="grade_select">
               <SelectValue placeholder="Filter by assessment" />
             </SelectTrigger>
             <SelectContent>
@@ -213,8 +213,8 @@ export default function Grades() {
               ))}
             </SelectContent>
           </Select>
-          <div className="flex gap-2">
-            <Button onClick={() => handleOpenDialog()}>
+          <div className="flex gap-2 add_grade_btn_wrapper">
+            <Button onClick={() => handleOpenDialog()} className='add_grade_btn'>
               <Plus className="mr-2 h-4 w-4" />
               Add Grade
             </Button>
@@ -237,9 +237,9 @@ export default function Grades() {
                 const student = students.find((s: any) => s.id === grade.student);
                 const percentage = parseFloat(grade.percentage);
                 return (
-                  <div key={grade.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div key={grade.id} className="flex items-center justify-between p-4 border border-border rounded-lg grades_item">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-primary/10 p-2">
+                      <div className="rounded-lg bg-primary/10 p-2 grade_icon">
                         <GraduationCap className="h-5 w-5 text-primary" />
                       </div>
                       <div>
@@ -253,8 +253,8 @@ export default function Grades() {
                         {grade.feedback && <p className="text-xs text-muted-foreground mt-1">{grade.feedback}</p>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-right">
+                    <div className="flex items-center gap-2 grades_right_wrapper">
+                      <div className="text-right grade_date__precent">
                         <p className="font-medium text-lg">{percentage.toFixed(1)}%</p>
                         <p className="text-xs text-muted-foreground">
                           {grade.graded_at ? new Date(grade.graded_at).toLocaleDateString() : ''}

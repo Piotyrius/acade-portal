@@ -73,6 +73,54 @@
     align-items: center;
 }
 
+.sidebar_overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9;
+}
+
+.card_item, .item_content {
+    padding: 24px;
+}
+
+.cohort_item_wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.cohort_top_side {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.cohort_icon {
+    display: flex;
+    align-items: center;
+}
+
+@media (max-width: 400px) {
+
+    .card_title {
+        font-size: 0.9rem !important;
+    }  
+    
+    .card_description {
+        font-size: 0.7rem !important;
+        font-weight: 500;    
+    }
+
+    .timesheets_item, .rate_item {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 13px;
+    }
+
+}
+
 
 
 @media (max-width: 500px) {
@@ -88,8 +136,8 @@
     .add_user_wrapper {
         display: flex;
         flex-direction: column;
+        align-items: start !important;
         gap: 20px;
-        text-align: center;
     }
 
     .add_user_btn {
@@ -106,10 +154,123 @@
         width: 100%;
     }
 
+    .timesheets_icon {
+        display: none;
+    }
+
     .timesheet_item {
         flex-direction: column;
+        align-items: start !important;
         gap: 10px;
     }
+
+    .programs_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 13px;
+    }
+
+    .programs_plus_btn {
+        width: 100%;
+    }
+
+    .courses_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 13px;
+    }
+
+    .courses_plus_btn {
+        width: 100%;
+    }
+
+    .card_title {
+        font-size: 1rem;
+    }  
+    
+    .card_description {
+        font-size: 0.6rem ;
+    }
+
+    .delete_icon, .edit_icon {
+        padding: 0 4px !important;
+    }
+
+    .card_item, .item_content {
+        padding: 24px 12px;
+    }
+
+    .rates_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 20px;
+    }
+
+    .rates_add_btn, .rates_add_btn_wrapper {
+        width: 100%;
+    }
+
+    .rates_dollar_sign {
+        display: none;
+    }
+
+    .document_item {
+        flex-direction: column;
+    }
+
+
+    .worklogs_btn_wrapper {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .log_hours_btn {
+        width: 100%;
+    }
+
+    .worklogs_icon {
+        display: none;
+    }
+
+    .worklogs_right_side {
+        flex-direction: column;
+    }
+
+    .grades_item {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }
+
+    .grade_date__precent {
+        display: flex;
+        align-items: center;
+        flex-direction: column-reverse;
+    }
+
+    .grades_right_wrapper {
+        gap: 20px !important;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .cohort_item_wrapper {
+        flex-direction: column;
+    }
+    
+    .cohort_top_side {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .certificate_item {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }    
 
 }
 
@@ -132,6 +293,11 @@
         display: none;
     }
 
+    .cohort_action_btns {
+        padding-left: 10px;
+        gap: 14px !important;
+    }
+
 }
 
 @media (max-width: 900px) {
@@ -145,18 +311,82 @@
         width: 100% !important;
     }
 
-    .header_upload_btns {
+    .documents_icon {
+        display: none;
+    } 
+
+    .header_upload_btns, .cohorts_header_wrapper {
         flex-direction: column;
         align-items: start !important;
         width: 100%;
+        gap: 10px;
     }
 
     .header_upload_btns > div {
         width: 100%;
     }
 
-    .gallery_add_btn {
+    .gallery_add_btn, .cohort_add_btn {
         width: 100%;
+    }
+
+    .cohort_search_wrapper {
+        max-width: 100% !important;
+    }
+
+    .cohort_delete_btn {
+        padding: 0 !important;
+    }
+
+    .cohort_date {
+        font-size: 11px !important;
+    }
+
+    .cohort_action_btns {
+        padding-left: 6px;
+    }
+
+    .worklogs_header_wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: start !important;
+        gap: 18px;
+    }
+
+    .certificate_btn_wrapper {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .issue_certificate_btn {
+        width: 100%;
+    }
+
+    .certificate_search, .input {
+        max-width: 100% !important;
+    }
+
+    .certificate_icon {
+        display: none;
+    }
+
+    .grade_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }
+
+    .grade_btn_wrapper {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .add_grade_btn, .grade_select {
+        width: 100%;
+    }
+
+    .grade_icon {
+        display: none;
     }
 
 }
@@ -165,14 +395,6 @@
 
     .cohort_icon {
         display: none;
-    }
-
-    .cohort_cart_title {
-        font-size: 1.2rem !important;
-    }  
-    
-    .cohort_cart_description {
-        font-size: 0.7rem !important;
     }
 
     .documents_header_wrapper {
@@ -188,6 +410,12 @@
         gap: 15px;
     }
 
+    .certificates_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 18px;
+    }
+
 }
 
 
@@ -200,6 +428,11 @@
     .sidebar_wrapper {
         position: relative;
         transform: none;
+    }
+
+    
+    .sidebar_overlay {
+        display: none;
     }
 
 }

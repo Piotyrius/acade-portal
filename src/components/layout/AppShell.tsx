@@ -3,11 +3,17 @@ import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useAuthStore } from '@/store/authStore';
 import './Layout.css'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export function AppShell() {
 
   const [open, setOpen] = useState(false)
+  const location = useLocation()
+
+  useEffect(() => {
+    setOpen(false)
+  }, [location.pathname])
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -18,6 +24,15 @@ export function AppShell() {
   return (
     <div className={`layout ${open ? "menu-open" : ""}`}>
       <Sidebar />
+
+      {open && (
+        <div
+          className='sidebar_overlay'
+          onClick={() => setOpen(false)}
+        >
+        </div>
+      )}
+
       <div className="layout-main">
         <Topbar onMenuClick={() => setOpen(!open)} />
         <main className="layout-content">

@@ -81,12 +81,12 @@ export default function WorkLogs() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between worklogs_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Work Logs</h2>
           <p className="text-muted-foreground">Track your teaching hours and earnings</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 worklogs_btn_wrapper">
           {user?.role === 'ADMIN' && (
             <Button variant="outline" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
@@ -94,7 +94,7 @@ export default function WorkLogs() {
             </Button>
           )}
           <div className="flex gap-2">
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={() => setIsDialogOpen(true)} className='log_hours_btn'>
               <Plus className="mr-2 h-4 w-4" />
               Log Hours
             </Button>
@@ -124,7 +124,7 @@ export default function WorkLogs() {
             {displayWorkLogs.map((log: any) => (
               <div key={log.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-primary/10 p-2">
+                  <div className="rounded-lg bg-primary/10 p-2 worklogs_icon">
                     <Clock className="h-5 w-5 text-primary" />
                   </div>
                   <div>
@@ -132,7 +132,7 @@ export default function WorkLogs() {
                     <p className="text-sm text-muted-foreground">{new Date(log.start_at).toLocaleString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 worklogs_right_side">
                   <div className="text-right">
                     <p className="font-medium">{(log.minutes / 60).toFixed(2)}h</p>
                   </div>
