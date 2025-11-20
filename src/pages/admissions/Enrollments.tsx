@@ -176,14 +176,14 @@ export default function Enrollments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between enrollments_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Enrollments</h2>
           <p className="text-muted-foreground">Manage student enrollments</p>
         </div>
         <div className="flex gap-2">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
-            <Button variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
+            <Button className='enrollments_bulk_active' variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
               <CheckSquare className="mr-2 h-4 w-4" />
               Bulk Activate
             </Button>

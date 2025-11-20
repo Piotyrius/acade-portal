@@ -275,6 +275,16 @@
     .attendance_input_wrapper {
         max-width: 100%  !important;
     }
+
+    .enrollments_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }
+
+    .enrollments_bulk_active {
+        width: 100%;
+    }
     
 
 }
