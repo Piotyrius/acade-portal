@@ -235,19 +235,19 @@ export default function Cohorts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between cohorts_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Cohorts</h2>
           <p className="text-muted-foreground">Manage student cohorts and groups</p>
         </div>
-        <Button onClick={handleOpenCreate}>
+        <Button onClick={handleOpenCreate} className='cohort_add_btn'>
           <Plus className="mr-2 h-4 w-4" />
           Add Cohort
         </Button>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 max-w-sm cohort_search_wrapper ">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search cohorts..."
@@ -263,48 +263,60 @@ export default function Cohorts() {
         {filteredCohorts.map((cohort: any) => (
           <Card key={cohort.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex gap-4">
-                  <div className="rounded-lg bg-primary/10 p-3 cohort_icon">
-                    <Users className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>{cohort.name}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {(cohort as any).course_title} • {(cohort as any).lecturer_name || 'No lecturer assigned'}
-                    </CardDescription>
-                    <div className="flex gap-2 mt-2">
-                      <Badge variant={getStatusColor(cohort.status)}>{(cohort as any).status_display || cohort.status}</Badge>
-                      <Badge variant="outline">
-                        {(cohort as any).current_enrollment_count || 0} / {cohort.capacity} students
-                      </Badge>
+              <div className="flex cohort_item_wrapper ">
+                  
+
+                <div className='cohort_top_side'>
+
+                  <div className="flex gap-4">
+                    <div className="rounded-lg bg-primary/10 p-3 cohort_icon">
+                      <Users className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>{cohort.name}</CardTitle>
+                      <CardDescription className="mt-1">
+                        {(cohort as any).course_title} • {(cohort as any).lecturer_name || 'No lecturer assigned'}
+                      </CardDescription>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant={getStatusColor(cohort.status)}>{(cohort as any).status_display || cohort.status}</Badge>
+                        <Badge variant="outline">
+                          {(cohort as any).current_enrollment_count || 0} / {cohort.capacity} students
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-sm font-medium">
-                      {format(new Date(cohort.start_date), 'MMM dd, yyyy')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Start Date</p>
+
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm font-medium cohort_date">
+                        {format(new Date(cohort.start_date), 'MMM dd, yyyy')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Start Date</p>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleOpenGenerateSessions(cohort)}
-                      title="Generate Sessions"
-                    >
-                      <Calendar className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(cohort)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(cohort.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
+
                 </div>
+
+
+                <div className="flex gap-2 cohort_action_btns">
+                  <Button
+                    variant="ghost"
+                    className='cohort_delete_btn'
+                    size="sm"
+                    onClick={() => handleOpenGenerateSessions(cohort)}
+                    title="Generate Sessions"
+                  >
+                    <Calendar className="h-4 w-4" />
+                  </Button>
+                  <Button className='cohort_delete_btn' variant="ghost" size="sm" onClick={() => handleOpenEdit(cohort)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button className='cohort_delete_btn' variant="ghost" size="sm" onClick={() => handleDelete(cohort.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+
+                  
               </div>
             </CardHeader>
           </Card>

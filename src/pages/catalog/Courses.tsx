@@ -159,12 +159,12 @@ export default function Courses() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between courses_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Courses</h2>
           <p className="text-muted-foreground">Browse and manage courses</p>
         </div>
-        <Button onClick={handleOpenCreate}>
+        <Button onClick={handleOpenCreate} className='courses_plus_btn'>
           <Plus className="mr-2 h-4 w-4" />
           Add Course
         </Button>
@@ -191,7 +191,7 @@ export default function Courses() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex gap-4">
-                    <div className="rounded-lg bg-primary/10 p-3">
+                    <div className="rounded-lg bg-primary/10 p-3 flex items-center">
                       <BookOpen className="h-6 w-6 text-primary" />
                     </div>
                     <div>
@@ -201,16 +201,16 @@ export default function Courses() {
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div className="text-right">
                       <p className="text-sm font-medium">{course.hours}h</p>
                       <p className="text-xs text-muted-foreground">Hours</p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(course)}>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" className='edit_icon' size="sm" onClick={() => handleOpenEdit(course)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(course.id)}>
+                      <Button variant="ghost" className='delete_icon' size="sm" onClick={() => handleDelete(course.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>

@@ -153,13 +153,13 @@ export default function Rates() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rates_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Rates</h2>
           <p className="text-muted-foreground">Manage lecturer hourly rates</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => handleOpenDialog()}>
+        <div className="flex gap-2 rates_add_btn_wrapper">
+          <Button onClick={() => handleOpenDialog()} className='rates_add_btn'>
             <Plus className="mr-2 h-4 w-4" />
             Add Rate
           </Button>
@@ -168,6 +168,7 @@ export default function Rates() {
 
       {rates.length === 0 && <ExampleBanner />}
       <Card>
+
         <CardHeader>
           <CardTitle>Lecturer Rates</CardTitle>
         </CardHeader>
@@ -179,9 +180,9 @@ export default function Rates() {
               displayRates.map((rate: RateDto) => {
                 const lecturer = lecturers.find((l: any) => l.id === rate.lecturer);
                 return (
-                  <div key={rate.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div key={rate.id} className="flex items-center justify-between p-4 border border-border rounded-lg rate_item">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-primary/10 p-2">
+                      <div className="rounded-lg bg-primary/10 p-2 rates_dollar_sign">
                         <DollarSign className="h-5 w-5 text-primary" />
                       </div>
                       <div>
@@ -197,7 +198,7 @@ export default function Rates() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={rate.active ? 'default' : 'secondary'}>
+                      <Badge variant={rate.active ? 'default' : 'secondary'} className='rates_active'>
                         {rate.active ? 'Active' : 'Inactive'}
                       </Badge>
                       <Button variant="outline" size="sm" onClick={() => handleOpenDialog(rate)}>

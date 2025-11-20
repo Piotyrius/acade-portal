@@ -151,9 +151,9 @@ export default function Documents() {
           ) : (
             <div className="space-y-4">
               {filteredDocuments.map((doc: any) => (
-                <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg document_item gap-3">
+                <div key={doc.id} className="flex justify-between p-4 border border-border rounded-lg document_item gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="rounded-lg bg-primary/10 p-2 flex-shrink-0">
+                    <div className="rounded-lg bg-primary/10 p-2 flex-shrink-0 documents_icon">
                       <FileText className="h-5 w-5 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -165,7 +165,7 @@ export default function Documents() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0 sm:ml-auto">
-                    <Badge variant={getVisibilityVariant(doc.visibility)} className="whitespace-nowrap">
+                    <Badge variant={getVisibilityVariant(doc.visibility)} className="whitespace-nowrap document_badge">
                       {doc.visibility}
                     </Badge>
                     {doc.file && (
