@@ -13,6 +13,7 @@ import Cohorts from "./pages/catalog/Cohorts";
 import Sessions from "./pages/catalog/Sessions";
 import Applications from "./pages/admissions/Applications";
 import Enrollments from "./pages/admissions/Enrollments";
+import Recruiting from "./pages/admissions/Recruiting";
 import AttendanceList from "./pages/attendance/AttendanceList";
 import Assessments from "./pages/assessment/Assessments";
 import Submissions from "./pages/assessment/Submissions";
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="catalog/sessions" element={<Sessions />} />
             <Route path="admissions/applications" element={<Applications />} />
             <Route path="admissions/enrollments" element={<Enrollments />} />
+            <Route path="admissions/recruiting" element={<Recruiting />} />
             <Route path="attendance/list" element={<AttendanceList />} />
             <Route path="assessment/assessments" element={<Assessments />} />
             <Route path="assessment/submissions" element={<Submissions />} />
