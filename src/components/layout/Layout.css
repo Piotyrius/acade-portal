@@ -121,6 +121,17 @@
 
 }
 
+@media (max-width: 450px) {
+
+    .attendance_item {
+        display: flex;
+        flex-direction: column;
+        align-items: start !important;
+        gap: 10px;
+    }
+
+}
+
 
 
 @media (max-width: 500px) {
@@ -252,6 +263,20 @@
         gap: 20px !important;
     }
 
+    .attendance_btn_wrapper {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .attendance_button {
+        width: 100%;
+    }
+
+    .attendance_input_wrapper {
+        max-width: 100%  !important;
+    }
+    
+
 }
 
 @media (max-width: 600px) {
@@ -270,7 +295,25 @@
         flex-direction: column;
         align-items: start !important;
         gap: 15px;
-    }    
+    }
+
+    .submissions_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }
+
+    .submissions_select, .select_wrapper {
+        width: 100%;
+    }
+
+    .submissions_file_icon {
+        display: none;
+    }
+
+    /* .assesments_item {
+
+    } */
 
 }
 
@@ -388,6 +431,27 @@
     .grade_icon {
         display: none;
     }
+
+    .assesments_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }
+
+    .assesments_file_icon {
+        display: none;
+    }
+
+    .assesments_edit_btn, .assesments_delete_btn {
+        padding: 0 4px !important;
+    }
+
+    .attendance_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }
+
 
 }
 
