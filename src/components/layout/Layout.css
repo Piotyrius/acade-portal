@@ -1,24 +1,25 @@
 .layout {
-    display: flex;
-    height: 100vh;
-    background: var(--background, #f5f6f8); 
-    overflow: hidden;
+  display: flex;
+  height: 100vh;
+  background: var(--background, #f5f6f8);
+  overflow: hidden;
 }
 
 .layout-main {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
 .layout-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
 }
 
-.sidebar_link_wrapper {
+
+.sidebar-menu {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -27,181 +28,60 @@
     padding: 16px;
 }
 
-.sidebar_link_wrapper::-webkit-scrollbar {
+.sidebar-menu::-webkit-scrollbar {
     width: 6px;
 }
 
-.sidebar_link_wrapper::-webkit-scrollbar-track {
+.sidebar-menu::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.06);
     border-radius: 4px;
 }
 
-.sidebar_link_wrapper::-webkit-scrollbar-thumb {
-    background: rgba(205, 205, 205, 0.2);
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: rgba(163, 163, 163, 0.2);
     border-radius: 4px;
 }
 
-.sidebar_link_wrapper::-webkit-scrollbar-thumb:hover {
-    background: rgba(176, 176, 176, 0.35);
-}
-
-.menu_icon {
-    display: none;
-    font-size: 1.2rem;
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(189, 189, 189, 0.35)
 }
 
 .sidebar_wrapper {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 256px;
-    height: 100vh;
-    max-height: 100vh;
-    overflow-y: auto;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-    z-index: 10;
-    background: hsl(var(--sidebar-background));
-    color: hsl(var(--sidebar-foreground));
-    border-right: 1px solid hsl(var(--sidebar-border));
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 256px;
+  height: 100vh;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 100;
+  background: var(--sidebar-bg, #fff);
 }
 
 .layout.menu-open .sidebar_wrapper {
-    transform: translateX(0);
+  transform: translateX(0);
 }
 
-.add_user_btn {
+.menu_icon {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .topbar_welcome {
+    display: none;
+  }
+
+  .menu_icon {
     display: flex;
-    align-items: center;
-}
-
-
-
-@media (max-width: 500px) {
-
-    .user_title {
-        font-size: 1.4rem !important;
-    }
-
-    .user_description {
-        font-size: 0.8rem !important;
-    }
-
-    .add_user_wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        text-align: center;
-    }
-
-    .add_user_btn {
-        width: 100% !important;
-    }
-
-    .timesheets_header_wrapper {
-        flex-direction: column;
-        align-items: start !important;
-        gap: 10px;
-    }
-
-    .create_timesheet_btn, .timesheet_btn_wrapper {
-        width: 100%;
-    }
-
-    .timesheet_item {
-        flex-direction: column;
-        gap: 10px;
-    }
+    font-size: 1.2rem;
+  }
 
 }
 
 
-@media (max-width: 750px) {
-
-    .menu_icon {
-        display: flex;
-    }  
-
-    .navbar_welcome_title {
-        display: none;
-    }
-
-    .user_role {
-        display: none !important;
-    }
-
-    .cohort_icon {
-        display: none;
-    }
-
-}
-
-@media (max-width: 900px) {
-
-    .documents_filter_wrapper {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .documents_filter {
-        width: 100% !important;
-    }
-
-    .header_upload_btns {
-        flex-direction: column;
-        align-items: start !important;
-        width: 100%;
-    }
-
-    .header_upload_btns > div {
-        width: 100%;
-    }
-
-    .gallery_add_btn {
-        width: 100%;
-    }
-
-}
-
-@media (max-width: 1024px) {
-
-    .cohort_icon {
-        display: none;
-    }
-
-    .cohort_cart_title {
-        font-size: 1.2rem !important;
-    }  
-    
-    .cohort_cart_description {
-        font-size: 0.7rem !important;
-    }
-
-    .documents_header_wrapper {
-        flex-wrap: wrap;
-        flex-direction: column;
-        align-items: start !important;
-        gap: 10px;
-    }
-
-    .gallery_header_wrapper {
-        flex-direction: column;
-        align-items: start !important;
-        gap: 15px;
-    }
-
-}
-
-
-
-
-
-
-@media (min-width: 751px) {
-
-    .sidebar_wrapper {
-        position: relative;
-        transform: none;
-    }
-
+@media (min-width: 601px) {
+  .sidebar_wrapper {
+    position: relative;
+    transform: none;
+  }
 }

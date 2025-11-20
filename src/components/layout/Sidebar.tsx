@@ -49,6 +49,7 @@ const navigation: NavItem[] = [
   { name: 'Users', href: '/users', icon: UserCog, roles: ['ADMIN'] },
   { name: 'Lecturer Portal', href: '/lecturer/dashboard', icon: GraduationCap, roles: ['LECTURER'] },
 ];
+import './Layout.css'
 
 export function Sidebar() {
   const { user } = useAuthStore();
@@ -65,7 +66,7 @@ export function Sidebar() {
         <img src="/logo.svg" alt="Cyber Academy" className="h-10 w-auto" />
         <span className="text-lg font-semibold text-sidebar-foreground">Cyber Academy</span>
       </div>
-      <nav className="sidebar_link_wrapper">
+      <nav className="sidebar-menu">
         {visibleNavigation.map((item) => (
           <NavLink
             key={item.name}

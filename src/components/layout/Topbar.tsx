@@ -13,8 +13,8 @@ import { LogOut, User, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
-
 import { LuMenu } from "react-icons/lu";
+
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { user, clearAuth } = useAuthStore();
@@ -36,13 +36,14 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}` || 'U'
     : 'U';
 
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
       <div className="flex items-center gap-4">
-        <h1 className="text-xl font-semibold text-card-foreground  navbar_welcome_title">
+        <h1 className="text-xl font-semibold text-card-foreground topbar_welcome">
           Welcome back, {user?.firstName}!
         </h1>
-        <Badge variant="secondary" className='user_role'>{user?.role}</Badge>
+        <Badge variant="secondary" className='topbar_user_role'>{user?.role}</Badge>
       </div>
 
       <div className="flex items-center gap-3">
@@ -53,7 +54,9 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
             <Sun className="h-5 w-5" />
           )}
         </Button>
+
         <LuMenu className='menu_icon' onClick={onMenuClick} />
+
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
