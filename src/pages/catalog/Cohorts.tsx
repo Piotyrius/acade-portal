@@ -263,7 +263,7 @@ export default function Cohorts() {
         {filteredCohorts.map((cohort: any) => (
           <Card key={cohort.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
-              <div className="flex cohort_item_wrapper ">
+              <div className="flex cohort_item_wrapper">
                   
 
                 <div className='cohort_top_side'>

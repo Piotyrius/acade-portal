@@ -251,19 +251,19 @@ export default function AttendanceList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between attendance_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Attendance</h2>
           <p className="text-muted-foreground">Track student attendance records</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 attendance_btn_wrapper">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
             <>
-              <Button variant="outline" onClick={handleOpenBulkDialog}>
+              <Button className='attendance_button' variant="outline" onClick={handleOpenBulkDialog}>
                 <Users className="mr-2 h-4 w-4" />
                 Bulk Mark
               </Button>
-              <Button onClick={() => handleOpenDialog()}>
+              <Button className='attendance_button' onClick={() => handleOpenDialog()}>
                 <Plus className="mr-2 h-4 w-4" />
                 Mark Attendance
               </Button>
@@ -273,7 +273,7 @@ export default function AttendanceList() {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 max-w-sm attendance_input_wrapper">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search attendance..."
@@ -295,7 +295,7 @@ export default function AttendanceList() {
               const session = sessions.find((s) => s.id === record.session);
               const student = students.find((s: any) => s.id === record.student);
               return (
-                <div key={record.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div key={record.id} className="attendance_item flex items-center justify-between p-4 border border-border rounded-lg">
                   <div>
                     <p className="font-medium">
                       {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student}
