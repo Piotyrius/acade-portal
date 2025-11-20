@@ -11,6 +11,8 @@ export async function createWorkLog(payload: {
   end_at: string;
   notes?: string;
   session?: string;
+  lecturer: string;
+  minutes: number;
 }): Promise<WorkLogDto> {
   const { data } = await api.post('/api/v1/timekeeping/worklogs/', {
     ...payload,
