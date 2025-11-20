@@ -174,19 +174,19 @@ export default function Sessions() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between sessions_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Sessions</h2>
           <p className="text-muted-foreground">Manage class sessions and schedules</p>
         </div>
-        <Button onClick={handleOpenCreate}>
+        <Button onClick={handleOpenCreate} className='create_sessions_btn'>
           <Plus className="mr-2 h-4 w-4" />
           Add Session
         </Button>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex items-center gap-4 sessions_search_select_wrapper">
+        <div className="relative flex-1  sessions_input">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search sessions..."
@@ -196,7 +196,7 @@ export default function Sessions() {
           />
         </div>
         <Select value={selectedCohort} onValueChange={setSelectedCohort}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] sessions_select">
             <SelectValue placeholder="Filter by cohort" />
           </SelectTrigger>
           <SelectContent>

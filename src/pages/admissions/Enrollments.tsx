@@ -176,14 +176,14 @@ export default function Enrollments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between enrollments_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Enrollments</h2>
           <p className="text-muted-foreground">Manage student enrollments</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 ">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
-            <Button variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
+            <Button className='enrollments_bulk_active' variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
               <CheckSquare className="mr-2 h-4 w-4" />
               Bulk Activate
             </Button>
@@ -191,8 +191,8 @@ export default function Enrollments() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex items-center gap-4 enrollements_input_option_wrapper">
+        <div className="relative flex-1 max-w-sm enrollments_input_wrapper">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search enrollments..."
@@ -204,7 +204,7 @@ export default function Enrollments() {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
-          className="px-3 py-2 border border-border rounded-md"
+          className="px-3 py-2 border border-border rounded-md select_wrapper"
         >
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
@@ -230,7 +230,7 @@ export default function Enrollments() {
                 return (
                   <div
                     key={enrollment.id}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg"
+                    className="flex items-center justify-between p-4 border border-border rounded-lg enrollments_item"
                   >
                     <div className="flex items-center gap-3">
                       {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (

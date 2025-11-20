@@ -139,14 +139,14 @@ export default function Submissions() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between submissions_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Submissions</h2>
           <p className="text-muted-foreground">View and manage assessment submissions</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 select_wrapper">
           <Select value={selectedAssessment} onValueChange={setSelectedAssessment}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger>
               <SelectValue placeholder="Filter by assessment" />
             </SelectTrigger>
             <SelectContent>
@@ -184,7 +184,7 @@ export default function Submissions() {
                 return (
                   <div key={submission.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-primary/10 p-2">
+                      <div className="rounded-lg bg-primary/10 p-2 submissions_file_icon">
                         <FileText className="h-5 w-5 text-primary" />
                       </div>
                       <div>
