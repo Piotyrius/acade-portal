@@ -191,8 +191,8 @@ export default function Enrollments() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex items-center gap-4 enrollements_input_option_wrapper">
+        <div className="relative flex-1 max-w-sm input_wrapper">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search enrollments..."
@@ -204,7 +204,7 @@ export default function Enrollments() {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
-          className="px-3 py-2 border border-border rounded-md"
+          className="px-3 py-2 border border-border rounded-md select_wrapper"
         >
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
@@ -268,7 +268,7 @@ export default function Enrollments() {
                               <CheckCircle className="h-4 w-4" />
                             </Button>
                           )}
-                          {enrollment.status === 'ACTIVE' && (
+                          {/* {enrollment.status === 'ACTIVE' && (
                             <>
                               <Button
                                 variant="outline"
@@ -287,7 +287,7 @@ export default function Enrollments() {
                                 <XCircle className="h-4 w-4" />
                               </Button>
                             </>
-                          )}
+                          )} */}
                         </div>
                       )}
                     </div>
