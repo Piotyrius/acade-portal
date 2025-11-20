@@ -181,7 +181,7 @@ export default function Enrollments() {
           <h2 className="text-3xl font-bold tracking-tight">Enrollments</h2>
           <p className="text-muted-foreground">Manage student enrollments</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 ">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
             <Button className='enrollments_bulk_active' variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
               <CheckSquare className="mr-2 h-4 w-4" />
@@ -192,7 +192,7 @@ export default function Enrollments() {
       </div>
 
       <div className="flex items-center gap-4 enrollements_input_option_wrapper">
-        <div className="relative flex-1 max-w-sm input_wrapper">
+        <div className="relative flex-1 max-w-sm enrollments_input_wrapper">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search enrollments..."
@@ -230,7 +230,7 @@ export default function Enrollments() {
                 return (
                   <div
                     key={enrollment.id}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg"
+                    className="flex items-center justify-between p-4 border border-border rounded-lg enrollments_item"
                   >
                     <div className="flex items-center gap-3">
                       {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
@@ -268,7 +268,7 @@ export default function Enrollments() {
                               <CheckCircle className="h-4 w-4" />
                             </Button>
                           )}
-                          {/* {enrollment.status === 'ACTIVE' && (
+                          {enrollment.status === 'ACTIVE' && (
                             <>
                               <Button
                                 variant="outline"
@@ -287,7 +287,7 @@ export default function Enrollments() {
                                 <XCircle className="h-4 w-4" />
                               </Button>
                             </>
-                          )} */}
+                          )}
                         </div>
                       )}
                     </div>

@@ -32,9 +32,9 @@ export default function Applications() {
 
   // Mock data for preview
   const mockApplications: ApplicationDto[] = [
-    { id: '1', program: '1', name: 'Sarah Johnson', email: 'sarah.j@email.com', phone: '+1-555-0101', status: 'PENDING', created_at: '2024-02-01T10:30:00Z', updated_at: '2024-02-01T10:30:00Z' },
+    { id: '1', program: '1', name: 'Sarah Johnson', email: 'sarah.j@email.com', phone: '+1-555-0101', status: 'NEW', created_at: '2024-02-01T10:30:00Z', updated_at: '2024-02-01T10:30:00Z' },
     { id: '2', program: '1', name: 'Michael Chen', email: 'michael.chen@email.com', phone: '+1-555-0102', status: 'ACCEPTED', created_at: '2024-02-02T14:15:00Z', updated_at: '2024-02-05T09:20:00Z' },
-    { id: '3', program: '2', name: 'Emily Rodriguez', email: 'emily.r@email.com', phone: '+1-555-0103', status: 'PENDING', created_at: '2024-02-03T16:45:00Z', updated_at: '2024-02-03T16:45:00Z' },
+    { id: '3', program: '2', name: 'Emily Rodriguez', email: 'emily.r@email.com', phone: '+1-555-0103', status: 'NEW', created_at: '2024-02-03T16:45:00Z', updated_at: '2024-02-03T16:45:00Z' },
     { id: '4', program: '3', name: 'David Kim', email: 'david.kim@email.com', phone: '+1-555-0104', status: 'ACCEPTED', created_at: '2024-02-04T11:20:00Z', updated_at: '2024-02-06T10:15:00Z' },
     { id: '5', program: '1', name: 'Jessica Martinez', email: 'jessica.m@email.com', phone: '+1-555-0105', status: 'REJECTED', created_at: '2024-02-05T09:00:00Z', updated_at: '2024-02-07T14:30:00Z' },
   ];
@@ -110,7 +110,7 @@ export default function Applications() {
     acceptMutation.mutate({ id: selectedApp.id, cohortId: selectedCohort });
   };
 
-  const handleStatusChange = (id: string, status: 'PENDING' | 'ACCEPTED' | 'REJECTED') => {
+  const handleStatusChange = (id: string, status: 'NEW' | 'IN_REVIEW' | 'ACCEPTED' | 'REJECTED') => {
     updateMutation.mutate({ id, data: { status } });
   };
 
@@ -185,7 +185,7 @@ export default function Applications() {
                     >
                       {app.status}
                     </Badge>
-                    {app.status === 'PENDING' && (
+                    {(app.status === 'NEW' || app.status === 'IN_REVIEW') && (
                       <div className="flex gap-2">
                         <Button
                           size="sm"

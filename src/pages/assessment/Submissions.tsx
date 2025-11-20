@@ -146,7 +146,7 @@ export default function Submissions() {
         </div>
         <div className="flex gap-2 select_wrapper">
           <Select value={selectedAssessment} onValueChange={setSelectedAssessment}>
-            <SelectTrigger className="submissions_select">
+            <SelectTrigger>
               <SelectValue placeholder="Filter by assessment" />
             </SelectTrigger>
             <SelectContent>

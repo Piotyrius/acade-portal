@@ -33,10 +33,10 @@ export default function Assessments() {
     cohort: '',
     title: '',
     description: '',
-    type: 'QUIZ' as 'EXAM' | 'QUIZ' | 'PROJECT' | 'ASSIGNMENT',
+    type: 'QUIZ' as 'EXAM' | 'QUIZ' | 'PROJECT',
     max_score: 100,
     weight: 1,
-    due_date: '',
+    due_at: '',
   });
 
   // Mock data for preview
@@ -75,7 +75,7 @@ export default function Assessments() {
         type: 'QUIZ',
         max_score: 100,
         weight: 1,
-        due_date: '',
+        due_at: '',
       });
     },
     onError: (error) => {
@@ -116,7 +116,7 @@ export default function Assessments() {
       type: 'QUIZ',
       max_score: 100,
       weight: 1,
-      due_date: '',
+      due_at: '',
     });
     setIsDialogOpen(true);
   };
@@ -127,10 +127,10 @@ export default function Assessments() {
       cohort: assessment.cohort,
       title: assessment.title,
       description: assessment.description || '',
-      type: assessment.type,
+      type: assessment.type?.toUpperCase() as 'EXAM' | 'QUIZ' | 'PROJECT',
       max_score: assessment.max_score,
       weight: assessment.weight,
-      due_date: assessment.due_date || '',
+      due_at: assessment.due_date || '',
     });
     setIsDialogOpen(true);
   };
@@ -139,7 +139,7 @@ export default function Assessments() {
     e.preventDefault();
     const payload = {
       ...formData,
-      due_date: formData.due_date || null,
+      due_at: formData.due_at || null,
     };
     if (editingAssessment) {
       updateMutation.mutate({ id: editingAssessment.id, data: payload });
@@ -180,8 +180,8 @@ export default function Assessments() {
           <h2 className="text-3xl font-bold tracking-tight">Assessments</h2>
           <p className="text-muted-foreground">Create and manage course assessments</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleOpenCreate}>
+        <div className="flex gap-2 assesments_create_btn_wrapper">
+          <Button onClick={handleOpenCreate} className='assesments_create_btn'>
             <Plus className="mr-2 h-4 w-4" />
             Create Assessment
           </Button>
@@ -195,35 +195,42 @@ export default function Assessments() {
           return (
             <Card key={assessment.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <div className="flex items-start justify-between assesments_item">
-                  <div className="flex gap-4">
-                    <div className="rounded-lg bg-primary/10 p-3 assesments_file_icon">
-                      <FileCheck className="h-6 w-6 text-primary" />
+                <div className="flex gap-3 items-center justify-between assesments_item">
+                    
+                  <div className='assesments_top_side'>
+                  
+                    <div className="flex gap-4 items-center">
+                      <div className="rounded-lg bg-primary/10 p-3 assesments_file_icon">
+                        <FileCheck className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle>{assessment.title}</CardTitle>
+                        <p className="text-muted-foreground mt-1 assesments_due_text">
+                          {cohort?.name || 'Unknown Cohort'} • Due:{' '}
+                          {assessment.due_at ? new Date(assessment.due_at).toLocaleDateString() : 'No due date'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle>{assessment.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {cohort?.name || 'Unknown Cohort'} • Due:{' '}
-                        {assessment.due_date ? new Date(assessment.due_date).toLocaleDateString() : 'No due date'}
-                      </p>
+
+
+                    <div className="flex items-center">
+                      <Badge variant="outline"> {assessment.type} </Badge>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">Max: {assessment.max_score}</p>
+                        <p className="text-xs text-muted-foreground">Weight: {assessment.weight}</p>
+                      </div>
                     </div>
+
                   </div>
 
 
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline">{assessment.type}</Badge>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">Max: {assessment.max_score}</p>
-                      <p className="text-xs text-muted-foreground">Weight: {assessment.weight}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button className='assesments_edit_btn' variant="ghost" size="sm" onClick={() => handleOpenEdit(assessment)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button className='assesments_delete_btn' variant="ghost" size="sm" onClick={() => handleDelete(assessment.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Button className='assesments_edit_btn' variant="ghost" size="sm" onClick={() => handleOpenEdit(assessment)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button className='assesments_delete_btn items-center' variant="ghost" size="sm" onClick={() => handleDelete(assessment.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
 
                   
@@ -289,7 +296,6 @@ export default function Assessments() {
                     <SelectItem value="EXAM">Exam</SelectItem>
                     <SelectItem value="QUIZ">Quiz</SelectItem>
                     <SelectItem value="PROJECT">Project</SelectItem>
-                    <SelectItem value="ASSIGNMENT">Assignment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -324,8 +330,8 @@ export default function Assessments() {
                 <Input
                   id="due_date"
                   type="datetime-local"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  value={formData.due_at}
+                  onChange={(e) => setFormData({ ...formData, due_at: e.target.value })}
                 />
               </div>
               <div className="space-y-2">

@@ -97,9 +97,19 @@
     width: 100%;
 }
 
+.assesments_top_side {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
 .cohort_icon {
     display: flex;
     align-items: center;
+}
+
+.assesments_due_text {
+    font-size: 14px;
 }
 
 @media (max-width: 400px) {
@@ -183,6 +193,14 @@
 
     .programs_plus_btn {
         width: 100%;
+    }
+
+    .programs_search_input {
+        max-width: 100% !important;
+    }
+
+        .courses_search {
+        max-width: 100% !important;
     }
 
     .courses_header_wrapper {
@@ -286,6 +304,47 @@
         width: 100%;
     }
     
+    .select_wrapper {
+        width: 100% !important;
+    }
+
+    .assesments_due_text {
+        font-size: 11px;
+    }
+
+    .enrollments_item {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }
+
+    .sessions_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px; 
+    }
+
+    .create_sessions_btn {
+        width: 100%;
+    }
+
+    .sessions_search_select_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        width: 100%;
+    }
+
+    .sessions_select {
+        width: 100% !important;
+    }
+
+    .sessions_input {
+        width: 100% !important;
+    }
+
+    .courses_search {
+        max-width: 100% !important;
+    }
 
 }
 
@@ -294,12 +353,6 @@
     .cohort_item_wrapper {
         flex-direction: column;
     }
-    
-    .cohort_top_side {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-    }
 
     .certificate_item {
         flex-direction: column;
@@ -307,23 +360,13 @@
         gap: 15px;
     }
 
-    .submissions_header_wrapper {
-        flex-direction: column;
-        align-items: start !important;
-        gap: 15px;
-    }
-
-    .submissions_select, .select_wrapper {
-        width: 100%;
-    }
-
     .submissions_file_icon {
         display: none;
     }
 
-    /* .assesments_item {
-
-    } */
+    .assesments_item {
+        flex-direction: column;
+    }
 
 }
 
@@ -465,11 +508,33 @@
     .enrollements_input_option_wrapper {
         flex-direction: column;
         align-items: start !important;
-
+        width: 100%;
     }
 
-    .input_wrapper, .select_wrapper {
-        width: 300px;
+    .enrollments_input_wrapper {
+        width: 100%;
+    }
+
+    .select_wrapper {
+        width: 100%;
+    }
+
+    .submissions_header_wrapper {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 15px;
+    }
+
+    .submissions_select, .select_wrapper {
+        width: 100%;
+    }
+
+    .assesments_create_btn_wrapper, .assesments_create_btn {
+        width: 100%;
+    }
+
+    .enrollments_input_wrapper, .input {
+        max-width: 100% !important;
     }
 
 
