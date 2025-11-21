@@ -75,7 +75,7 @@ api.interceptors.response.use(
 
         notify(newAccess);
 
-        original.headers.Authorization = `Bearer newAccess`;
+        original.headers.Authorization = `Bearer ${newAccess}`;
         return api(original);
       } catch (e) {
         auth.clearAuth();

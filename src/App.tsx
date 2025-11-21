@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { RequireAuth } from "@/components/guards/RequireAuth";
 import { AppShell } from "@/components/layout/AppShell";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Programs from "./pages/catalog/Programs";
 import Courses from "./pages/catalog/Courses";
@@ -33,6 +34,7 @@ import ApplyPage from "./pages/public/ApplyPage";
 import PublicGallery from "./pages/public/PublicGallery";
 import LecturerDashboard from "./pages/lecturer/LecturerDashboard";
 import NotFound from "./pages/NotFound";
+import ManualEnrollment from "./pages/admissions/ManualEnrollment";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,11 +57,16 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify" element={<VerifyCertificate />} />
           <Route path="/apply" element={<ApplyPage />} />
           <Route path="/gallery" element={<PublicGallery />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route element={<AppShell />}>
+          <Route element={
+            <RequireAuth>
+              <AppShell />
+            </RequireAuth>
+          }>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="catalog/programs" element={<Programs />} />
             <Route path="catalog/courses" element={<Courses />} />
@@ -67,6 +74,7 @@ const App = () => (
             <Route path="catalog/sessions" element={<Sessions />} />
             <Route path="admissions/applications" element={<Applications />} />
             <Route path="admissions/enrollments" element={<Enrollments />} />
+            <Route path="admissions/manual-enrollment" element={<ManualEnrollment />} />
             <Route path="admissions/recruiting" element={<Recruiting />} />
             <Route path="attendance/list" element={<AttendanceList />} />
             <Route path="assessment/assessments" element={<Assessments />} />
