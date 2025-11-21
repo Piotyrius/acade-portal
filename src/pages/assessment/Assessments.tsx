@@ -33,7 +33,7 @@ export default function Assessments() {
     cohort: '',
     title: '',
     description: '',
-    type: 'QUIZ' as 'EXAM' | 'QUIZ' | 'PROJECT',
+    type: 'QUIZ' as 'EXAM' | 'QUIZ' | 'PROJECT' | 'ASSIGNMENT',
     max_score: 100,
     weight: 1,
     due_at: '',
@@ -121,16 +121,30 @@ export default function Assessments() {
     setIsDialogOpen(true);
   };
 
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '';
+    // Pad month, day, hours, minutes
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const min = pad(d.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  };
+
   const handleOpenEdit = (assessment: AssessmentDto) => {
     setEditingAssessment(assessment);
     setFormData({
-      cohort: assessment.cohort,
-      title: assessment.title,
+      cohort: assessment.cohort || '',
+      title: assessment.title || '',
       description: assessment.description || '',
-      type: assessment.type?.toUpperCase() as 'EXAM' | 'QUIZ' | 'PROJECT',
-      max_score: assessment.max_score,
-      weight: assessment.weight,
-      due_at: assessment.due_date || '',
+      type: assessment.type || 'QUIZ',
+      max_score: typeof assessment.max_score === 'number' ? assessment.max_score : 100,
+      weight: typeof assessment.weight === 'number' ? assessment.weight : 1,
+      due_at: formatDateForInput(assessment.due_at || assessment.due_date || ''),
     });
     setIsDialogOpen(true);
   };
@@ -175,13 +189,13 @@ export default function Assessments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between assesments_header_wrapper">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Assessments</h2>
           <p className="text-muted-foreground">Create and manage course assessments</p>
         </div>
-        <div className="flex gap-2 assesments_create_btn_wrapper">
-          <Button onClick={handleOpenCreate} className='assesments_create_btn'>
+        <div className="flex gap-2">
+          <Button onClick={handleOpenCreate}>
             <Plus className="mr-2 h-4 w-4" />
             Create Assessment
           </Button>
@@ -195,45 +209,42 @@ export default function Assessments() {
           return (
             <Card key={assessment.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <div className="flex gap-3 items-center justify-between assesments_item">
-                    
-                  <div className='assesments_top_side'>
-                  
-                    <div className="flex gap-4 items-center">
-                      <div className="rounded-lg bg-primary/10 p-3 assesments_file_icon">
-                        <FileCheck className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle>{assessment.title}</CardTitle>
-                        <p className="text-muted-foreground mt-1 assesments_due_text">
-                          {cohort?.name || 'Unknown Cohort'} • Due:{' '}
-                          {assessment.due_at ? new Date(assessment.due_at).toLocaleDateString() : 'No due date'}
-                        </p>
-                      </div>
+                <div className="flex items-start justify-between">
+                  <div className="flex gap-4">
+                    <div className="rounded-lg bg-primary/10 p-3">
+                      <FileCheck className="h-6 w-6 text-primary" />
                     </div>
-
-
-                    <div className="flex items-center">
-                      <Badge variant="outline"> {assessment.type} </Badge>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">Max: {assessment.max_score}</p>
-                        <p className="text-xs text-muted-foreground">Weight: {assessment.weight}</p>
-                      </div>
+                    <div>
+                      <CardTitle>
+                        {assessment.title}
+                        <span className="ml-2 px-2 py-1 rounded bg-muted text-xs font-semibold align-middle">
+                          {assessment.type === 'EXAM' && 'Exam'}
+                          {assessment.type === 'QUIZ' && 'Quiz'}
+                          {assessment.type === 'PROJECT' && 'Project'}
+                          {assessment.type === 'ASSIGNMENT' && 'Assignment'}
+                        </span>
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {cohort?.name || 'Unknown Cohort'} • Due:{' '}
+                        {assessment.due_at ? new Date(assessment.due_at).toLocaleDateString() : 'No due date'}
+                      </p>
                     </div>
-
                   </div>
-
-
-                  <div className="flex items-center gap-2">
-                    <Button className='assesments_edit_btn' variant="ghost" size="sm" onClick={() => handleOpenEdit(assessment)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button className='assesments_delete_btn items-center' variant="ghost" size="sm" onClick={() => handleDelete(assessment.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline">{assessment.type}</Badge>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">Max: {typeof assessment.max_score === 'number' && !isNaN(assessment.max_score) ? assessment.max_score : 0}</p>
+                      <p className="text-xs text-muted-foreground">Weight: {assessment.weight}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(assessment)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(assessment.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
-
-                  
                 </div>
               </CardHeader>
             </Card>
@@ -296,6 +307,7 @@ export default function Assessments() {
                     <SelectItem value="EXAM">Exam</SelectItem>
                     <SelectItem value="QUIZ">Quiz</SelectItem>
                     <SelectItem value="PROJECT">Project</SelectItem>
+                    <SelectItem value="ASSIGNMENT">Assignment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -326,9 +338,9 @@ export default function Assessments() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="due_date">Due Date</Label>
+                <Label htmlFor="due_at">Due Date</Label>
                 <Input
-                  id="due_date"
+                  id="due_at"
                   type="datetime-local"
                   value={formData.due_at}
                   onChange={(e) => setFormData({ ...formData, due_at: e.target.value })}

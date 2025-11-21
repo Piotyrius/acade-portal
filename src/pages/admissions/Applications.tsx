@@ -52,7 +52,7 @@ export default function Applications() {
 
   const { data: programs = mockPrograms } = useQuery({
     queryKey: ['programs'],
-    queryFn: getPrograms,
+    queryFn: () => getPrograms(),
   });
 
   const { data: cohorts = [] } = useQuery({
