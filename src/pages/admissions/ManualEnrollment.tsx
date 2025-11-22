@@ -10,7 +10,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { createEnrollment } from '../../api/endpoints/enrollments';
+import { createEnrollment } from '../../api/endpoints/admissions';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { getUsers } from '../../api/endpoints/users';
