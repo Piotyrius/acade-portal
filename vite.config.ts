@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -11,7 +12,7 @@ const ensureRedirectsPlugin = () => {
     closeBundle() {
       const redirectsSource = path.resolve(__dirname, "public", "_redirects");
       const redirectsDest = path.resolve(__dirname, "dist", "_redirects");
-      
+
       if (existsSync(redirectsSource)) {
         copyFileSync(redirectsSource, redirectsDest);
         console.log("✅ Copied _redirects file to dist/");
@@ -29,7 +30,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(), 
+    react(),
     mode === "development" && componentTagger(),
     ensureRedirectsPlugin(),
   ].filter(Boolean),
@@ -40,4 +41,10 @@ export default defineConfig(({ mode }) => ({
   },
   // Ensure public files are copied correctly
   publicDir: "public",
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.ts",
+    css: true,
+  },
 }));
