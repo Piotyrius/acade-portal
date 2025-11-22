@@ -57,7 +57,8 @@ export default function Enrollments() {
   });
 
   const activateMutation = useMutation({
-    mutationFn: activateEnrollment,
+    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+      activateEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
       toast({ title: 'Success', description: 'Enrollment activated successfully' });
@@ -68,7 +69,8 @@ export default function Enrollments() {
   });
 
   const withdrawMutation = useMutation({
-    mutationFn: withdrawEnrollment,
+    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+      withdrawEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
       toast({ title: 'Success', description: 'Enrollment withdrawn successfully' });
@@ -79,7 +81,8 @@ export default function Enrollments() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: completeEnrollment,
+    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+      completeEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
       toast({ title: 'Success', description: 'Enrollment completed successfully' });
@@ -102,21 +105,30 @@ export default function Enrollments() {
     },
   });
 
-  const handleActivate = (id: string) => {
+  const handleActivate = (enrollment: any) => {
     if (confirm('Are you sure you want to activate this enrollment?')) {
-      activateMutation.mutate(id);
+      activateMutation.mutate({
+        id: enrollment.id,
+        payload: { cohort: enrollment.cohort, student: enrollment.student },
+      });
     }
   };
 
-  const handleWithdraw = (id: string) => {
+  const handleWithdraw = (enrollment: any) => {
     if (confirm('Are you sure you want to withdraw this enrollment?')) {
-      withdrawMutation.mutate(id);
+      withdrawMutation.mutate({
+        id: enrollment.id,
+        payload: { cohort: enrollment.cohort, student: enrollment.student },
+      });
     }
   };
 
-  const handleComplete = (id: string) => {
+  const handleComplete = (enrollment: any) => {
     if (confirm('Are you sure you want to mark this enrollment as complete?')) {
-      completeMutation.mutate(id);
+      completeMutation.mutate({
+        id: enrollment.id,
+        payload: { cohort: enrollment.cohort, student: enrollment.student },
+      });
     }
   };
 
@@ -261,7 +273,7 @@ export default function Enrollments() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleActivate(enrollment.id)}
+                              onClick={() => handleActivate(enrollment)}
                               disabled={activateMutation.isPending}
                               title="Activate Enrollment"
                             >
@@ -273,7 +285,7 @@ export default function Enrollments() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleComplete(enrollment.id)}
+                                onClick={() => handleComplete(enrollment)}
                                 disabled={completeMutation.isPending}
                               >
                                 <CheckCircle className="h-4 w-4" />
@@ -281,7 +293,7 @@ export default function Enrollments() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleWithdraw(enrollment.id)}
+                                onClick={() => handleWithdraw(enrollment)}
                                 disabled={withdrawMutation.isPending}
                               >
                                 <XCircle className="h-4 w-4" />
@@ -324,7 +336,7 @@ export default function Enrollments() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleActivate(enrollment.id)}
+                      onClick={() => handleActivate(enrollment)}
                       disabled={activateMutation.isPending}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />

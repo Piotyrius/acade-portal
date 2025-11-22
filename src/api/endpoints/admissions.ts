@@ -1,10 +1,9 @@
 import api from '@/api/client';
-import axios from 'axios';
 import { ApplicationDto, EnrollmentDto } from '@/api/types';
 
 // Applications (Public - no auth required)
 export async function submitPublicApplication(payload: Partial<ApplicationDto>): Promise<ApplicationDto> {
-  const { data } = await axios.post('http://localhost:8000/api/v1/admissions/applications/', payload);
+  const { data } = await api.post('/api/v1/admissions/applications/', payload);
   return data;
 }
 
@@ -61,18 +60,18 @@ export async function updateEnrollment(id: string, payload: Partial<EnrollmentDt
   return data;
 }
 
-export async function activateEnrollment(id: string): Promise<EnrollmentDto> {
-  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/activate/`);
+export async function activateEnrollment(id: string, payload: { cohort: string; student: string }): Promise<EnrollmentDto> {
+  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/activate/`, payload);
   return data;
 }
 
-export async function withdrawEnrollment(id: string): Promise<EnrollmentDto> {
-  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/withdraw/`);
+export async function withdrawEnrollment(id: string, payload: { cohort: string; student: string }): Promise<EnrollmentDto> {
+  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/withdraw/`, payload);
   return data;
 }
 
-export async function completeEnrollment(id: string): Promise<EnrollmentDto> {
-  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/complete/`);
+export async function completeEnrollment(id: string, payload: { cohort: string; student: string }): Promise<EnrollmentDto> {
+  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/complete/`, payload);
   return data;
 }
 
@@ -82,7 +81,7 @@ export async function getWaitlist(): Promise<EnrollmentDto[]> {
 }
 
 export async function bulkActivateEnrollments(ids: string[]): Promise<{ activated: number; errors: string[] }> {
-  const { data } = await api.post('/api/v1/admissions/enrollments/bulk_activate/', { enrollment_ids: ids });
+  const { data } = await api.post('/api/v1/admissions/enrollments/bulk_activate/', { enrollments_ids: ids });
   return data;
 }
 

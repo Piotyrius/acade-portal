@@ -54,8 +54,6 @@ export async function deleteUser(id: string): Promise<void> {
   await api.delete(`/api/v1/users/${id}/`);
 }
 
-
-
-
-
-
+export async function requestPasswordReset(email: string): Promise<void> {
+  await api.post('/api/v1/auth/password_reset/', { email });
+}
