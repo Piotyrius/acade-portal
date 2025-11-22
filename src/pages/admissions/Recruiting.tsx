@@ -96,8 +96,8 @@ export default function Recruiting() {
                 value={form.program}
                 onValueChange={val => setForm({ ...form, program: val })}
               >
-                <SelectTrigger className='recruiting_input'>
-                  <SelectValue placeholder="Select program or Thinking" />
+                <SelectTrigger className='recruiting_select'>
+                  <SelectValue className='text-gray-400' placeholder="Select program or Thinking" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="thinking">Thinking</SelectItem>
@@ -118,7 +118,7 @@ export default function Recruiting() {
               />
             </div>
 
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button className='recruiting_btn' type="submit" disabled={mutation.isPending}>
               Recruit
             </Button>
           </form>
