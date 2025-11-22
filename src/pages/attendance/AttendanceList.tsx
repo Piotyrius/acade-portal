@@ -66,7 +66,7 @@ export default function AttendanceList() {
     staleTime: 2 * 60 * 1000, // 2 minutes for attendance data
   });
 
-  const { data: sessions = mockSessions } = useQuery({
+  const { data: sessions = [] } = useQuery({
     queryKey: ['sessions'],
     queryFn: () => getSessions(undefined),
     staleTime: 5 * 60 * 1000, // 5 minutes for session data
@@ -213,6 +213,7 @@ export default function AttendanceList() {
       session_id: bulkFormData.session,
       records: bulkFormData.records,
     });
+    
   };
 
   const displayRecords = records.length === 0 ? exampleAttendance.slice(0, 1) : records;
@@ -291,32 +292,65 @@ export default function AttendanceList() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredRecords.map((record: any) => {
-              const session = sessions.find((s) => s.id === record.session);
-              const student = students.find((s: any) => s.id === record.student);
-              return (
-                <div key={record.id} className="attendance_item flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div>
-                    <p className="font-medium">
-                      {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Session: {session ? new Date(session.start_at).toLocaleString() : 'Unknown'} •{' '}
-                      {new Date(record.marked_at).toLocaleDateString()}
-                    </p>
-                    {record.note && <p className="text-xs text-muted-foreground mt-1">Note: {record.note}</p>}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={getStatusVariant(record.status)}>{record.status_display || record.status}</Badge>
-                    {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenDialog(record)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            
+            <table className='attendance_table'>
+                <thead>
+                  <tr>
+
+                    <th> Student </th>
+                    <th> Sessions </th>
+                    <th> Status </th>
+                    <th> Note </th>
+                    <th> Action </th>
+
+                  </tr>
+                </thead>
+
+                <tbody>
+
+
+                {filteredRecords.map((record: any) => {
+                  const session = sessions.find((s) => s.id === record.session);
+                  const student = students.find((s: any) => s.id === record.student);
+                  return (
+                      <tr key={record.id}>
+
+                        <td>
+                          <p className="font-medium"> {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student} </p>
+                        </td>
+
+                        <td>
+                          <p className="text-sm text-muted-foreground">
+                           Session: {session ? new Date(session.start_at).toLocaleString() : 'Unknown'} •{' '}
+                           {new Date(record.marked_at).toLocaleDateString()}
+                          </p>
+                        </td>
+
+                        <td>
+                          <Badge variant={getStatusVariant(record.status)}>{record.status_display || record.status}</Badge>
+                        </td>
+
+                        
+                        <td>
+                            {record.note && <p className="text-xs text-muted-foreground mt-1">Note: {record.note}</p>}
+                        </td>
+
+                        <td>
+                          {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenDialog(record)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </td>
+
+                      </tr>
+                  )
+                })}
+              
+              </tbody>
+
+            </table>
+
           </div>
           {filteredRecords.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">

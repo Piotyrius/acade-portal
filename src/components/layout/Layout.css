@@ -67,7 +67,7 @@
     height: 100vh;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
-    z-index: 100;
+    z-index: 10;
     background: var(--sidebar-bg, #fff);
     display: flex;
     flex-direction: column;
@@ -119,6 +119,11 @@
 
 .assesments_due_text {
     font-size: 14px;
+}
+
+.menu_icon {
+    display: none;
+    font-size: 1.3rem;
 }
 
 @media (max-width: 400px) {
@@ -382,10 +387,13 @@
 
 @media (max-width: 750px) {
 
-.menu_icon {
-  display: none;
+    .menu_icon {
+        display: flex;
+    }
+
 }
-}
+
+
 @media (max-width: 600px) {
   .topbar_welcome {
     display: none;
@@ -586,4 +594,37 @@
         display: none;
     }
 
+}
+
+
+
+
+
+
+
+
+
+.attendance_table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.attendance_table th {
+    text-align: left;
+    background: #f7f7f7;
+    padding: 12px 14px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 2px solid #e5e5e5;
+}
+
+.attendance_table td {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #eee;
+}
+
+.attendance_table tr:hover {
+    background: #fafafa;
 }
