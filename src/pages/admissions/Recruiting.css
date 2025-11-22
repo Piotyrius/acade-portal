@@ -1,0 +1,45 @@
+.recruiting_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.recruiting_wrapper {
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 10px;
+    box-shadow: 2px 2px 10px rgba(114, 114, 114, 0.13);
+}
+
+.recruit_student_title {
+    font-size: 1.4rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.recruiting_form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 400px;
+}
+
+.recruiting_form > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.recruiting_form > div label {
+    font-weight: 400;
+    font-size: 14px;
+    color: #2a2a2a;
+}
+
+.recruiting_input {
+    border-radius: 15px;
+    height: 45px;
+}
