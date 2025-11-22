@@ -68,14 +68,14 @@ export function Sidebar() {
         <img src="/logo.svg" alt="Cyber Academy" className="h-10 w-auto" />
         <span className="text-lg font-semibold text-sidebar-foreground">Cyber Academy</span>
       </div>
-      <nav className="sidebar-menu">
+      <nav className="sidebar_link_wrapper">
         {visibleNavigation.map((item) => (
           <NavLink
             key={item.name}
             to={item.href}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2 my-1 text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
