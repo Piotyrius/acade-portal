@@ -1,42 +1,30 @@
 .layout {
-  display: flex;
-  height: 100vh;
-  background: var(--background, #f5f6f8);
-  overflow: hidden;
+    display: flex;
+    height: 100vh;
+    background: var(--background, #f5f6f8);
+    overflow: hidden;
 }
 
 .layout-main {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
 }
 
 .layout-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
-}
-
-.sidebar_wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
 }
 
 .sidebar_link_wrapper {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 7px;
     overflow-y: auto;
-    padding: 16px;
-}
-
-.sidebar_link_wrapper {
-    overflow-y: auto;
-    padding: 10px;
+    padding: 12px;
 }
 
 .sidebar_link_wrapper::-webkit-scrollbar {
@@ -63,18 +51,20 @@
     position: fixed;
     left: 0;
     top: 0;
-    width: 256px;
+    width: 220px;
     height: 100vh;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     z-index: 10;
-    background: var(--sidebar-bg, #fff);
+    background-color: hsl(var(--sidebar-background));  
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+
 }
 
 .layout.menu-open .sidebar_wrapper {
-  transform: translateX(0);
+    transform: translateX(0);
 }
 
 .add_user_btn {
@@ -125,6 +115,8 @@
     display: none;
     font-size: 1.3rem;
 }
+
+
 
 @media (max-width: 400px) {
 
@@ -213,7 +205,7 @@
         max-width: 100% !important;
     }
 
-        .courses_search {
+    .courses_search {
         max-width: 100% !important;
     }
 
@@ -382,22 +374,9 @@
         flex-direction: column;
     }
 
-}
-
-
-@media (max-width: 750px) {
-
-    .menu_icon {
-        display: flex;
+    .topbar_welcome {
+        display: none;
     }
-
-}
-
-
-@media (max-width: 600px) {
-  .topbar_welcome {
-    display: none;
-  }
 
     .cohort_action_btns {
         padding-left: 10px;
@@ -405,6 +384,16 @@
     }
 
 }
+
+
+@media (max-width: 800px) {
+
+    .menu_icon {
+        display: flex;
+    }
+
+}
+
 
 @media (max-width: 900px) {
 
@@ -582,11 +571,12 @@
 
 
 
-@media (min-width: 751px) {
+@media (min-width: 801px) {
 
     .sidebar_wrapper {
         position: relative;
         transform: none;
+        width: 220px;
     }
 
     
