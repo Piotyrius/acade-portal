@@ -55,7 +55,7 @@ describe('Admissions API Endpoints', () => {
     })
 
     describe('bulkActivateEnrollments', () => {
-        it('should POST with enrollments_ids in payload', async () => {
+        it('should POST with enrollment_ids in payload', async () => {
             const mockResponse = { activated: 2, errors: [] }
             vi.mocked(api.post).mockResolvedValue({ data: mockResponse })
 
@@ -64,7 +64,7 @@ describe('Admissions API Endpoints', () => {
 
             expect(api.post).toHaveBeenCalledWith(
                 '/api/v1/admissions/enrollments/bulk_activate/',
-                { enrollments_ids: ids }
+                { enrollment_ids: ids }
             )
             expect(result).toEqual(mockResponse)
         })
@@ -77,7 +77,7 @@ describe('Admissions API Endpoints', () => {
 
             expect(api.post).toHaveBeenCalledWith(
                 '/api/v1/admissions/enrollments/bulk_activate/',
-                { enrollments_ids: [] }
+                { enrollment_ids: [] }
             )
             expect(result.activated).toBe(0)
         })
