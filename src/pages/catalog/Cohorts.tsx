@@ -71,6 +71,7 @@ export default function Cohorts() {
     queryFn: () => getCourses(),
   });
 
+  console.log("COHORT:", cohorts);
   const createMutation = useMutation({
     mutationFn: createCohort,
     onSuccess: () => {

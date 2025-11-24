@@ -56,8 +56,17 @@ export default function Enrollments() {
     queryFn: () => getCohorts(),
   });
 
+  type ActivatePayload = {
+  status: string;
+  completed_at: string | null;
+  notes: string | null;
+  organization: string;
+  student: string;
+  cohort: string;
+};
+
   const activateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: ActivatePayload }) =>
       activateEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
@@ -66,6 +75,8 @@ export default function Enrollments() {
     onError: (error) => {
       toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
     },
+
+    
   });
 
   const withdrawMutation = useMutation({
@@ -105,20 +116,19 @@ export default function Enrollments() {
     },
   });
 
-  const handleActivate = (enrollment: any) => {
-    activateMutation.mutate({
-      id: enrollment.id,
-      payload: {
-        status: enrollment.status,
-        completed_at: enrollment.completed_at || null,
-        notes: enrollment.notes || "",
-        organization: enrollment.organization,
-        student: enrollment.student,
-        cohort: enrollment.cohort
-      },
-    
-    });
-  };
+const handleActivate = (enrollment: any) => {
+  activateMutation.mutate({
+    id: enrollment.id,
+    payload: {
+      status: "PENDING", 
+      completed_at: null,
+      notes: enrollment.notes || "",
+      organization: enrollment.organization,
+      student: enrollment.student,
+      cohort: enrollment.cohort,
+    },
+  });
+};
 
 
   const handleWithdraw = (enrollment: any) => {
