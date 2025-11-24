@@ -106,13 +106,20 @@ export default function Enrollments() {
   });
 
   const handleActivate = (enrollment: any) => {
-    if (confirm('Are you sure you want to activate this enrollment?')) {
-      activateMutation.mutate({
-        id: enrollment.id,
-        payload: { cohort: enrollment.cohort, student: enrollment.student },
-      });
-    }
+    activateMutation.mutate({
+      id: enrollment.id,
+      payload: {
+        status: enrollment.status,
+        completed_at: enrollment.completed_at || null,
+        notes: enrollment.notes || "",
+        organization: enrollment.organization,
+        student: enrollment.student,
+        cohort: enrollment.cohort
+      },
+    
+    });
   };
+
 
   const handleWithdraw = (enrollment: any) => {
     if (confirm('Are you sure you want to withdraw this enrollment?')) {

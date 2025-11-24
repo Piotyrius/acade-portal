@@ -569,3 +569,21 @@
     width: 95%;
   }
 }
+
+
+.rates_Card {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+} 
+
+.rate_item {
+  flex-direction: column;
+}
+
+.rates_top_side {
+  justify-content: space-between;
+}
+
+.rates_edit_btn, .rates_delete_btn {
+  width: 80px;
+}
