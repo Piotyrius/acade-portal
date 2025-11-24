@@ -94,14 +94,31 @@ export default function Enrollments() {
 
   const bulkActivateMutation = useMutation({
     mutationFn: bulkActivateEnrollments,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Bulk activation successful:', data);
       qc.invalidateQueries({ queryKey: ['enrollments'] });
-      toast({ title: 'Success', description: 'Enrollments activated successfully' });
+      toast({
+        title: 'Success',
+        description: `${data.activated} enrollment(s) activated successfully`
+      });
       setIsBulkDialogOpen(false);
       setSelectedEnrollments([]);
     },
-    onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    onError: (error: any) => {
+      console.error('❌ Bulk activation failed:', error);
+      console.error('Error response:', error.response?.data);
+
+      const errorMsg = error.response?.data?.error
+        || error.response?.data?.detail
+        || error.response?.data?.message
+        || error.message
+        || 'Failed to activate enrollments';
+
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        variant: 'destructive'
+      });
     },
   });
 
@@ -148,6 +165,10 @@ export default function Enrollments() {
       });
       return;
     }
+
+    console.log('🔵 Attempting bulk activate with IDs:', selectedEnrollments);
+    console.log('📊 Number of enrollments:', selectedEnrollments.length);
+
     bulkActivateMutation.mutate(selectedEnrollments);
   };
 

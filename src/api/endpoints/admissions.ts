@@ -81,7 +81,9 @@ export async function getWaitlist(): Promise<EnrollmentDto[]> {
 }
 
 export async function bulkActivateEnrollments(ids: string[]): Promise<{ activated: number; errors: string[] }> {
-  const { data } = await api.post('/api/v1/admissions/enrollments/bulk_activate/', { enrollments_ids: ids });
+  console.log('🔵 Bulk Activate Request:', { enrollment_ids: ids });
+  const { data } = await api.post('/api/v1/admissions/enrollments/bulk_activate/', { enrollment_ids: ids });
+  console.log('✅ Bulk Activate Response:', data);
   return data;
 }
 
