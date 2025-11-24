@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import './Timekeeping.css'
 
 export default function Rates() {
   const { user } = useAuthStore();
@@ -173,41 +174,54 @@ export default function Rates() {
           <CardTitle>Lecturer Rates</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-4 rates_Card">
             {displayRates.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No rates found</p>
             ) : (
               displayRates.map((rate: RateDto) => {
                 const lecturer = lecturers.find((l: any) => l.id === rate.lecturer);
                 return (
-                  <div key={rate.id} className="flex items-center justify-between p-4 border border-border rounded-lg rate_item">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-primary/10 p-2 rates_dollar_sign">
-                        <DollarSign className="h-5 w-5 text-primary" />
+                  <div key={rate.id} className="flex items-center justify-between p-4 h-[140px] border border-border rounded-lg rate_item">
+                    
+                    <div className='flex w-[100%]  rates_top_side'>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-primary/10 p-2 rates_dollar_sign">
+                          <DollarSign className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {lecturer ? `${lecturer.first_name} ${lecturer.last_name}` : 'Unknown Lecturer'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {(rate.per_hour_minor / 100).toFixed(2)} {rate.currency}/hour
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">
-                          {lecturer ? `${lecturer.first_name} ${lecturer.last_name}` : 'Unknown Lecturer'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {(rate.per_hour_minor / 100).toFixed(2)} {rate.currency}/hour
-                        </p>
+
+                      <div className="flex flex-col items-center gap-2">
+                        
                         <p className="text-xs text-muted-foreground">
                           Created: {new Date(rate.created_at).toLocaleDateString()}
                         </p>
+
+                        <Badge variant={rate.active ? 'default' : 'secondary'} className='rates_active'>
+                          {rate.active ? 'Active' : 'Inactive'}
+                        </Badge>
+
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={rate.active ? 'default' : 'secondary'} className='rates_active'>
-                        {rate.active ? 'Active' : 'Inactive'}
-                      </Badge>
-                      <Button variant="outline" size="sm" onClick={() => handleOpenDialog(rate)}>
+
+
+                    <div className='w-[100%] gap-2 flex justify-center'>
+                    
+                      <Button className='rates_edit_btn' variant="outline" size="sm" onClick={() => handleOpenDialog(rate)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(rate.id)}>
+                      <Button className='rates_delete_btn' variant="destructive" size="sm" onClick={() => handleDelete(rate.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
+
                   </div>
                 );
               })
