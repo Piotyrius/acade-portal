@@ -66,7 +66,17 @@ export default function Enrollments() {
 };
 
   const activateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: ActivatePayload }) =>
+    mutationFn: ({ id, payload }: {
+      id: string;
+      payload: {
+        status?: string;
+        completed_at?: string | null;
+        notes?: string;
+        organization?: string;
+        cohort: string;
+        student: string;
+      }
+    }) =>
       activateEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
@@ -80,7 +90,17 @@ export default function Enrollments() {
   });
 
   const withdrawMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+    mutationFn: ({ id, payload }: {
+      id: string;
+      payload: {
+        status?: string;
+        completed_at?: string | null;
+        notes?: string;
+        organization?: string;
+        cohort: string;
+        student: string;
+      }
+    }) =>
       withdrawEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
@@ -92,7 +112,17 @@ export default function Enrollments() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+    mutationFn: ({ id, payload }: {
+      id: string;
+      payload: {
+        status?: string;
+        completed_at?: string | null;
+        notes?: string;
+        organization?: string;
+        cohort: string;
+        student: string;
+      }
+    }) =>
       completeEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
@@ -105,37 +135,62 @@ export default function Enrollments() {
 
   const bulkActivateMutation = useMutation({
     mutationFn: bulkActivateEnrollments,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Bulk activation successful:', data);
       qc.invalidateQueries({ queryKey: ['enrollments'] });
-      toast({ title: 'Success', description: 'Enrollments activated successfully' });
+      toast({
+        title: 'Success',
+        description: `${data.activated} enrollment(s) activated successfully`
+      });
       setIsBulkDialogOpen(false);
       setSelectedEnrollments([]);
     },
-    onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    onError: (error: any) => {
+      console.error('❌ Bulk activation failed:', error);
+      console.error('Error response:', error.response?.data);
+
+      const errorMsg = error.response?.data?.error
+        || error.response?.data?.detail
+        || error.response?.data?.message
+        || error.message
+        || 'Failed to activate enrollments';
+
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        variant: 'destructive'
+      });
     },
   });
 
-const handleActivate = (enrollment: any) => {
-  activateMutation.mutate({
-    id: enrollment.id,
-    payload: {
-      status: "PENDING", 
-      completed_at: null,
-      notes: enrollment.notes || "",
-      organization: enrollment.organization,
-      student: enrollment.student,
-      cohort: enrollment.cohort,
-    },
-  });
-};
+  const handleActivate = (enrollment: any) => {
+    activateMutation.mutate({
+      id: enrollment.id,
+      payload: {
+        status: enrollment.status,
+        completed_at: enrollment.completed_at || null,
+        notes: enrollment.notes || "",
+        organization: enrollment.organization,
+        student: enrollment.student,
+        cohort: enrollment.cohort
+      },
+
+    });
+  };
 
 
   const handleWithdraw = (enrollment: any) => {
     if (confirm('Are you sure you want to withdraw this enrollment?')) {
       withdrawMutation.mutate({
         id: enrollment.id,
-        payload: { cohort: enrollment.cohort, student: enrollment.student },
+        payload: {
+          status: enrollment.status,
+          completed_at: enrollment.completed_at || null,
+          notes: enrollment.notes || "",
+          organization: enrollment.organization,
+          student: enrollment.student,
+          cohort: enrollment.cohort
+        },
       });
     }
   };
@@ -144,7 +199,14 @@ const handleActivate = (enrollment: any) => {
     if (confirm('Are you sure you want to mark this enrollment as complete?')) {
       completeMutation.mutate({
         id: enrollment.id,
-        payload: { cohort: enrollment.cohort, student: enrollment.student },
+        payload: {
+          status: enrollment.status,
+          completed_at: new Date().toISOString(), // Generate current timestamp
+          notes: enrollment.notes || "",
+          organization: enrollment.organization,
+          student: enrollment.student,
+          cohort: enrollment.cohort
+        },
       });
     }
   };
@@ -158,6 +220,10 @@ const handleActivate = (enrollment: any) => {
       });
       return;
     }
+
+    console.log('🔵 Attempting bulk activate with IDs:', selectedEnrollments);
+    console.log('📊 Number of enrollments:', selectedEnrollments.length);
+
     bulkActivateMutation.mutate(selectedEnrollments);
   };
 

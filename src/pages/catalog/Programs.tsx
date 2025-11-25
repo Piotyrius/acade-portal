@@ -182,6 +182,8 @@ export default function Programs() {
         </select>
       </div>
 
+      {programs.length === 0 && <ExampleBanner />}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredPrograms.map((program) => (
           <Card key={program.id} className="hover:shadow-lg transition-shadow">
