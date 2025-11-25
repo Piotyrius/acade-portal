@@ -23,8 +23,16 @@ export default function Recruiting() {
   });
 
   const { data: programs = [] } = useQuery({
-    queryKey: ['programs'],
-    queryFn: () => getPrograms(),
+    queryKey: ['programs', 'active'],
+    queryFn: async () => {
+      const allPrograms = await getPrograms({ active: true });
+      // Sort programs: "Thinking" first, then alphabetically by name
+      return allPrograms.sort((a, b) => {
+        if (a.name.toLowerCase().includes('thinking')) return -1;
+        if (b.name.toLowerCase().includes('thinking')) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    },
   });
 
   const mutation = useMutation({
@@ -90,24 +98,25 @@ export default function Recruiting() {
                   required
                 />
               </div>
+
               <div>
                 <label> Program * </label>
                 <Select
                   value={form.program}
                   onValueChange={val => setForm({ ...form, program: val })}
+                  required
                 >
                   <SelectTrigger className='recruiting_select'>
-                    <SelectValue className='text-gray-400' placeholder="Select program or Thinking" />
+                    <SelectValue className='text-gray-400' placeholder="Select program" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="thinking">Thinking</SelectItem>
                     {(programs as any[]).map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-                  
+
               <div>
                 <label> Additional info </label>
                 <Input
