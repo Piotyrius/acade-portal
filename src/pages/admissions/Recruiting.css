@@ -1,19 +1,24 @@
 .recruiting_section {
     background-image: url('/src/assets/images/WhatsApp Image 2025-11-11 at 18.47.15_dbc6232f.jpg');
     width: 100%;
-    height: 100%;
+    min-height: 100%;
+    height: auto;
     background-position: center;
+    background-size: cover;
     background-repeat: no-repeat;
     border-radius: 10px;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
+    padding: 40px 0;
 }
 
 .recruiting_container {
     display: flex;
     flex-direction: column;
     align-items: center;    
+    width: 100%;
+    height: auto;
 }
 
 .recruiting_wrapper {
@@ -22,7 +27,8 @@
     flex-direction: column;
     justify-content: center;
     padding: 40px 10px;
-    background-color: rgba(211, 211, 211, 0.13);
+    background-color: rgba(92, 92, 92, 0.27);
+    height: auto;
 }
 
 .recruit_student_title {
@@ -77,6 +83,74 @@
     background-color: rgb(155, 176, 229) !important;
     width: 250px;
     margin-top: 15px;
+}
+
+
+.add_another_phone_field button {
+    background-color: #9bb0e5;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 5px;
+    padding: 0 10px;
+}
+
+.recruiting_plus_icon {
+    font-size: 17px;
+}
+
+.input_delete_btn {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 5px;
+    width: 20px;
+    height: 20px;
+}
+
+.recruiting_phone_input {
+    border-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.233) !important;
+    border: none;
+    width: 100%;
+    color: #fff;
+}
+
+.recruiting_phone_input::placeholder {
+    color: #fff !important;
+}
+
+.recruiting_phone_wrapper {
+    display: flex;
+    gap: 5px;
+
+}
+
+.hello {
+    position: relative;
+    width: 100%;
+}
+
+.phone__name {
+    border-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.233) !important;
+    border: none;
+    width: 50px;
+    color: #fff;
+    position: relative;
+}
+
+.phone__name::placeholder {
+    color: #fff !important;
+}
+
+.phone_name_delete_btn_wrapper {
+    position: relative;
+    width: 100%;
 }
 
 @media (max-width: 600px) {
