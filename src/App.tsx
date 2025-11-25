@@ -33,6 +33,7 @@ import VerifyCertificate from "./pages/public/VerifyCertificate";
 import ApplyPage from "./pages/public/ApplyPage";
 import PublicGallery from "./pages/public/PublicGallery";
 import LecturerDashboard from "./pages/lecturer/LecturerDashboard";
+import MySessions from "./pages/lecturer/MySessions";
 import NotFound from "./pages/NotFound";
 import ManualEnrollment from "./pages/admissions/ManualEnrollment";
 
@@ -91,6 +92,7 @@ const App = () => (
             <Route path="reporting" element={<Reporting />} />
             <Route path="users" element={<Users />} />
             <Route path="lecturer/dashboard" element={<LecturerDashboard />} />
+            <Route path="lecturer/sessions" element={<MySessions />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

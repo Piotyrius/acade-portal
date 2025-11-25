@@ -2,7 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Calendar, Edit, Trash2, X } from 'lucide-react';
+import { Search, Plus, Calendar, Edit, Trash2, X, List, Calendar as Cal } from 'lucide-react';
+import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSessions, createSession, updateSession, deleteSession, getCohorts } from '@/api/endpoints/catalog';
 import { SessionDto } from '@/api/types';
@@ -20,7 +22,15 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { format } from 'date-fns';
+import { format, startOfWeek } from 'date-fns';
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse: (str: string) => new Date(str),
+  startOfWeek: () => startOfWeek(new Date()),
+  getDay: (date: Date) => date.getDay(),
+  locales: {},
+});
 import { exampleSessions } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 
@@ -29,6 +39,7 @@ export default function Sessions() {
   const qc = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCohort, setSelectedCohort] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<SessionDto | null>(null);
   const [formData, setFormData] = useState({
@@ -48,7 +59,7 @@ export default function Sessions() {
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
   const createMutation = useMutation({
@@ -179,10 +190,28 @@ export default function Sessions() {
           <h2 className="text-3xl font-bold tracking-tight">Sessions</h2>
           <p className="text-muted-foreground">Manage class sessions and schedules</p>
         </div>
-        <Button onClick={handleOpenCreate} className='create_sessions_btn'>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Session
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="mr-2 h-4 w-4" />
+            List
+          </Button>
+          <Button
+            variant={viewMode === 'calendar' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('calendar')}
+          >
+            <Cal className="mr-2 h-4 w-4" />
+            Calendar
+          </Button>
+          <Button onClick={handleOpenCreate} className='create_sessions_btn'>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Session
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-4 sessions_search_select_wrapper">
@@ -221,50 +250,74 @@ export default function Sessions() {
       </div>
 
       {sessions.length === 0 && <ExampleBanner />}
-      <div className="space-y-4">
-        {filteredSessions.map((session: any) => {
-          const startDate = new Date(session.start_at);
-          const endDate = new Date(session.end_at);
-          return (
-            <Card key={session.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-4">
-                    <div className="rounded-lg bg-primary/10 p-3">
-                      <Calendar className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle>{session.cohort_name || 'Unknown Cohort'}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {format(startDate, 'PPpp')} - {format(endDate, 'p')}
-                      </CardDescription>
-                      <div className="flex gap-2 mt-2">
-                        {session.location && (
-                          <Badge variant="outline">📍 {session.location}</Badge>
-                        )}
-                        {session.online_link && (
-                          <Badge variant="outline">🔗 Online</Badge>
-                        )}
-                        {session.is_cancelled && (
-                          <Badge variant="destructive">Cancelled</Badge>
-                        )}
+
+      {viewMode === 'list' ? (
+        <div className="space-y-4">
+          {filteredSessions.map((session: any) => {
+            const startDate = new Date(session.start_at);
+            const endDate = new Date(session.end_at);
+            return (
+              <Card key={session.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex gap-4">
+                      <div className="rounded-lg bg-primary/10 p-3">
+                        <Calendar className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle>{session.cohort_name || 'Unknown Cohort'}</CardTitle>
+                        <CardDescription className="mt-1">
+                          {format(startDate, 'PPpp')} - {format(endDate, 'p')}
+                        </CardDescription>
+                        <div className="flex gap-2 mt-2">
+                          {session.location && (
+                            <Badge variant="outline">📍 {session.location}</Badge>
+                          )}
+                          {session.online_link && (
+                            <Badge variant="outline">🔗 Online</Badge>
+                          )}
+                          {session.is_cancelled && (
+                            <Badge variant="destructive">Cancelled</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(session)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(session.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(session)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(session.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          );
-        })}
-      </div>
+                </CardHeader>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-6">
+            <BigCalendar
+              localizer={localizer}
+              events={filteredSessions.map((session: any) => ({
+                id: session.id,
+                title: session.cohort_name || 'Session',
+                start: new Date(session.start_at),
+                end: new Date(session.end_at),
+                resource: session,
+              }))}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: 600 }}
+              onSelectEvent={(event) => handleOpenEdit(event.resource)}
+              views={['month', 'week', 'day']}
+              defaultView="week"
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {filteredSessions.length === 0 && sessions.length > 0 && (
         <Card>
