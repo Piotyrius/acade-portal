@@ -2,12 +2,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Users, Edit, Trash2, Calendar, Eye } from 'lucide-react';
+import { Search, Plus, Users, Edit, Trash2, Calendar, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { exampleCohorts } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCohorts, createCohort, updateCohort, deleteCohort, generateSessions, getCourses } from '@/api/endpoints/catalog';
-import { CohortDto } from '@/api/types';
+import { getEnrollments } from '@/api/endpoints/admissions';
+import { CohortDto, EnrollmentDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
@@ -27,6 +28,7 @@ export default function Cohorts() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedCohortId, setExpandedCohortId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false);
   const [selectedCohort, setSelectedCohort] = useState<CohortDto | null>(null);
@@ -69,6 +71,13 @@ export default function Cohorts() {
   const { data: courses = mockCourses } = useQuery({
     queryKey: ['courses'],
     queryFn: () => getCourses(),
+  });
+
+  // Fetch enrollments for the expanded cohort
+  const { data: cohortEnrollments = [], isLoading: isLoadingEnrollments } = useQuery({
+    queryKey: ['enrollments', expandedCohortId],
+    queryFn: () => getEnrollments(expandedCohortId!, undefined),
+    enabled: !!expandedCohortId,
   });
 
   const createMutation = useMutation({
@@ -214,6 +223,20 @@ export default function Cohorts() {
     return colors[status] || 'secondary';
   };
 
+  const getEnrollmentStatusColor = (status: EnrollmentDto['status']): "default" | "destructive" | "outline" | "secondary" => {
+    const colors: Record<EnrollmentDto['status'], "default" | "destructive" | "outline" | "secondary"> = {
+      PENDING: 'secondary',
+      ACTIVE: 'default',
+      COMPLETED: 'outline',
+      WITHDRAWN: 'destructive',
+    };
+    return colors[status] || 'secondary';
+  };
+
+  const toggleStudentList = (cohortId: string) => {
+    setExpandedCohortId(expandedCohortId === cohortId ? null : cohortId);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -264,7 +287,7 @@ export default function Cohorts() {
           <Card key={cohort.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex cohort_item_wrapper">
-                  
+
 
                 <div className='cohort_top_side'>
 
@@ -301,6 +324,14 @@ export default function Cohorts() {
                 <div className="flex gap-2 cohort_action_btns">
                   <Button
                     variant="ghost"
+                    size="sm"
+                    onClick={() => toggleStudentList(cohort.id)}
+                    title="View Students"
+                  >
+                    {expandedCohortId === cohort.id ? <ChevronUp className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
                     className='cohort_delete_btn'
                     size="sm"
                     onClick={() => handleOpenGenerateSessions(cohort)}
@@ -316,9 +347,40 @@ export default function Cohorts() {
                   </Button>
                 </div>
 
-                  
+
               </div>
             </CardHeader>
+            {expandedCohortId === cohort.id && (
+              <CardContent>
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold mb-3">Enrolled Students</h4>
+                  {isLoadingEnrollments ? (
+                    <div className="space-y-2">
+                      <div className="h-12 bg-muted animate-pulse rounded" />
+                      <div className="h-12 bg-muted animate-pulse rounded" />
+                    </div>
+                  ) : cohortEnrollments.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No students enrolled yet</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {cohortEnrollments.map((enrollment: EnrollmentDto) => (
+                        <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                          <div>
+                            <p className="font-medium text-sm">{enrollment.student_name || 'Unknown Student'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge variant={getEnrollmentStatusColor(enrollment.status)}>
+                            {enrollment.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            )}
           </Card>
         ))}
       </div>

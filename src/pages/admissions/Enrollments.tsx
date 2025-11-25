@@ -57,7 +57,17 @@ export default function Enrollments() {
   });
 
   const activateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+    mutationFn: ({ id, payload }: {
+      id: string;
+      payload: {
+        status?: string;
+        completed_at?: string | null;
+        notes?: string;
+        organization?: string;
+        cohort: string;
+        student: string;
+      }
+    }) =>
       activateEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
@@ -69,7 +79,17 @@ export default function Enrollments() {
   });
 
   const withdrawMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+    mutationFn: ({ id, payload }: {
+      id: string;
+      payload: {
+        status?: string;
+        completed_at?: string | null;
+        notes?: string;
+        organization?: string;
+        cohort: string;
+        student: string;
+      }
+    }) =>
       withdrawEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
@@ -81,7 +101,17 @@ export default function Enrollments() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { cohort: string; student: string } }) =>
+    mutationFn: ({ id, payload }: {
+      id: string;
+      payload: {
+        status?: string;
+        completed_at?: string | null;
+        notes?: string;
+        organization?: string;
+        cohort: string;
+        student: string;
+      }
+    }) =>
       completeEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
@@ -133,7 +163,7 @@ export default function Enrollments() {
         student: enrollment.student,
         cohort: enrollment.cohort
       },
-    
+
     });
   };
 
@@ -142,7 +172,14 @@ export default function Enrollments() {
     if (confirm('Are you sure you want to withdraw this enrollment?')) {
       withdrawMutation.mutate({
         id: enrollment.id,
-        payload: { cohort: enrollment.cohort, student: enrollment.student },
+        payload: {
+          status: enrollment.status,
+          completed_at: enrollment.completed_at || null,
+          notes: enrollment.notes || "",
+          organization: enrollment.organization,
+          student: enrollment.student,
+          cohort: enrollment.cohort
+        },
       });
     }
   };
@@ -151,7 +188,14 @@ export default function Enrollments() {
     if (confirm('Are you sure you want to mark this enrollment as complete?')) {
       completeMutation.mutate({
         id: enrollment.id,
-        payload: { cohort: enrollment.cohort, student: enrollment.student },
+        payload: {
+          status: enrollment.status,
+          completed_at: new Date().toISOString(), // Generate current timestamp
+          notes: enrollment.notes || "",
+          organization: enrollment.organization,
+          student: enrollment.student,
+          cohort: enrollment.cohort
+        },
       });
     }
   };
