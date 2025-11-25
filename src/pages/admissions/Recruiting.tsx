@@ -111,11 +111,17 @@ export default function Recruiting() {
                 <label> Phone * </label>
 
                 {form.phone.map((p, index) => (
-                
+                  
                   <div className='recruiting_phone_wrapper' key={index}>
-                    <div className='hello'>
-                
-                      <Input
+                    <div className='delete_btn__recruiting_phone'>
+                      {index > 0 && (
+                        <IoMdClose
+                          className='input_delete_btn'
+                          onClick={() => removePhone(index)}
+                        />
+                      )}
+
+                      <input
                         className="recruiting_phone_input"
                         placeholder="Enter your phone"
                         value={p}
@@ -131,24 +137,15 @@ export default function Recruiting() {
 
                     </div>
 
-                    <div className='phone_name_delete_btn_wrapper'>
-                      <Input 
-                        type='text'
-                        placeholder='Phone name'
-                        value={form.phoneName}
-                        onChange={e => setForm({ ...form, phoneName: e.target.value })}
-                        className='phone__name'
-                      />
 
-                      {index > 0 && (
-                        <IoMdClose
-                          className='input_delete_btn'
-                          onClick={() => removePhone(index)}
-                        />
-                      )}
-                    </div>
+                    <Input 
+                      type='text'
+                      placeholder='Phone name'
+                      value={form.phoneName}
+                      onChange={e => setForm({ ...form, phoneName: e.target.value })}
+                      className='phone__name'
+                    />
 
-                    
                     <div className='add_another_phone_field'>
                       <button 
                         type='button'
