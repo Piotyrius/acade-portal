@@ -60,17 +60,47 @@ export async function updateEnrollment(id: string, payload: Partial<EnrollmentDt
   return data;
 }
 
-export async function activateEnrollment(id: string, payload: { cohort: string; student: string }): Promise<EnrollmentDto> {
+export async function activateEnrollment(
+  id: string,
+  payload: {
+    status?: string;
+    completed_at?: string | null;
+    notes?: string;
+    organization?: string;
+    cohort: string;
+    student: string;
+  }
+): Promise<EnrollmentDto> {
   const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/activate/`, payload);
   return data;
 }
 
-export async function withdrawEnrollment(id: string, payload: { cohort: string; student: string }): Promise<EnrollmentDto> {
+export async function withdrawEnrollment(
+  id: string,
+  payload: {
+    status?: string;
+    completed_at?: string | null;
+    notes?: string;
+    organization?: string;
+    cohort: string;
+    student: string;
+  }
+): Promise<EnrollmentDto> {
   const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/withdraw/`, payload);
   return data;
 }
 
-export async function completeEnrollment(id: string, payload: { cohort: string; student: string }): Promise<EnrollmentDto> {
+export async function completeEnrollment(
+  id: string,
+  payload: {
+    status?: string;
+    completed_at?: string | null;
+    notes?: string;
+    organization?: string;
+    cohort: string;
+    student: string;
+  }
+): Promise<EnrollmentDto> {
   const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/complete/`, payload);
   return data;
 }
