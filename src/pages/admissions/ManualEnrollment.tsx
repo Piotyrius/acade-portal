@@ -33,7 +33,6 @@ export default function ManualEnrollment() {
   });
 
 
-
   // Fetch all users
   const {
     data: usersResponse,

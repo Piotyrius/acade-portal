@@ -33,7 +33,7 @@ export default function Assessments() {
     cohort: '',
     title: '',
     description: '',
-    type: 'QUIZ' as 'EXAM' | 'QUIZ' | 'PROJECT' | 'ASSIGNMENT',
+    kind: 'QUIZ' as 'EXAM' | 'QUIZ' | 'PROJECT' | 'ASSIGNMENT',
     max_score: 100,
     weight: 1,
     due_at: '',
@@ -72,7 +72,7 @@ export default function Assessments() {
         cohort: '',
         title: '',
         description: '',
-        type: 'QUIZ',
+        kind: 'QUIZ',
         max_score: 100,
         weight: 1,
         due_at: '',
@@ -113,7 +113,7 @@ export default function Assessments() {
       cohort: '',
       title: '',
       description: '',
-      type: 'QUIZ',
+      kind: 'QUIZ',
       max_score: 100,
       weight: 1,
       due_at: '',
@@ -141,7 +141,7 @@ export default function Assessments() {
       cohort: assessment.cohort || '',
       title: assessment.title || '',
       description: assessment.description || '',
-      type: assessment.type || 'QUIZ',
+      kind: assessment.kind || 'QUIZ',
       max_score: typeof assessment.max_score === 'number' ? assessment.max_score : 100,
       weight: typeof assessment.weight === 'number' ? assessment.weight : 1,
       due_at: formatDateForInput(assessment.due_at || assessment.due_date || ''),
@@ -218,10 +218,10 @@ export default function Assessments() {
                       <CardTitle>
                         {assessment.title}
                         <span className="ml-2 px-2 py-1 rounded bg-muted text-xs font-semibold align-middle">
-                          {assessment.type === 'EXAM' && 'Exam'}
-                          {assessment.type === 'QUIZ' && 'Quiz'}
-                          {assessment.type === 'PROJECT' && 'Project'}
-                          {assessment.type === 'ASSIGNMENT' && 'Assignment'}
+                          {assessment.kind === 'EXAM' && 'Exam'}
+                          {assessment.kind === 'QUIZ' && 'Quiz'}
+                          {assessment.kind === 'PROJECT' && 'Project'}
+                          {assessment.kind === 'ASSIGNMENT' && 'Assignment'}
                         </span>
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
@@ -231,7 +231,7 @@ export default function Assessments() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge variant="outline">{assessment.type}</Badge>
+                    <Badge variant="outline">{assessment.kind}</Badge>
                     <div className="text-right">
                       <p className="text-sm font-medium">Max: {typeof assessment.max_score === 'number' && !isNaN(assessment.max_score) ? assessment.max_score : 0}</p>
                       <p className="text-xs text-muted-foreground">Weight: {assessment.weight}</p>
@@ -297,8 +297,8 @@ export default function Assessments() {
               <div className="space-y-2">
                 <Label htmlFor="type">Type *</Label>
                 <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value as any })}
+                  value={formData.kind}
+                  onValueChange={(value) => setFormData({ ...formData, kind: value as any })}
                 >
                   <SelectTrigger>
                     <SelectValue />

@@ -9,6 +9,8 @@ import { getPrograms } from '@/api/endpoints/catalog';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import './Recruiting.css'
+import { IoMdClose } from "react-icons/io";
+import { GoPlus } from "react-icons/go";
 
 export default function Recruiting() {
   const { toast } = useToast();
@@ -16,9 +18,10 @@ export default function Recruiting() {
   const [form, setForm] = useState({
     name: '',
     email: '',
-    phone: '',
+    phone: [''],
     program: '',
     notes: '',
+    phoneName: '',
     status: "NEW" as "NEW",
   });
 
@@ -39,7 +42,7 @@ export default function Recruiting() {
     mutationFn: createApplication,
     onSuccess: () => {
       toast({ title: 'Success', description: 'Student recruited successfully' });
-      setForm({ name: '', email: '', phone: '', program: '', notes: '', status: "NEW" as "NEW" });
+      setForm({ name: '', email: '', phone: [''], program: '', notes: '', status: "NEW" as "NEW", phoneName: '' });
       qc.invalidateQueries({ queryKey: ['applications'] });
     },
     onError: (error) => {
@@ -48,9 +51,24 @@ export default function Recruiting() {
   });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate(form);
-  };
+    e.preventDefault()
+
+    const payload = {
+      ...form,
+      phone: form.phone
+        .map(p => p.trim())
+        .filter(p => p !== '')
+        .join(', '),
+    };
+
+    mutation.mutate(payload)
+  }
+
+  const removePhone = (i: number) => {
+    const updated = form.phone.filter((_, index) => index !== i)
+    setForm({ ...form, phone: updated })
+  }
+
 
   return (
     <section className='recruiting_section'>
@@ -85,18 +103,62 @@ export default function Recruiting() {
                   value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
                   required
+                  inputMode="email"
                 />
               </div>
 
               <div>
                 <label> Phone * </label>
-                <Input
-                  className='recruiting_input'
-                  placeholder="Enter your phone"
-                  value={form.phone}
-                  onChange={e => setForm({ ...form, phone: e.target.value })}
-                  required
-                />
+
+                {form.phone.map((p, index) => (
+                  
+                  <div className='recruiting_phone_wrapper' key={index}>
+                    <div className='delete_btn__recruiting_phone'>
+                      {index > 0 && (
+                        <IoMdClose
+                          className='input_delete_btn'
+                          onClick={() => removePhone(index)}
+                        />
+                      )}
+
+                      <input
+                        className="recruiting_phone_input"
+                        placeholder="Enter your phone"
+                        value={p}
+                        inputMode="numeric"
+                        maxLength={9}
+                        onChange={e => {
+                          const newPhones = [...form.phone];
+                          newPhones[index] = e.target.value.replace(/\D/g, "");
+                          setForm({ ...form, phone: newPhones });
+                        }}
+                        required={index === 0}
+                      />
+
+                    </div>
+
+
+                    <Input 
+                      type='text'
+                      placeholder='Phone name'
+                      value={form.phoneName}
+                      onChange={e => setForm({ ...form, phoneName: e.target.value })}
+                      className='phone__name'
+                    />
+
+                    <div className='add_another_phone_field'>
+                      <button 
+                        type='button'
+                        className='h-10'
+                        onClick={() => setForm({ ...form, phone: [...form.phone, ""] })}
+                      >
+                        <GoPlus className='recruiting_plus_icon' />
+                      </button>
+                    </div>
+                    
+                  </div>
+                ))}
+
               </div>
 
               <div>
