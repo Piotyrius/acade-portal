@@ -8,7 +8,7 @@ export async function exportApplications(params?: {
   to?: string;
   program?: string;
 }): Promise<Blob> {
-  const response = await api.get('/api/v1/reports/applications/', {
+  const response = await api.get('/api/v1/reporting/reports/applications/', {
     params,
     responseType: 'blob',
   });
@@ -24,7 +24,7 @@ export async function exportEnrollments(params?: {
   program?: string;
   cohort?: string;
 }): Promise<Blob> {
-  const response = await api.get('/api/v1/reports/enrollments/', {
+  const response = await api.get('/api/v1/reporting/reports/enrollments/', {
     params,
     responseType: 'blob',
   });
@@ -40,7 +40,7 @@ export async function exportAttendance(params?: {
   cohort?: string;
   session?: string;
 }): Promise<Blob> {
-  const response = await api.get('/api/v1/reports/attendance/', {
+  const response = await api.get('/api/v1/reporting/reports/attendance/', {
     params,
     responseType: 'blob',
   });
@@ -56,7 +56,7 @@ export async function exportGrades(params?: {
   cohort?: string;
   assessment?: string;
 }): Promise<Blob> {
-  const response = await api.get('/api/v1/reports/grades/', {
+  const response = await api.get('/api/v1/reporting/reports/grades/', {
     params,
     responseType: 'blob',
   });
@@ -71,7 +71,7 @@ export async function exportCertificates(params?: {
   to?: string;
   program?: string;
 }): Promise<Blob> {
-  const response = await api.get('/api/v1/reports/certificates/', {
+  const response = await api.get('/api/v1/reporting/reports/certificates/', {
     params,
     responseType: 'blob',
   });
@@ -86,7 +86,7 @@ export async function exportPayroll(params?: {
   to?: string;
   lecturer?: string;
 }): Promise<Blob> {
-  const response = await api.get('/api/v1/reports/payroll/', {
+  const response = await api.get('/api/v1/reporting/reports/payroll/', {
     params,
     responseType: 'blob',
   });

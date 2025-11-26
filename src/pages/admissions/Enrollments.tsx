@@ -56,6 +56,15 @@ export default function Enrollments() {
     queryFn: () => getCohorts(),
   });
 
+  type ActivatePayload = {
+  status: string;
+  completed_at: string | null;
+  notes: string | null;
+  organization: string;
+  student: string;
+  cohort: string;
+};
+
   const activateMutation = useMutation({
     mutationFn: ({ id, payload }: {
       id: string;
@@ -76,6 +85,8 @@ export default function Enrollments() {
     onError: (error) => {
       toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
     },
+
+    
   });
 
   const withdrawMutation = useMutation({
