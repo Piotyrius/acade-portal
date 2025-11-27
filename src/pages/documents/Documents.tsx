@@ -110,7 +110,7 @@ export default function Documents() {
         </div>
         <div className="flex gap-2 documents_filter_wrapper">
           <Select value={selectedKind} onValueChange={setSelectedKind}>
-            <SelectTrigger className="w-[170px] documents_filter">
+            <SelectTrigger className="w-[180px] documents_filter">
               <SelectValue placeholder="Filter by kind" />
             </SelectTrigger>
             <SelectContent>
@@ -121,7 +121,7 @@ export default function Documents() {
             </SelectContent>
           </Select>
           <Select value={selectedVisibility} onValueChange={setSelectedVisibility}>
-            <SelectTrigger className="w-[170px] documents_filter">
+            <SelectTrigger className="w-[180px] documents_filter">
               <SelectValue placeholder="Filter by visibility" />
             </SelectTrigger>
             <SelectContent>
@@ -131,7 +131,7 @@ export default function Documents() {
               <SelectItem value="ADMIN">Admin</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => setIsDialogOpen(true)} className="w-[170px] documents_filter">
+          <Button onClick={() => setIsDialogOpen(true)} className="w-[180px] documents_filter">
             <Plus className="mr-2 h-4 w-4" />
             Upload Document
           </Button>

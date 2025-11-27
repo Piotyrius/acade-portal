@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 
+
 export default function Cohorts() {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -67,6 +68,7 @@ export default function Cohorts() {
     queryKey: ['cohorts'],
     queryFn: () => getCohorts(),
   });
+  console.log(cohorts)
 
   const { data: courses = mockCourses } = useQuery({
     queryKey: ['courses'],
@@ -303,7 +305,7 @@ export default function Cohorts() {
                       <div className="flex gap-2 mt-2">
                         <Badge variant={getStatusColor(cohort.status)}>{(cohort as any).status_display || cohort.status}</Badge>
                         <Badge variant="outline">
-                          {(cohort as any).current_enrollment_count || 0} / {cohort.capacity} students
+                          {cohort.current_enrollment_count || 0} / {cohort.capacity} students
                         </Badge>
                       </div>
                     </div>
@@ -321,7 +323,7 @@ export default function Cohorts() {
                 </div>
 
 
-                <div className="flex gap-2 cohort_action_btns">
+                <div className="flex gap-2 ml-2 cohort_action_btns">
                   <Button
                     variant="ghost"
                     size="sm"
