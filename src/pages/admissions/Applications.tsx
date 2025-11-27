@@ -171,14 +171,7 @@ export default function Applications() {
                   </div>
 
                   <div className="flex items-center gap-4 application_bottom">
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground application_date">
-                        {new Date(app.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    
-
+                  
                     <Badge
                       className='application_badge'
                       variant={
@@ -219,9 +212,13 @@ export default function Applications() {
                       </Button>
                     )}
 
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground application_date">
+                        {new Date(app.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
 
                   </div>
-
                 </div>
               );
             })}
