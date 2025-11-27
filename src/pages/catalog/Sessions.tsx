@@ -373,7 +373,7 @@ export default function Sessions() {
                   <Label htmlFor="end_at">End Date & Time *</Label>
                   <Input
                     id="end_at"
-                    type="datetime-local"
+                    type='time'
                     value={formData.end_at}
                     onChange={(e) => setFormData({ ...formData, end_at: e.target.value })}
                     required
