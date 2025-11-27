@@ -27,6 +27,7 @@ export async function createDocument(payload: {
   description: string;
   file: File;
   visibility?: 'PRIVATE' | 'LECTURER' | 'ADMIN';
+  owner?: string;
 }): Promise<DocumentDto> {
   const form = new FormData();
   form.append('kind', payload.kind);
@@ -34,6 +35,9 @@ export async function createDocument(payload: {
   form.append('file', payload.file);
   if (payload.visibility) {
     form.append('visibility', payload.visibility);
+  }
+  if (payload.owner) {
+    form.append('owner', payload.owner);
   }
   const { data } = await api.post('/api/v1/documents/documents/', form);
   return data;
