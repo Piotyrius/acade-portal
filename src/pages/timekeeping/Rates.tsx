@@ -174,7 +174,7 @@ export default function Rates() {
           <CardTitle>Lecturer Rates</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 rates_Card">
+          <div className="gap-2 rates_Card">
             {displayRates.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No rates found</p>
             ) : (
@@ -183,7 +183,7 @@ export default function Rates() {
                 return (
                   <div key={rate.id} className="flex items-center justify-between p-4 h-[140px] border border-border rounded-lg rate_item">
                     
-                    <div className='flex w-[100%]  rates_top_side'>
+                    <div className='flex w-[100%] rates_top_side'>
                       <div className="flex items-center gap-3">
                         <div className="rounded-lg bg-primary/10 p-2 rates_dollar_sign">
                           <DollarSign className="h-5 w-5 text-primary" />

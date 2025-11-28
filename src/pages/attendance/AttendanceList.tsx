@@ -291,7 +291,7 @@ export default function AttendanceList() {
           <CardTitle>Attendance Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-4 attendance_table_wrapper">
             
             <table className='attendance_table'>
                 <thead>

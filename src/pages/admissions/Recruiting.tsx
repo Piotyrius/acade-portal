@@ -114,12 +114,7 @@ export default function Recruiting() {
                   
                   <div className='recruiting_phone_wrapper' key={index}>
                     <div className='delete_btn__recruiting_phone'>
-                      {index > 0 && (
-                        <IoMdClose
-                          className='input_delete_btn'
-                          onClick={() => removePhone(index)}
-                        />
-                      )}
+
 
                       <input
                         className="recruiting_phone_input"
@@ -146,19 +141,30 @@ export default function Recruiting() {
                       className='phone__name'
                     />
 
-                    <div className='add_another_phone_field'>
-                      <button 
-                        type='button'
-                        className='h-10'
-                        onClick={() => setForm({ ...form, phone: [...form.phone, ""] })}
-                      >
-                        <GoPlus className='recruiting_plus_icon' />
+                    {index === 0 && (
+                      <div className='add_another_phone_field'>
+                        <button 
+                          type='button'
+                          className='h-10'
+                          onClick={() => setForm({ ...form, phone: [...form.phone, ""] })}
+                        >
+                          <GoPlus className='recruiting_plus_icon' />
+                        </button>
+                      </div>
+                    )}
+
+
+                    {index > 0 && (
+                      <button onClick={() => removePhone(index)} className='input_delete_btn_wrapper'>
+                        <IoMdClose
+                          className='input_delete_btn'
+                          
+                        />
                       </button>
-                    </div>
+                    )}
                     
                   </div>
                 ))}
-
               </div>
 
               <div>

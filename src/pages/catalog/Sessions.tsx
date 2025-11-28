@@ -190,7 +190,7 @@ export default function Sessions() {
           <h2 className="text-3xl font-bold tracking-tight">Sessions</h2>
           <p className="text-muted-foreground">Manage class sessions and schedules</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 sessions_calendar_btns">
           <Button
             variant={viewMode === 'list' ? 'default' : 'outline'}
             size="sm"
@@ -259,17 +259,21 @@ export default function Sessions() {
             return (
               <Card key={session.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex gap-4">
-                      <div className="rounded-lg bg-primary/10 p-3">
+                  <div className="flex items-start justify-between sessions_item">
+                    <div className="flex gap-4 sessions_top_side_wrapper">
+                      
+                      <div className="rounded-lg bg-primary/10 p-3 sessions_icon">
                         <Calendar className="h-6 w-6 text-primary" />
                       </div>
-                      <div>
+                      <div className='sessions_top_side'>
+                        <div>
+
                         <CardTitle>{session.cohort_name || 'Unknown Cohort'}</CardTitle>
                         <CardDescription className="mt-1">
                           {format(startDate, 'PPpp')} - {format(endDate, 'p')}
                         </CardDescription>
-                        <div className="flex gap-2 mt-2">
+                        </div>
+                        <div className="flex gap-2 mt-2 session_location">
                           {session.location && (
                             <Badge variant="outline">📍 {session.location}</Badge>
                           )}
@@ -282,6 +286,7 @@ export default function Sessions() {
                         </div>
                       </div>
                     </div>
+
                     <div className="flex gap-2">
                       <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(session)}>
                         <Edit className="h-4 w-4" />
@@ -290,6 +295,7 @@ export default function Sessions() {
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
+
                   </div>
                 </CardHeader>
               </Card>
@@ -373,7 +379,7 @@ export default function Sessions() {
                   <Label htmlFor="end_at">End Date & Time *</Label>
                   <Input
                     id="end_at"
-                    type="datetime-local"
+                    type='time'
                     value={formData.end_at}
                     onChange={(e) => setFormData({ ...formData, end_at: e.target.value })}
                     required

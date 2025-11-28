@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@/components/ui/select';
 import { Search, Users, CheckCircle, XCircle, UserX, List, CheckSquare, Eye } from 'lucide-react';
 import { exampleEnrollments } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
@@ -276,7 +277,7 @@ export default function Enrollments() {
           <h2 className="text-3xl font-bold tracking-tight">Enrollments</h2>
           <p className="text-muted-foreground">Manage student enrollments</p>
         </div>
-        <div className="flex gap-2 ">
+        <div className="flex gap-2 enrollments_bulk_active_wrapper">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
             <Button className='enrollments_bulk_active' variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
               <CheckSquare className="mr-2 h-4 w-4" />
@@ -286,8 +287,8 @@ export default function Enrollments() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 enrollements_input_option_wrapper">
-        <div className="relative flex-1 max-w-sm enrollments_input_wrapper">
+      <div className="flex items-center gap-2 enrollements_input_option_wrapper">
+        <div className="relative flex-1 w-[200px] enrollments_input_wrapper">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search enrollments..."
@@ -296,18 +297,18 @@ export default function Enrollments() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="px-3 py-2 border border-border rounded-md select_wrapper"
-        >
-          <option value="">All Statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="ACTIVE">Active</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="WITHDRAWN">Withdrawn</option>
-          <option value="WAITLISTED">Waitlisted</option>
-        </select>
+        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+          <SelectTrigger className="w-[200px] select_wrapper">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="PENDING">Pending</SelectItem>
+            <SelectItem value="ACTIVE">Active</SelectItem>
+            <SelectItem value="COMPLETED">Completed</SelectItem>
+            <SelectItem value="WITHDRAWN">Withdrawn</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {enrollments.length === 0 && <ExampleBanner />}

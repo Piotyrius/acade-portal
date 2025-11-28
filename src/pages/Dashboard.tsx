@@ -11,7 +11,6 @@ import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 export default function Dashboard() {
   const { user } = useAuthStore();
 
-  // Fetch real data
   const { data: cohorts } = useQuery({
     queryKey: ['cohorts'],
     queryFn: getCohorts,
@@ -33,13 +32,19 @@ export default function Dashboard() {
     enabled: user?.role === 'LECTURER',
   });
 
-  // Calculate stats from real data
-  const totalStudents = enrollments?.filter(e => e.status === 'ACTIVE').length || 0;
-  const activeCohorts = cohorts?.filter(c => c.is_active).length || 0;
-  const certificatesIssued = certificates?.filter(c => c.status === 'ISSUED').length || 0;
+  const activeStudentsCount = enrollments?.filter((e) => e.status === 'ACTIVE').length || 0;
+
+  const totalStudentsCount = enrollments?.length || 0;
+
+  const activeCohorts =
+    cohorts?.filter((c) => c.status === 'ACTIVE').length || 0;
+
+  const certificatesIssued =
+    certificates?.filter((c) => c.status === 'ISSUED').length || 0;
+
+
   
-  // Calculate attendance rate (simplified - you would need attendance data)
-  const attendanceRate = '87%'; // Placeholder
+  const attendanceRate = '87%';
 
   // Get upcoming sessions for lecturer
   const upcomingSessions = mySessions
@@ -57,33 +62,38 @@ export default function Dashboard() {
   const stats = [
     {
       title: user?.role === 'ADMIN' ? 'Total Students' : 'Active Students',
-      value: totalStudents.toString(),
-      change: '+12%',
+      // FIX: Admin sees total students, others see active students.
+      value: (user?.role === 'ADMIN'
+        ? totalStudentsCount
+        : activeStudentsCount
+      ).toString(),
+      change: '+12%', // still placeholder
       icon: Users,
-      trend: 'up',
+      trend: 'up' as const,
     },
     {
       title: 'Active Cohorts',
       value: activeCohorts.toString(),
-      change: '+3',
+      change: '+3', // placeholder
       icon: BookOpen,
-      trend: 'up',
+      trend: 'up' as const,
     },
     {
       title: 'Attendance Rate',
       value: attendanceRate,
-      change: '+2%',
+      change: '+2%', // placeholder
       icon: ClipboardCheck,
-      trend: 'up',
+      trend: 'up' as const,
     },
     {
       title: 'Certificates Issued',
       value: certificatesIssued.toString(),
+      // Placeholder: simple "growth" number derived from count
       change: `+${Math.floor(certificatesIssued * 0.08)}`,
       icon: Award,
-      trend: 'up',
+      trend: 'up' as const,
     },
-  ];
+  ]
 
   return (
     <div className="space-y-6">

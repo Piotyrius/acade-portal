@@ -50,7 +50,7 @@
 .recruiting_form > div {
     display: flex;
     flex-direction: column;
-    /* gap: 4px; */
+    gap: 4px;
     width: 100%;
 }
 
@@ -111,7 +111,8 @@
 
 .recruiting_phone_wrapper {
     display: flex;
-    gap: 5px;
+    gap: 5px !important;
+    height: 40px;
 }
 
 .phone__name {
@@ -178,21 +179,26 @@
 }
 
 
-.input_delete_btn {
+.input_delete_btn_wrapper {
+    background-color: rgb(255, 33, 33);
     color: #fff;
     border-radius: 5px;
-    cursor: pointer;
-    position: absolute;
-    top: 5px;
-    right: 5px;   
-    font-size: 16px;
+    padding: 0 10px;
+    font-size: 14px;
+    transition: all 0.3s ease-in-out;
+}
+
+.input_delete_btn_wrapper:hover {
+    background-color: red;
+}
+
+.input_delete_btn {
+    font-size: 17px;
 }
 
 .delete_btn__recruiting_phone {
-    position: relative;
     width: 100%;
 }
-
 
 .recruiting_phone_input {
     display: flex;
@@ -219,4 +225,8 @@
 .recruiting_phone_input:disabled {
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+.recruit_phone_container {
+    display: flex;
 }
