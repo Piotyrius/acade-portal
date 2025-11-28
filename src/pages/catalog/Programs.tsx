@@ -172,22 +172,18 @@ export default function Programs() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
-
           
-        <Select className="border rounded px-2 py-1 text-sm" value={filter} onValueChange={setFilter}>
-
+        <Select value={filter} onValueChange={(v) => setFilter(v as 'all' | 'active' | 'inactive')}>
           <SelectTrigger className="w-[200px] select_wrapper">
             <SelectValue placeholder="All Programs" />
           </SelectTrigger>
-          
+
           <SelectContent>
+            <SelectItem value="all">All Programs</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>
-
-
 
 
       </div>
