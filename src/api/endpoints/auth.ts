@@ -58,6 +58,10 @@ export async function requestPasswordReset(email: string): Promise<void> {
   await api.post('/api/v1/auth/password_reset/', { email });
 }
 
+export async function confirmPasswordReset(token: string, newPassword: string): Promise<void> {
+  await api.post('/api/v1/auth/password_reset/confirm/', { token, new_password: newPassword });
+}
+
 // ============================================================================
 // MFA (Multi-Factor Authentication) Functions
 // ============================================================================
