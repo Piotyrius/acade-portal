@@ -53,7 +53,9 @@ export default function WorkLogs() {
   const { data } = useQuery({
     queryKey: ['worklogs'],
     queryFn: async () => {
-      const res = await getWorkLogs();
+      // Lecturers should only see their own work logs
+      const params = user?.role === 'LECTURER' ? { lecturer: user.id } : {};
+      const res = await getWorkLogs(params);
       // API may return either {results:[]} or [] depending on pagination
       const list = Array.isArray(res) ? res : res.results || [];
       return list;
@@ -97,12 +99,17 @@ export default function WorkLogs() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.start_at || !formData.end_at || !formData.lecturer || !formData.minutes) {
+
+    // Auto-populate lecturer ID for lecturers
+    const lecturerId = user?.role === 'LECTURER' ? user.id : formData.lecturer;
+
+    if (!formData.start_at || !formData.end_at || !lecturerId || !formData.minutes) {
       toast({ title: 'Error', description: 'Start, end times, lecturer, and minutes are required', variant: 'destructive' });
       return;
     }
     createMutation.mutate({
       ...formData,
+      lecturer: lecturerId,
       minutes: Number(formData.minutes),
     });
   };
@@ -136,7 +143,7 @@ export default function WorkLogs() {
             <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatted}h</div>
+            <div className="text-2xl font-bold">{formatted}</div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
@@ -180,32 +187,32 @@ export default function WorkLogs() {
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="lecturer">Lecturer *</Label>
-                <Select
-                  value={formData.lecturer}
-                  onValueChange={(value) => setFormData({ ...formData, lecturer: value })}
-                  disabled={lecturersLoading}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={lecturersLoading ? "Loading..." : "Select a lecturer"} />
-                  </SelectTrigger>
-                          
-                  <SelectContent>
-                    {!lecturersLoading && lecturers.length === 0 && (
-                      <div className="px-3 py-2 text-sm text-muted-foreground">No lecturers found</div>
-                    )}
-                
-                    {!lecturersLoading &&
-                      lecturers.map((lect: any) => (
-                        <SelectItem key={lect.id} value={lect.id}>
-                          {lect.first_name} {lect.last_name} ({lect.email})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-
-              </div>
+              {/* Only show lecturer dropdown for admins */}
+              {user?.role === 'ADMIN' && (
+                <div className="space-y-2">
+                  <Label htmlFor="lecturer">Lecturer *</Label>
+                  <Select
+                    value={formData.lecturer}
+                    onValueChange={(value) => setFormData({ ...formData, lecturer: value })}
+                    disabled={lecturersLoading}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={lecturersLoading ? "Loading..." : "Select a lecturer"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {!lecturersLoading && lecturers.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">No lecturers found</div>
+                      )}
+                      {!lecturersLoading &&
+                        lecturers.map((lect: any) => (
+                          <SelectItem key={lect.id} value={lect.id}>
+                            {lect.first_name} {lect.last_name} ({lect.email})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="minutes">Minutes *</Label>
                 <Input
