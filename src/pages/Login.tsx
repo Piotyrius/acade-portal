@@ -48,7 +48,7 @@ export default function Login() {
         lastName: response.user.last_name,
         role: response.user.role,
       };
-      // Set auth with tokens and user data
+      // Set auth with tokens and user data 
       setAuth(user, response.access, response.refresh);
       
       // Verify token is stored

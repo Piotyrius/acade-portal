@@ -487,6 +487,13 @@
 }
 
 /* Responsive */
+
+/* @media (max-width: 1300px) {
+  .rates_Card {
+    grid-template-columns: repeat(, 1fr);
+  }
+} */
+
 @media (max-width: 768px) {
   .timekeeping-container {
     padding: 20px;
@@ -570,10 +577,9 @@
   }
 }
 
-
 .rates_Card {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 } 
 
 .rate_item {

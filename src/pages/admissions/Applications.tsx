@@ -157,9 +157,10 @@ export default function Applications() {
             {filteredApplications.map((app) => {
               const program = programs.find((p) => p.id === app.program);
               return (
-                <div key={app.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div key={app.id} className="flex items-center justify-between p-4 border border-border rounded-lg application_item">
+                  
                   <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-primary/10 p-2">
+                    <div className="rounded-lg bg-primary/10 p-2 application_icon">
                       <UserPlus className="h-5 w-5 text-primary" />
                     </div>
                     <div>
@@ -168,13 +169,11 @@ export default function Applications() {
                       <p className="text-xs text-muted-foreground mt-1">{program?.name || 'Unknown Program'}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(app.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
+
+                  <div className="flex items-center gap-4 application_bottom">
+                  
                     <Badge
+                      className='application_badge'
                       variant={
                         app.status === 'ACCEPTED'
                           ? 'default'
@@ -186,11 +185,12 @@ export default function Applications() {
                       {app.status}
                     </Badge>
                     {(app.status === 'NEW' || app.status === 'IN_REVIEW') && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 application_status_btns">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleStatusChange(app.id, 'ACCEPTED')}
+                          className='application_accept'
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Accept
@@ -199,6 +199,7 @@ export default function Applications() {
                           size="sm"
                           variant="outline"
                           onClick={() => handleStatusChange(app.id, 'REJECTED')}
+                          className='application_reject'
                         >
                           <X className="h-4 w-4 mr-1" />
                           Reject
@@ -206,10 +207,17 @@ export default function Applications() {
                       </div>
                     )}
                     {app.status === 'ACCEPTED' && (
-                      <Button size="sm" onClick={() => handleAccept(app)}>
+                      <Button className='create_enrollment_btn' size="sm" onClick={() => handleAccept(app)}>
                         Create Enrollment
                       </Button>
                     )}
+
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground application_date">
+                        {new Date(app.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+
                   </div>
                 </div>
               );

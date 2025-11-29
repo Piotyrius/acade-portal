@@ -11,6 +11,7 @@ import { saveAs } from 'file-saver';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { useState, useEffect } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -76,7 +77,16 @@ export default function WorkLogs() {
     },
   });
 
-  const totalHours = displayWorkLogs.reduce((sum: number, wl: any) => sum + wl.minutes / 60, 0);
+  const totalMinutes = displayWorkLogs.reduce(
+    (sum: number, wl: any) => sum + wl.minutes,
+    0
+  );
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  const formatted = `${hours}h ${minutes}m`;
+
 
   const handleExport = async () => {
     try {
@@ -133,7 +143,7 @@ export default function WorkLogs() {
             <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalHours}h</div>
+            <div className="text-2xl font-bold">{formatted}</div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
@@ -181,21 +191,26 @@ export default function WorkLogs() {
               {user?.role === 'ADMIN' && (
                 <div className="space-y-2">
                   <Label htmlFor="lecturer">Lecturer *</Label>
-                  <select
-                    id="lecturer"
+                  <Select
                     value={formData.lecturer}
-                    onChange={(e) => setFormData({ ...formData, lecturer: e.target.value })}
-                    required
-                    className="w-full border rounded px-2 py-2"
+                    onValueChange={(value) => setFormData({ ...formData, lecturer: value })}
                     disabled={lecturersLoading}
                   >
-                    <option value="">{lecturersLoading ? 'Loading...' : 'Select a lecturer'}</option>
-                    {lecturers.map((lect: any) => (
-                      <option key={lect.id} value={lect.id}>
-                        {lect.first_name} {lect.last_name} ({lect.email})
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={lecturersLoading ? "Loading..." : "Select a lecturer"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {!lecturersLoading && lecturers.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">No lecturers found</div>
+                      )}
+                      {!lecturersLoading &&
+                        lecturers.map((lect: any) => (
+                          <SelectItem key={lect.id} value={lect.id}>
+                            {lect.first_name} {lect.last_name} ({lect.email})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
               <div className="space-y-2">

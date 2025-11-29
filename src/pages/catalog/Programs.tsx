@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@/components/ui/select';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPrograms, createProgram, updateProgram, deleteProgram } from '@/api/endpoints/catalog';
@@ -171,15 +172,20 @@ export default function Programs() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select
-          className="border rounded px-2 py-1 text-sm"
-          value={filter}
-          onChange={e => setFilter(e.target.value as 'all' | 'active' | 'inactive')}
-        >
-          <option value="all">All Programs</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
+          
+        <Select value={filter} onValueChange={(v) => setFilter(v as 'all' | 'active' | 'inactive')}>
+          <SelectTrigger className="w-[200px] select_wrapper">
+            <SelectValue placeholder="All Programs" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="all">All Programs</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+
+
       </div>
 
       {programs.length === 0 && <ExampleBanner />}
