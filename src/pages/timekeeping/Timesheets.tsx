@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Edit, Trash2, Eye } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, FileText, Edit, Trash2, Eye, CheckCircle, Send } from 'lucide-react';
 import { exampleTimesheets } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,6 +30,9 @@ export default function Timesheets() {
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTimesheet, setEditingTimesheet] = useState<TimesheetDto | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [lecturerFilter, setLecturerFilter] = useState<string>('ALL');
   const [formData, setFormData] = useState({
     lecturer: '',
     period_start: '',
@@ -44,8 +48,12 @@ export default function Timesheets() {
   ];
 
   const { data: timesheets = mockTimesheets } = useQuery({
-    queryKey: ['timesheets'],
-    queryFn: () => getTimesheets(undefined, undefined),
+    queryKey: ['timesheets', lecturerFilter, statusFilter],
+    queryFn: () => {
+      const lecturerId = user?.role === 'LECTURER' ? user.id : (lecturerFilter !== 'ALL' ? lecturerFilter : undefined);
+      const status = statusFilter !== 'ALL' ? statusFilter : undefined;
+      return getTimesheets(lecturerId, status);
+    },
   });
 
   const displayTimesheets = timesheets.length === 0 ? exampleTimesheets.slice(0, 1) : timesheets;
@@ -153,6 +161,45 @@ export default function Timesheets() {
     }
   };
 
+  const handleApprove = (id: string) => {
+    updateMutation.mutate({ id, data: { status: 'APPROVED' } });
+  };
+
+  const handleSubmit = (id: string) => {
+    updateMutation.mutate({ id, data: { status: 'SUBMITTED' } });
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedIds.length === 0) {
+      toast({ title: 'No selection', description: 'Please select timesheets to approve', variant: 'destructive' });
+      return;
+    }
+
+    Promise.all(selectedIds.map(id => updateTimesheet(id, { status: 'APPROVED' })))
+      .then(() => {
+        qc.invalidateQueries({ queryKey: ['timesheets'] });
+        toast({ title: 'Success', description: `${selectedIds.length} timesheet(s) approved` });
+        setSelectedIds([]);
+      })
+      .catch((error) => {
+        toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      });
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === displayTimesheets.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(displayTimesheets.map((t: TimesheetDto) => t.id));
+    }
+  };
+
   const getStatusVariant = (status: string) => {
     switch (status) {
       case 'PAID':
@@ -174,6 +221,12 @@ export default function Timesheets() {
           <p className="text-muted-foreground">Manage timesheet periods and status</p>
         </div>
         <div className="flex gap-2 timesheet_btn_wrapper">
+          {user?.role === 'ADMIN' && selectedIds.length > 0 && (
+            <Button onClick={handleBulkApprove} variant="default">
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Approve Selected ({selectedIds.length})
+            </Button>
+          )}
           <Button onClick={() => handleOpenDialog()} className='create_timesheet_btn'>
             <Plus className="mr-2 h-4 w-4" />
             Create Timesheet
@@ -181,10 +234,62 @@ export default function Timesheets() {
         </div>
       </div>
 
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex gap-4 flex-wrap">
+            {user?.role === 'ADMIN' && (
+              <div className="flex-1 min-w-[200px]">
+                <Label>Filter by Lecturer</Label>
+                <Select value={lecturerFilter} onValueChange={setLecturerFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Lecturers</SelectItem>
+                    {lecturers.map((lect: any) => (
+                      <SelectItem key={lect.id} value={lect.id}>
+                        {lect.first_name} {lect.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="flex-1 min-w-[200px]">
+              <Label>Filter by Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Statuses</SelectItem>
+                  <SelectItem value="OPEN">Open</SelectItem>
+                  <SelectItem value="SUBMITTED">Submitted</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="PAID">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {timesheets.length === 0 && <ExampleBanner />}
       <Card>
         <CardHeader>
-          <CardTitle>Timesheets</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Timesheets</CardTitle>
+            {user?.role === 'ADMIN' && displayTimesheets.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedIds.length === displayTimesheets.length}
+                  onCheckedChange={toggleSelectAll}
+                />
+                <Label className="text-sm">Select All</Label>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -198,6 +303,12 @@ export default function Timesheets() {
                 return (
                   <div key={timesheet.id} className="flex items-center justify-between p-4 border border-border rounded-lg  timesheets_item">
                     <div className="flex items-center gap-3">
+                      {user?.role === 'ADMIN' && (
+                        <Checkbox
+                          checked={selectedIds.includes(timesheet.id)}
+                          onCheckedChange={() => toggleSelection(timesheet.id)}
+                        />
+                      )}
                       <div className="rounded-lg bg-primary/10 p-2 timesheets_icon">
                         <FileText className="h-5 w-5 text-primary" />
                       </div>
@@ -216,6 +327,23 @@ export default function Timesheets() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className='timesheed_icon' variant={getStatusVariant(timesheet.status)}>{timesheet.status}</Badge>
+
+                      {/* Lecturer can submit OPEN timesheets */}
+                      {user?.role === 'LECTURER' && timesheet.status === 'OPEN' && (
+                        <Button variant="default" size="sm" onClick={() => handleSubmit(timesheet.id)}>
+                          <Send className="h-4 w-4 mr-1" />
+                          Submit
+                        </Button>
+                      )}
+
+                      {/* Admin can approve SUBMITTED timesheets */}
+                      {user?.role === 'ADMIN' && timesheet.status === 'SUBMITTED' && (
+                        <Button variant="default" size="sm" onClick={() => handleApprove(timesheet.id)}>
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                      )}
+
                       <Button variant="outline" size="sm" onClick={() => handleOpenDialog(timesheet)}>
                         <Edit className="h-4 w-4" />
                       </Button>

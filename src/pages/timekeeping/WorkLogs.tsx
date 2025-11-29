@@ -52,7 +52,9 @@ export default function WorkLogs() {
   const { data } = useQuery({
     queryKey: ['worklogs'],
     queryFn: async () => {
-      const res = await getWorkLogs();
+      // Lecturers should only see their own work logs
+      const params = user?.role === 'LECTURER' ? { lecturer: user.id } : {};
+      const res = await getWorkLogs(params);
       // API may return either {results:[]} or [] depending on pagination
       const list = Array.isArray(res) ? res : res.results || [];
       return list;
@@ -87,12 +89,17 @@ export default function WorkLogs() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.start_at || !formData.end_at || !formData.lecturer || !formData.minutes) {
+
+    // Auto-populate lecturer ID for lecturers
+    const lecturerId = user?.role === 'LECTURER' ? user.id : formData.lecturer;
+
+    if (!formData.start_at || !formData.end_at || !lecturerId || !formData.minutes) {
       toast({ title: 'Error', description: 'Start, end times, lecturer, and minutes are required', variant: 'destructive' });
       return;
     }
     createMutation.mutate({
       ...formData,
+      lecturer: lecturerId,
       minutes: Number(formData.minutes),
     });
   };
@@ -170,24 +177,27 @@ export default function WorkLogs() {
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="lecturer">Lecturer *</Label>
-                <select
-                  id="lecturer"
-                  value={formData.lecturer}
-                  onChange={(e) => setFormData({ ...formData, lecturer: e.target.value })}
-                  required
-                  className="w-full border rounded px-2 py-2"
-                  disabled={lecturersLoading}
-                >
-                  <option value="">{lecturersLoading ? 'Loading...' : 'Select a lecturer'}</option>
-                  {lecturers.map((lect: any) => (
-                    <option key={lect.id} value={lect.id}>
-                      {lect.first_name} {lect.last_name} ({lect.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Only show lecturer dropdown for admins */}
+              {user?.role === 'ADMIN' && (
+                <div className="space-y-2">
+                  <Label htmlFor="lecturer">Lecturer *</Label>
+                  <select
+                    id="lecturer"
+                    value={formData.lecturer}
+                    onChange={(e) => setFormData({ ...formData, lecturer: e.target.value })}
+                    required
+                    className="w-full border rounded px-2 py-2"
+                    disabled={lecturersLoading}
+                  >
+                    <option value="">{lecturersLoading ? 'Loading...' : 'Select a lecturer'}</option>
+                    {lecturers.map((lect: any) => (
+                      <option key={lect.id} value={lect.id}>
+                        {lect.first_name} {lect.last_name} ({lect.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="minutes">Minutes *</Label>
                 <Input

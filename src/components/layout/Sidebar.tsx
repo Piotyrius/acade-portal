@@ -43,7 +43,7 @@ const navigation: NavItem[] = [
   { name: 'Certificates', href: '/certificates/list', icon: Award },
   { name: 'Timekeeping', href: '/timekeeping/worklogs', icon: Clock, roles: ['ADMIN', 'LECTURER'] },
   { name: 'Rates', href: '/timekeeping/rates', icon: DollarSign, roles: ['ADMIN'] },
-  { name: 'Timesheets', href: '/timekeeping/timesheets', icon: FileText, roles: ['ADMIN'] },
+  { name: 'Timesheets', href: '/timekeeping/timesheets', icon: FileText, roles: ['ADMIN', 'LECTURER'] },
   { name: 'Gallery', href: '/gallery/mine', icon: Image },
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Reporting', href: '/reporting', icon: FileSpreadsheet, roles: ['ADMIN'] },
