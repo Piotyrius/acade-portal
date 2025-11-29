@@ -4,19 +4,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuthStore } from '@/store/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchMe, updateProfile } from '@/api/endpoints/auth';
+import { fetchMe, updateProfile, setupMfa, verifyMfa, disableMfa } from '@/api/endpoints/auth';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
-import { User, Mail, Shield } from 'lucide-react';
+import { User, Mail, Shield, CheckCircle2, XCircle } from 'lucide-react';
+import { MfaSetup } from '@/components/MfaSetup';
 
 export default function Profile() {
   const { user, setAuth } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [mfaSetupOpen, setMfaSetupOpen] = useState(false);
+  const [mfaDisableOpen, setMfaDisableOpen] = useState(false);
+  const [mfaSecret, setMfaSecret] = useState<string | null>(null);
   const { data: currentUser, isLoading } = useQuery({
     queryKey: ['me'],
     queryFn: fetchMe,
@@ -24,6 +30,7 @@ export default function Profile() {
   });
 
   const displayUser = user || currentUser;
+  const mfaEnabled = (displayUser as any)?.mfa_enabled || false;
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -74,6 +81,105 @@ export default function Profile() {
       first_name: formData.first_name,
       last_name: formData.last_name,
     });
+  };
+
+  // MFA Setup Mutation
+  const mfaSetupMutation = useMutation({
+    mutationFn: setupMfa,
+    onSuccess: (data) => {
+      // The API might return the secret in different fields
+      const secret = (data as any).mfa_secret || (data as any).secret || (data as any).totp_secret || '';
+      if (!secret) {
+        toast({
+          title: 'Error',
+          description: 'Failed to retrieve MFA secret. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setMfaSecret(secret);
+      setMfaSetupOpen(true);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // MFA Verify Mutation
+  const mfaVerifyMutation = useMutation({
+    mutationFn: verifyMfa,
+    onSuccess: (data) => {
+      // Update auth store
+      const currentAuth = useAuthStore.getState();
+      if (currentAuth.user) {
+        setAuth(
+          {
+            ...currentAuth.user,
+            mfa_enabled: true,
+          },
+          currentAuth.accessToken!,
+          currentAuth.refreshToken!
+        );
+      }
+      qc.invalidateQueries({ queryKey: ['me'] });
+      toast({
+        title: 'Success',
+        description: 'MFA has been enabled successfully',
+      });
+      setMfaSetupOpen(false);
+      setMfaSecret(null);
+    },
+    onError: (error) => {
+      throw error; // Let MfaSetup component handle the error
+    },
+  });
+
+  // MFA Disable Mutation
+  const mfaDisableMutation = useMutation({
+    mutationFn: disableMfa,
+    onSuccess: (data) => {
+      // Update auth store
+      const currentAuth = useAuthStore.getState();
+      if (currentAuth.user) {
+        setAuth(
+          {
+            ...currentAuth.user,
+            mfa_enabled: false,
+          },
+          currentAuth.accessToken!,
+          currentAuth.refreshToken!
+        );
+      }
+      qc.invalidateQueries({ queryKey: ['me'] });
+      toast({
+        title: 'Success',
+        description: 'MFA has been disabled',
+      });
+      setMfaDisableOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleStartMfaSetup = () => {
+    mfaSetupMutation.mutate();
+  };
+
+  const handleVerifyMfa = async (code: string) => {
+    await mfaVerifyMutation.mutateAsync(code);
+  };
+
+  const handleDisableMfa = () => {
+    mfaDisableMutation.mutate();
   };
 
   const initials = displayUser
@@ -198,15 +304,89 @@ export default function Profile() {
               <Button variant="outline">Change Password</Button>
             </div>
             <div className="space-y-2">
-              <Label>Two-Factor Authentication</Label>
-              <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
-              <Button variant="outline" disabled>
-                Enable 2FA (Coming Soon)
-              </Button>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Two-Factor Authentication</Label>
+                  <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                </div>
+                {mfaEnabled ? (
+                  <Badge variant="default" className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Enabled
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <XCircle className="h-3 w-3" />
+                    Disabled
+                  </Badge>
+                )}
+              </div>
+              {mfaEnabled ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setMfaDisableOpen(true)}
+                  disabled={mfaDisableMutation.isPending}
+                >
+                  {mfaDisableMutation.isPending ? 'Disabling...' : 'Disable MFA'}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={handleStartMfaSetup}
+                  disabled={mfaSetupMutation.isPending}
+                >
+                  {mfaSetupMutation.isPending ? 'Setting up...' : 'Enable MFA'}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* MFA Setup Dialog */}
+      <Dialog open={mfaSetupOpen} onOpenChange={setMfaSetupOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Set Up Two-Factor Authentication</DialogTitle>
+            <DialogDescription>
+              Follow the steps below to enable MFA for your account
+            </DialogDescription>
+          </DialogHeader>
+          {mfaSecret && (
+            <MfaSetup
+              secret={mfaSecret}
+              userEmail={displayUser?.email || ''}
+              onVerify={handleVerifyMfa}
+              onCancel={() => {
+                setMfaSetupOpen(false);
+                setMfaSecret(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* MFA Disable Confirmation Dialog */}
+      <AlertDialog open={mfaDisableOpen} onOpenChange={setMfaDisableOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disable Two-Factor Authentication?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to disable MFA? This will make your account less secure. 
+              You can re-enable it at any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDisableMfa}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Disable MFA
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

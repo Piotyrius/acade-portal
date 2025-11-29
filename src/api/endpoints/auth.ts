@@ -57,3 +57,37 @@ export async function deleteUser(id: string): Promise<void> {
 export async function requestPasswordReset(email: string): Promise<void> {
   await api.post('/api/v1/auth/password_reset/', { email });
 }
+
+// ============================================================================
+// MFA (Multi-Factor Authentication) Functions
+// ============================================================================
+
+export interface MfaSetupResponse extends UserDto {
+  mfa_secret?: string;
+  qr_code_uri?: string;
+}
+
+/**
+ * Start MFA setup for the current user
+ * Generates a new TOTP secret and returns it for QR code generation
+ */
+export async function setupMfa(): Promise<MfaSetupResponse> {
+  const { data } = await api.post('/api/v1/users/mfa_setup/', {});
+  return data;
+}
+
+/**
+ * Verify an MFA code and enable MFA if valid
+ */
+export async function verifyMfa(code: string): Promise<UserDto> {
+  const { data } = await api.post('/api/v1/users/mfa_verify/', { code });
+  return data;
+}
+
+/**
+ * Disable MFA for the current user
+ */
+export async function disableMfa(): Promise<UserDto> {
+  const { data } = await api.post('/api/v1/users/mfa_disable/', {});
+  return data;
+}

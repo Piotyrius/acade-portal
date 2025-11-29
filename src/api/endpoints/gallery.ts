@@ -35,5 +35,15 @@ export async function publishWork(id: string): Promise<WorkDto> {
   return data;
 }
 
+export async function unpublishWork(id: string): Promise<WorkDto> {
+  const { data } = await api.patch(`/api/v1/gallery/works/${id}/`, { status: 'DRAFT' });
+  return data;
+}
+
+export async function toggleWorkVisibility(id: string, isPublic: boolean): Promise<WorkDto> {
+  const { data } = await api.patch(`/api/v1/gallery/works/${id}/`, { is_public: isPublic });
+  return data;
+}
+
 
 

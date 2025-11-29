@@ -13,6 +13,7 @@ export interface UserDto {
   is_active?: boolean;
   is_staff?: boolean;
   is_superuser?: boolean;
+  mfa_enabled?: boolean;
 }
 
 export interface TokenPair {

@@ -22,6 +22,25 @@ Object.defineProperty(window, 'matchMedia', {
     })),
 })
 
+// Mock IntersectionObserver (needed for some components)
+global.IntersectionObserver = class IntersectionObserver {
+    constructor() {}
+    disconnect() {}
+    observe() {}
+    takeRecords() {
+        return []
+    }
+    unobserve() {}
+} as any
+
+// Mock ResizeObserver (needed for some components)
+global.ResizeObserver = class ResizeObserver {
+    constructor() {}
+    disconnect() {}
+    observe() {}
+    unobserve() {}
+} as any
+
 // Mock localStorage
 const localStorageMock = {
     getItem: vi.fn(),
@@ -30,3 +49,12 @@ const localStorageMock = {
     clear: vi.fn(),
 }
 global.localStorage = localStorageMock as any
+
+// Mock sessionStorage
+const sessionStorageMock = {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+}
+global.sessionStorage = sessionStorageMock as any

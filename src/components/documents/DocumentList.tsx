@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { DocumentDto, deleteDocument } from '@/api/endpoints/documents';
+import { DocumentDto, deleteDocument, downloadDocument, downloadBlob } from '@/api/endpoints/documents';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
+import { Loader2 } from 'lucide-react';
 import {
     Table,
     TableBody,
@@ -41,6 +42,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [visibilityFilter, setVisibilityFilter] = useState('all');
     const [previewDoc, setPreviewDoc] = useState<DocumentDto | null>(null);
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
     const deleteMutation = useMutation({
         mutationFn: deleteDocument,
@@ -53,10 +55,56 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
         },
     });
 
+    const downloadMutation = useMutation({
+        mutationFn: downloadDocument,
+        onSuccess: (blob, documentId) => {
+            const doc = documents.find(d => d.id === documentId);
+            if (doc) {
+                const filename = getFilename(doc);
+                downloadBlob(blob, filename);
+                toast({ title: 'Success', description: 'Document downloaded successfully' });
+            }
+            setDownloadingId(null);
+        },
+        onError: (error) => {
+            toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+            setDownloadingId(null);
+        },
+    });
+
     const handleDelete = (id: string) => {
         if (confirm('Are you sure you want to delete this document?')) {
             deleteMutation.mutate(id);
         }
+    };
+
+    const getFilename = (doc: DocumentDto): string => {
+        // Extract filename from document description
+        let filename = getCleanDescription(doc) || doc.id;
+        
+        // Sanitize filename (remove invalid characters)
+        filename = filename.replace(/[<>:"/\\|?*]/g, '_').trim();
+        
+        // Try to extract extension from original file URL
+        const fileUrl = doc.file;
+        const urlMatch = fileUrl.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+        const extension = urlMatch ? urlMatch[1] : '';
+        
+        // Add extension if not already present
+        if (extension && !filename.toLowerCase().endsWith(`.${extension.toLowerCase()}`)) {
+            filename = `${filename}.${extension}`;
+        } else if (!extension) {
+            // Fallback to common extensions based on file type
+            filename = `${filename}.pdf`;
+        }
+        
+        return filename || `document_${doc.id}.pdf`;
+    };
+
+    const handleDownload = (doc: DocumentDto) => {
+        if (downloadingId) return; // Prevent multiple simultaneous downloads
+        setDownloadingId(doc.id);
+        downloadMutation.mutate(doc.id);
     };
 
     const getCategoryFromDoc = (doc: DocumentDto) => {
@@ -210,12 +258,15 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                asChild
+                                                onClick={() => handleDownload(doc)}
+                                                disabled={downloadingId === doc.id}
                                                 title="Download"
                                             >
-                                                <a href={doc.file} download target="_blank" rel="noopener noreferrer">
+                                                {downloadingId === doc.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
                                                     <Download className="h-4 w-4" />
-                                                </a>
+                                                )}
                                             </Button>
                                             <Button
                                                 variant="ghost"
@@ -260,11 +311,21 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                         )}
                     </div>
                     <div className="flex justify-end pt-4">
-                        <Button asChild>
-                            <a href={previewDoc?.file} download target="_blank" rel="noopener noreferrer">
-                                <Download className="mr-2 h-4 w-4" />
-                                Download Original
-                            </a>
+                        <Button
+                            onClick={() => previewDoc && handleDownload(previewDoc)}
+                            disabled={previewDoc ? downloadingId === previewDoc.id : false}
+                        >
+                            {previewDoc && downloadingId === previewDoc.id ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Downloading...
+                                </>
+                            ) : (
+                                <>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download Original
+                                </>
+                            )}
                         </Button>
                     </div>
                 </DialogContent>

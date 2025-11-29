@@ -4,11 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Plus, Image as ImageIcon, Eye, Edit, Trash2 } from 'lucide-react';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { exampleWorks } from '@/utils/exampleData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getMyWorks, uploadWork, publishWork } from '@/api/endpoints/gallery';
+import { getMyWorks, uploadWork, publishWork, unpublishWork, toggleWorkVisibility } from '@/api/endpoints/gallery';
+import { WorkDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
@@ -34,6 +36,7 @@ export default function MyWorks() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingWork, setEditingWork] = useState<any>(null);
   const [editFormData, setEditFormData] = useState({ title: '', description: '' });
+  const [togglingWorkId, setTogglingWorkId] = useState<string | null>(null);
 
   const uploadMut = useMutation({
     mutationFn: (payload: { title: string; file: File }) => uploadWork(payload),
@@ -53,6 +56,35 @@ export default function MyWorks() {
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
     onError: (e: any) => toast({ title: 'Publish failed', description: getErrorMessage(e), variant: 'destructive' }),
+  });
+
+  const unpublishMut = useMutation({
+    mutationFn: (id: string) => unpublishWork(id),
+    onSuccess: () => {
+      toast({ title: 'Unpublished', description: 'Work unpublished successfully' });
+      qc.invalidateQueries({ queryKey: ['my-works'] });
+    },
+    onError: (e: any) => toast({ title: 'Unpublish failed', description: getErrorMessage(e), variant: 'destructive' }),
+  });
+
+  const toggleVisibilityMut = useMutation({
+    mutationFn: ({ id, isPublic }: { id: string; isPublic: boolean }) => toggleWorkVisibility(id, isPublic),
+    onMutate: ({ id }) => {
+      setTogglingWorkId(id);
+    },
+    onSuccess: (_, variables) => {
+      toast({ 
+        title: 'Visibility Updated', 
+        description: `Work is now ${variables.isPublic ? 'public' : 'private'}` 
+      });
+      qc.invalidateQueries({ queryKey: ['my-works'] });
+    },
+    onError: (e: any) => {
+      toast({ title: 'Update failed', description: getErrorMessage(e), variant: 'destructive' });
+    },
+    onSettled: () => {
+      setTogglingWorkId(null);
+    },
   });
 
   const updateMut = useMutation({
@@ -120,7 +152,7 @@ export default function MyWorks() {
 
       {works.length === 0 && <ExampleBanner />}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {displayWorks.map((work: any) => (
+        {displayWorks.map((work: WorkDto) => (
           <Card key={work.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardHeader className="p-0">
               <div className="aspect-video bg-muted flex items-center justify-center">
@@ -129,11 +161,26 @@ export default function MyWorks() {
             </CardHeader>
             <CardContent className="p-4">
               <CardTitle className="text-base mb-2">{work.title}</CardTitle>
-              <div className="flex items-center gap-2">
-                <Badge variant={work.status === 'PUBLISHED' ? 'default' : 'secondary'}>
-                  {work.status}
-                </Badge>
-                {work.is_public && <Badge variant="outline">Public</Badge>}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant={work.status === 'PUBLISHED' ? 'default' : 'secondary'}>
+                    {work.status}
+                  </Badge>
+                  {work.is_public && <Badge variant="outline">Public</Badge>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={`visibility-${work.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                    Public
+                  </Label>
+                  <Switch
+                    id={`visibility-${work.id}`}
+                    checked={work.is_public ?? false}
+                    onCheckedChange={(checked) => {
+                      toggleVisibilityMut.mutate({ id: work.id, isPublic: checked });
+                    }}
+                    disabled={togglingWorkId === work.id || toggleVisibilityMut.isPending}
+                  />
+                </div>
               </div>
             </CardContent>
             <CardFooter className="p-4 pt-0 flex items-center justify-between">
@@ -142,8 +189,22 @@ export default function MyWorks() {
                 <span>—</span>
               </div>
               <div className="flex gap-2">
-                {work.status !== 'PUBLISHED' && (
-                  <Button variant="default" size="sm" onClick={() => publishMut.mutate(work.id)} disabled={publishMut.isPending}>
+                {work.status === 'PUBLISHED' ? (
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => unpublishMut.mutate(work.id)} 
+                    disabled={unpublishMut.isPending}
+                  >
+                    {unpublishMut.isPending ? 'Unpublishing...' : 'Unpublish'}
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => publishMut.mutate(work.id)} 
+                    disabled={publishMut.isPending}
+                  >
                     {publishMut.isPending ? 'Publishing...' : 'Publish'}
                   </Button>
                 )}

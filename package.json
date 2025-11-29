@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
+    "test:ci": "vitest --run --coverage --reporter=verbose"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -52,6 +54,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-big-calendar": "^1.19.4",
     "react-day-picker": "^8.10.1",
@@ -82,6 +85,7 @@
     "@types/react-big-calendar": "^1.16.3",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
+    "@vitest/coverage-v8": "^4.0.14",
     "@vitest/ui": "^4.0.13",
     "autoprefixer": "^10.4.21",
     "axios": "^1.7.7",
