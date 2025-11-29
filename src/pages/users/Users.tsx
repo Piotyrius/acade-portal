@@ -65,8 +65,8 @@ export default function Users() {
 
   // Query
   const { data: users, isLoading } = useQuery({
-    queryKey: ['users', roleFilter === 'all' ? undefined : roleFilter],
-    queryFn: () => getUsers(roleFilter === 'all' ? undefined : roleFilter),
+    queryKey: ['users', roleFilter === 'all' ? null : roleFilter],
+    queryFn: () => getUsers(roleFilter === 'all' ? '' : roleFilter),
   });
 
   // Mutations
