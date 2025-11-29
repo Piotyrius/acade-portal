@@ -146,11 +146,22 @@ export default function Sessions() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = {
-      ...formData,
-      start_at: new Date(formData.start_at).toISOString(),
-      end_at: new Date(formData.end_at).toISOString(),
-    };
+    const startDate = new Date(formData.start_at);
+
+// extract hours + minutes from the time input
+const [hours, minutes] = formData.end_at.split(':').map(Number);
+
+// build the end datetime
+const endDate = new Date(startDate);
+endDate.setHours(hours);
+endDate.setMinutes(minutes);
+
+const payload = {
+  ...formData,
+  start_at: startDate.toISOString(),
+  end_at: endDate.toISOString(),
+};
+
     if (editingSession) {
       updateMutation.mutate({ id: editingSession.id, data: payload });
     } else {
@@ -431,7 +442,7 @@ export default function Sessions() {
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              <Button type="submit"  disabled={createMutation.isPending || updateMutation.isPending}>
                 {editingSession ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>
