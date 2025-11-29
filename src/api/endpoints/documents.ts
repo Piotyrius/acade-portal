@@ -52,3 +52,27 @@ export async function deleteDocument(id: string): Promise<void> {
   await api.delete(`/api/v1/documents/documents/${id}/`);
 }
 
+/**
+ * Download a document file
+ */
+export async function downloadDocument(id: string): Promise<Blob> {
+  const response = await api.post(`/api/v1/documents/documents/${id}/download/`, {}, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+/**
+ * Helper function to download blob as file
+ */
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
+

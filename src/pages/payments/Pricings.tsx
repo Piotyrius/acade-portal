@@ -1,0 +1,456 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Edit, Trash2 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getPricings,
+  createPricing,
+  updatePricing,
+  deletePricing,
+  PricingDto,
+  PricingRequest,
+} from '@/api/endpoints/payments';
+import { getPrograms, getCourses, getCohorts } from '@/api/endpoints/catalog';
+import { useAuthStore } from '@/store/authStore';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { getErrorMessage } from '@/lib/errors';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+
+export default function Pricings() {
+  const { user } = useAuthStore();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPricing, setEditingPricing] = useState<PricingDto | null>(null);
+  const [formData, setFormData] = useState({
+    object_id: '',
+    object_type: '' as 'program' | 'course' | 'cohort' | '',
+    content_type: 0,
+    amount: '',
+    currency: 'USD',
+    effective_from: '',
+    effective_to: '',
+    is_active: true,
+  });
+
+  const { data: pricings = [], isLoading } = useQuery({
+    queryKey: ['pricings'],
+    queryFn: () => getPricings(),
+    enabled: user?.role === 'ADMIN',
+  });
+
+  const { data: programs = [] } = useQuery({
+    queryKey: ['programs'],
+    queryFn: () => getPrograms(),
+    enabled: user?.role === 'ADMIN',
+  });
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses'],
+    queryFn: () => getCourses(),
+    enabled: user?.role === 'ADMIN',
+  });
+
+  const { data: cohorts = [] } = useQuery({
+    queryKey: ['cohorts'],
+    queryFn: () => getCohorts(),
+    enabled: user?.role === 'ADMIN',
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createPricing,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pricings'] });
+      toast({ title: 'Success', description: 'Pricing created successfully' });
+      setIsDialogOpen(false);
+      resetForm();
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<PricingRequest> }) => updatePricing(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pricings'] });
+      toast({ title: 'Success', description: 'Pricing updated successfully' });
+      setIsDialogOpen(false);
+      setEditingPricing(null);
+      resetForm();
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deletePricing,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pricings'] });
+      toast({ title: 'Success', description: 'Pricing deleted successfully' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const resetForm = () => {
+    setFormData({
+      object_id: '',
+      object_type: '',
+      content_type: 0,
+      amount: '',
+      currency: 'USD',
+      effective_from: '',
+      effective_to: '',
+      is_active: true,
+    });
+  };
+
+  const handleOpenDialog = (pricing?: PricingDto) => {
+    if (pricing) {
+      // Determine object_type by checking which list contains the object_id
+      const isProgram = programs.some((p: any) => p.id === pricing.object_id);
+      const isCourse = courses.some((c: any) => c.id === pricing.object_id);
+      const isCohort = cohorts.some((ch: any) => ch.id === pricing.object_id);
+      
+      let objectType: 'program' | 'course' | 'cohort' | '' = '';
+      let contentType = 0;
+      
+      if (isProgram) {
+        objectType = 'program';
+        contentType = 1; // Adjust based on your backend
+      } else if (isCourse) {
+        objectType = 'course';
+        contentType = 2; // Adjust based on your backend
+      } else if (isCohort) {
+        objectType = 'cohort';
+        contentType = 3; // Adjust based on your backend
+      }
+      
+      setEditingPricing(pricing);
+      setFormData({
+        object_id: pricing.object_id,
+        object_type: objectType,
+        content_type: contentType,
+        amount: pricing.amount,
+        currency: pricing.currency,
+        effective_from: pricing.effective_from.split('T')[0],
+        effective_to: pricing.effective_to ? pricing.effective_to.split('T')[0] : '',
+        is_active: pricing.is_active,
+      });
+    } else {
+      setEditingPricing(null);
+      resetForm();
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.object_id || !formData.content_type || !formData.amount || !formData.effective_from) {
+      toast({
+        title: 'Error',
+        description: 'Object, content type, amount, and effective from date are required',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const payload: PricingRequest = {
+      object_id: formData.object_id,
+      content_type: formData.content_type,
+      amount: formData.amount,
+      currency: formData.currency,
+      effective_from: formData.effective_from,
+      effective_to: formData.effective_to || undefined,
+      is_active: formData.is_active,
+    };
+
+    if (editingPricing) {
+      updateMutation.mutate({ id: editingPricing.id, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this pricing?')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const formatCurrency = (amount: string) => {
+    const num = parseFloat(amount || '0');
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(num);
+  };
+
+  if (user?.role !== 'ADMIN') {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Pricings</h2>
+          <p className="text-muted-foreground">You don't have permission to view pricings</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-9 w-40 bg-muted animate-pulse rounded" />
+        <div className="h-96 bg-muted animate-pulse rounded-lg" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Pricings</h2>
+          <p className="text-muted-foreground">Manage pricing for programs, courses, and cohorts</p>
+        </div>
+        <Button onClick={() => handleOpenDialog()}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Pricing
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pricings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {pricings.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No pricings found</p>
+            ) : (
+              pricings.map((pricing: PricingDto) => (
+                <div
+                  key={pricing.id}
+                  className="flex items-center justify-between p-4 border border-border rounded-lg"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="font-medium">
+                        {pricing.pricing_object_name || `Object ${pricing.object_id.slice(0, 8)}`}
+                      </p>
+                      <Badge variant={pricing.is_active ? 'default' : 'outline'}>
+                        {pricing.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-medium">
+                      Price: {formatCurrency(pricing.amount)} {pricing.currency}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Effective from: {new Date(pricing.effective_from).toLocaleDateString()}
+                      {pricing.effective_to && ` to ${new Date(pricing.effective_to).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenDialog(pricing)}
+                      title="Edit Pricing"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(pricing.id)}
+                      title="Delete Pricing"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingPricing ? 'Edit Pricing' : 'Create Pricing'}</DialogTitle>
+            <DialogDescription>
+              {editingPricing ? 'Update pricing details' : 'Create a new pricing for a program, course, or cohort'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="object_type">Object Type *</Label>
+                <Select
+                  value={formData.object_type || undefined}
+                  onValueChange={(value: 'program' | 'course' | 'cohort') => {
+                    // Reset object_id when type changes
+                    setFormData({ 
+                      ...formData, 
+                      object_type: value,
+                      object_id: '',
+                      // Map object type to content_type (these are typical Django ContentType IDs)
+                      // You may need to adjust these based on your backend
+                      content_type: value === 'program' ? 1 : value === 'course' ? 2 : 3
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select object type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="program">Program</SelectItem>
+                    <SelectItem value="course">Course</SelectItem>
+                    <SelectItem value="cohort">Cohort</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="object_id">Object *</Label>
+                <Select
+                  value={formData.object_id || undefined}
+                  onValueChange={(value) => setFormData({ ...formData, object_id: value })}
+                  disabled={!formData.object_type}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.object_type ? `Select a ${formData.object_type}` : "Select object type first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formData.object_type === 'program' && programs.length > 0 && (
+                      programs.map((program: any) => (
+                        <SelectItem key={program.id} value={program.id}>
+                          {program.name} ({program.code})
+                        </SelectItem>
+                      ))
+                    )}
+                    {formData.object_type === 'course' && courses.length > 0 && (
+                      courses.map((course: any) => (
+                        <SelectItem key={course.id} value={course.id}>
+                          {course.title} ({course.code})
+                        </SelectItem>
+                      ))
+                    )}
+                    {formData.object_type === 'cohort' && cohorts.length > 0 && (
+                      cohorts.map((cohort: any) => (
+                        <SelectItem key={cohort.id} value={cohort.id}>
+                          {cohort.name}
+                        </SelectItem>
+                      ))
+                    )}
+                    {formData.object_type && 
+                      ((formData.object_type === 'program' && programs.length === 0) ||
+                       (formData.object_type === 'course' && courses.length === 0) ||
+                       (formData.object_type === 'cohort' && cohorts.length === 0)) && (
+                      <SelectItem value="none" disabled>No {formData.object_type}s available</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="content_type">Content Type ID *</Label>
+                <Input
+                  id="content_type"
+                  type="number"
+                  value={formData.content_type}
+                  onChange={(e) => setFormData({ ...formData, content_type: parseInt(e.target.value) || 0 })}
+                  placeholder="Content Type ID (auto-filled based on object type)"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Content Type ID: {formData.content_type || 'Not set'} (auto-filled when object type is selected)
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount *</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Input
+                    id="currency"
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    placeholder="USD"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="effective_from">Effective From *</Label>
+                  <Input
+                    id="effective_from"
+                    type="date"
+                    value={formData.effective_from}
+                    onChange={(e) => setFormData({ ...formData, effective_from: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="effective_to">Effective To</Label>
+                  <Input
+                    id="effective_to"
+                    type="date"
+                    value={formData.effective_to}
+                    onChange={(e) => setFormData({ ...formData, effective_to: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, is_active: checked as boolean })
+                  }
+                />
+                <Label htmlFor="is_active" className="cursor-pointer">
+                  Active
+                </Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                {editingPricing ? 'Update' : 'Create'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+

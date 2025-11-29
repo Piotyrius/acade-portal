@@ -165,7 +165,7 @@ export default function Timesheets() {
     updateMutation.mutate({ id, data: { status: 'APPROVED' } });
   };
 
-  const handleSubmit = (id: string) => {
+  const handleSubmitTimesheet = (id: string) => {
     updateMutation.mutate({ id, data: { status: 'SUBMITTED' } });
   };
 
@@ -330,7 +330,7 @@ export default function Timesheets() {
 
                       {/* Lecturer can submit OPEN timesheets */}
                       {user?.role === 'LECTURER' && timesheet.status === 'OPEN' && (
-                        <Button variant="default" size="sm" onClick={() => handleSubmit(timesheet.id)}>
+                        <Button variant="default" size="sm" onClick={() => handleSubmitTimesheet(timesheet.id)}>
                           <Send className="h-4 w-4 mr-1" />
                           Submit
                         </Button>

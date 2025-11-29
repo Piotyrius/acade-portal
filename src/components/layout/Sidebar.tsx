@@ -18,6 +18,11 @@ import {
   Upload,
   FileSpreadsheet,
   UserCog,
+  CreditCard,
+  Receipt,
+  Tag,
+  Calendar as CalendarIcon,
+  Wallet,
 } from 'lucide-react';
 
 interface NavItem {
@@ -47,6 +52,13 @@ const navigation: NavItem[] = [
   { name: 'Gallery', href: '/gallery/mine', icon: Image },
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Reporting', href: '/reporting', icon: FileSpreadsheet, roles: ['ADMIN'] },
+  { name: 'Invoices', href: '/payments/invoices', icon: Receipt, roles: ['ADMIN'] },
+  { name: 'Payments', href: '/payments/payments', icon: CreditCard, roles: ['ADMIN'] },
+  { name: 'Discounts', href: '/payments/discounts', icon: Tag, roles: ['ADMIN'] },
+  { name: 'Payment Plans', href: '/payments/payment-plans', icon: CalendarIcon, roles: ['ADMIN'] },
+  { name: 'Payment Methods', href: '/payments/payment-methods', icon: Wallet, roles: ['ADMIN'] },
+  { name: 'Payment Schedules', href: '/payments/payment-schedules', icon: CalendarIcon, roles: ['ADMIN'] },
+  { name: 'Pricings', href: '/payments/pricings', icon: DollarSign, roles: ['ADMIN'] },
   { name: 'Users', href: '/users', icon: UserCog, roles: ['ADMIN'] },
   { name: 'Lecturer Portal', href: '/lecturer/dashboard', icon: GraduationCap, roles: ['LECTURER'] },
   { name: 'My Sessions', href: '/lecturer/sessions', icon: Calendar, roles: ['LECTURER'] },

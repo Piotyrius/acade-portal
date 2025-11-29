@@ -36,6 +36,13 @@ import LecturerDashboard from "./pages/lecturer/LecturerDashboard";
 import MySessions from "./pages/lecturer/MySessions";
 import NotFound from "./pages/NotFound";
 import ManualEnrollment from "./pages/admissions/ManualEnrollment";
+import Invoices from "./pages/payments/Invoices";
+import Discounts from "./pages/payments/Discounts";
+import PaymentPlans from "./pages/payments/PaymentPlans";
+import PaymentMethods from "./pages/payments/PaymentMethods";
+import PaymentSchedules from "./pages/payments/PaymentSchedules";
+import Payments from "./pages/payments/Payments";
+import Pricings from "./pages/payments/Pricings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +100,13 @@ const App = () => (
             <Route path="users" element={<Users />} />
             <Route path="lecturer/dashboard" element={<LecturerDashboard />} />
             <Route path="lecturer/sessions" element={<MySessions />} />
+            <Route path="payments/invoices" element={<Invoices />} />
+            <Route path="payments/discounts" element={<Discounts />} />
+            <Route path="payments/payment-plans" element={<PaymentPlans />} />
+            <Route path="payments/payment-methods" element={<PaymentMethods />} />
+            <Route path="payments/payment-schedules" element={<PaymentSchedules />} />
+            <Route path="payments/payments" element={<Payments />} />
+            <Route path="payments/pricings" element={<Pricings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

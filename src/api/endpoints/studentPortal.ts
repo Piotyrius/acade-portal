@@ -26,3 +26,28 @@ export async function getMyCertificates(): Promise<CertificateDto[]> {
   return data;
 }
 
+// ============================================================================
+// Financial Endpoints
+// ============================================================================
+
+export interface OutstandingBalanceDto {
+  outstanding_balance_minor: number;
+  currency: string;
+}
+
+/**
+ * Get student's total outstanding balance
+ */
+export async function getMyOutstandingBalance(): Promise<OutstandingBalanceDto> {
+  const { data } = await api.get('/api/v1/me/outstanding_balance/');
+  return data;
+}
+
+/**
+ * Get student's invoices and payments
+ */
+export async function getMyPayments(): Promise<any[]> {
+  const { data } = await api.get('/api/v1/me/payments/');
+  return data.results || data;
+}
+
