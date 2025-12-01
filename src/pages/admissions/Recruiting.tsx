@@ -11,6 +11,7 @@ import { getErrorMessage } from '@/lib/errors';
 import './Recruiting.css'
 import { IoMdClose } from "react-icons/io";
 import { GoPlus } from "react-icons/go";
+import { FaArrowLeft } from "react-icons/fa6";
 
 export default function Recruiting() {
   const { toast } = useToast();
@@ -24,6 +25,7 @@ export default function Recruiting() {
     phoneName: '',
     status: "NEW" as "NEW",
   });
+  const [fullscreen, setFullscreen] = useState(true);
 
   const { data: programs = [] } = useQuery({
     queryKey: ['programs', 'active'],
@@ -71,11 +73,19 @@ export default function Recruiting() {
 
 
   return (
-    <section className='recruiting_section'>
+    <section className={`recruiting_section ${fullscreen ? 'fullscreen_recruit' : ''}`} >
 
       <div className='recruiting_container'>
         <div className='recruiting_wrapper'>
 
+          {fullscreen && (
+            <button 
+              className='recruit_back_btn'
+              onClick={() => setFullscreen(false)}
+            >
+              <FaArrowLeft />
+            </button>
+          )}
 
           <CardHeader className='recruiting_card_header'>
             <CardTitle className='recruit_student_title'>Recruit Student</CardTitle>
@@ -98,6 +108,7 @@ export default function Recruiting() {
               <div>
                 <label> Email * </label>
                 <Input
+                  type="email"
                   className='recruiting_input'
                   placeholder="Enter your email"
                   value={form.email}
