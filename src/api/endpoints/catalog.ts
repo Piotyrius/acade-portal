@@ -78,6 +78,11 @@ export async function deleteCohort(id: string): Promise<void> {
   await api.delete(`/api/v1/catalog/cohorts/${id}/`);
 }
 
+export interface SessionRecurrenceResponse {
+  created: number;
+  sessions: SessionDto[];
+}
+
 export async function generateSessions(cohortId: string, payload: {
   pattern: string;
   start_time: string;
@@ -113,6 +118,19 @@ export async function updateSession(id: string, payload: Partial<SessionDto>): P
 
 export async function deleteSession(id: string): Promise<void> {
   await api.delete(`/api/v1/catalog/sessions/${id}/`);
+}
+
+export type SessionWithRecurrencePayload = Partial<SessionDto> & {
+  repeat?: boolean;
+  weekdays?: number[];
+  repeat_until?: string;
+};
+
+export async function createSessionWithRecurrence(
+  payload: SessionWithRecurrencePayload,
+): Promise<SessionRecurrenceResponse> {
+  const { data } = await api.post('/api/v1/catalog/sessions/with_recurrence/', payload);
+  return data;
 }
 
 // Lecturer-specific endpoints
