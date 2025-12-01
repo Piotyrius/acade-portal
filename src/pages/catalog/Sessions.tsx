@@ -2,11 +2,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Calendar, Edit, Trash2, X, List, Calendar as Cal } from 'lucide-react';
+import { Search, Plus, Calendar as CalendarIcon, Edit, Trash2, X, List, Calendar as Cal } from 'lucide-react';
 import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getSessions, createSession, updateSession, deleteSession, getCohorts } from '@/api/endpoints/catalog';
+import {
+  getSessions,
+  createSession,
+  updateSession,
+  deleteSession,
+  getCohorts,
+  createSessionWithRecurrence,
+  SessionWithRecurrencePayload,
+} from '@/api/endpoints/catalog';
 import { SessionDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +30,10 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { format, startOfWeek } from 'date-fns';
+import { format, startOfWeek, isBefore, startOfDay } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const localizer = dateFnsLocalizer({
   format,
@@ -51,6 +62,10 @@ export default function Sessions() {
     is_cancelled: false,
     cancellation_reason: '',
   });
+  const [repeatEnabled, setRepeatEnabled] = useState(false);
+  const [repeatWeekdays, setRepeatWeekdays] = useState<number[]>([]);
+  const [repeatUntil, setRepeatUntil] = useState<Date | undefined>(undefined);
+  const [repeatError, setRepeatError] = useState<string | null>(null);
 
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['sessions', selectedCohort],
@@ -69,6 +84,28 @@ export default function Sessions() {
       toast({ title: 'Success', description: 'Session created successfully' });
       setIsDialogOpen(false);
       resetForm();
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const createWithRecurrenceMutation = useMutation({
+    mutationFn: (payload: SessionWithRecurrencePayload) => createSessionWithRecurrence(payload),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['sessions'] });
+      const createdCount = data?.created ?? data?.sessions?.length ?? 0;
+      toast({
+        title: 'Success',
+        description:
+          createdCount > 1
+            ? `Created ${createdCount} sessions successfully`
+            : 'Session created successfully',
+      });
+      setIsDialogOpen(false);
+      setEditingSession(null);
+      resetForm();
+      resetRepeat();
     },
     onError: (error) => {
       toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
@@ -112,6 +149,13 @@ export default function Sessions() {
     });
   };
 
+  const resetRepeat = () => {
+    setRepeatEnabled(false);
+    setRepeatWeekdays([]);
+    setRepeatUntil(undefined);
+    setRepeatError(null);
+  };
+
   const displaySessions = sessions.length === 0 ? exampleSessions.slice(0, 1) : sessions;
   const filteredSessions = displaySessions.filter((s: any) => {
     const matchesSearch = !searchTerm || s.cohort_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
@@ -125,6 +169,7 @@ export default function Sessions() {
     if (selectedCohort && selectedCohort !== 'all') {
       setFormData({ ...formData, cohort: selectedCohort });
     }
+    resetRepeat();
     setIsDialogOpen(true);
   };
 
@@ -135,38 +180,85 @@ export default function Sessions() {
     setFormData({
       cohort: session.cohort,
       start_at: format(startDate, "yyyy-MM-dd'T'HH:mm"),
-      end_at: format(endDate, "yyyy-MM-dd'T'HH:mm"),
+      // store only the time portion for the time input
+      end_at: format(endDate, 'HH:mm'),
       location: session.location || '',
       online_link: session.online_link || '',
       is_cancelled: session.is_cancelled,
       cancellation_reason: session.cancellation_reason || '',
     });
+    resetRepeat();
     setIsDialogOpen(true);
+  };
+
+  const buildBasePayload = () => {
+    const startDate = new Date(formData.start_at);
+
+    // extract hours + minutes from the time input
+    const [hours, minutes] = formData.end_at.split(':').map(Number);
+
+    // build the end datetime
+    const endDate = new Date(startDate);
+    endDate.setHours(hours);
+    endDate.setMinutes(minutes);
+
+    return {
+      ...formData,
+      start_at: startDate.toISOString(),
+      end_at: endDate.toISOString(),
+    };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const startDate = new Date(formData.start_at);
+    setRepeatError(null);
 
-// extract hours + minutes from the time input
-const [hours, minutes] = formData.end_at.split(':').map(Number);
-
-// build the end datetime
-const endDate = new Date(startDate);
-endDate.setHours(hours);
-endDate.setMinutes(minutes);
-
-const payload = {
-  ...formData,
-  start_at: startDate.toISOString(),
-  end_at: endDate.toISOString(),
-};
+    const payload = buildBasePayload();
 
     if (editingSession) {
       updateMutation.mutate({ id: editingSession.id, data: payload });
     } else {
       createMutation.mutate(payload);
     }
+  };
+
+  const handleCreateWithRecurrence = () => {
+    setRepeatError(null);
+
+    if (!repeatEnabled || editingSession) {
+      return;
+    }
+
+    if (!formData.start_at || !formData.end_at) {
+      setRepeatError('Please fill in both start and end time before creating repeated sessions.');
+      return;
+    }
+
+    const basePayload = buildBasePayload();
+
+    if (repeatWeekdays.length === 0) {
+      setRepeatError('Select at least one weekday for repeating sessions.');
+      return;
+    }
+    if (!repeatUntil) {
+      setRepeatError('Select an end date for repeating sessions.');
+      return;
+    }
+
+    const startDate = new Date(formData.start_at);
+    const repeatUntilStart = startOfDay(repeatUntil);
+    if (isBefore(repeatUntilStart, startOfDay(startDate))) {
+      setRepeatError('End date must be on or after the session start date.');
+      return;
+    }
+
+    const recurrencePayload: SessionWithRecurrencePayload = {
+      ...basePayload,
+      repeat: true,
+      weekdays: repeatWeekdays,
+      repeat_until: repeatUntilStart.toISOString().slice(0, 10),
+    };
+    createWithRecurrenceMutation.mutate(recurrencePayload);
   };
 
   const handleDelete = (id: string) => {
@@ -273,8 +365,8 @@ const payload = {
                   <div className="flex items-start justify-between sessions_item">
                     <div className="flex gap-4 sessions_top_side_wrapper">
                       
-                      <div className="rounded-lg bg-primary/10 p-3 sessions_icon">
-                        <Calendar className="h-6 w-6 text-primary" />
+                          <div className="rounded-lg bg-primary/10 p-3 sessions_icon">
+                        <CalendarIcon className="h-6 w-6 text-primary" />
                       </div>
                       <div className='sessions_top_side'>
                         <div>
@@ -437,14 +529,143 @@ const payload = {
                   />
                 </div>
               )}
+
+              {!editingSession && (
+                <div className="mt-4 space-y-3 border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="repeat-session">Repeat this session</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Create this session again on selected weekdays at the same time.
+                      </p>
+                    </div>
+                    <Switch
+                      id="repeat-session"
+                      checked={repeatEnabled}
+                      onCheckedChange={(checked) => {
+                        setRepeatEnabled(checked);
+                        if (!checked) {
+                          setRepeatWeekdays([]);
+                          setRepeatUntil(undefined);
+                          setRepeatError(null);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {repeatEnabled && (
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Weekdays</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { label: 'Mon', value: 1 },
+                            { label: 'Tue', value: 2 },
+                            { label: 'Wed', value: 3 },
+                            { label: 'Thu', value: 4 },
+                            { label: 'Fri', value: 5 },
+                            { label: 'Sat', value: 6 },
+                            { label: 'Sun', value: 0 },
+                          ].map((day) => (
+                            <button
+                              key={day.value}
+                              type="button"
+                              onClick={() => {
+                                setRepeatWeekdays((prev) =>
+                                  prev.includes(day.value)
+                                    ? prev.filter((d) => d !== day.value)
+                                    : [...prev, day.value],
+                                );
+                              }}
+                              className={cn(
+                                'inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition-colors',
+                                repeatWeekdays.includes(day.value)
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-background text-foreground hover:bg-accent',
+                              )}
+                            >
+                              {day.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label>Repeat until</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !repeatUntil && 'text-muted-foreground',
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {repeatUntil ? format(repeatUntil, 'PPP') : 'Pick end date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={repeatUntil}
+                              onSelect={(date) => {
+                                setRepeatUntil(date ?? undefined);
+                              }}
+                              disabled={(date) => {
+                                if (!formData.start_at) return false;
+                                const start = startOfDay(new Date(formData.start_at));
+                                return isBefore(date, start);
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <p className="text-xs text-muted-foreground">
+                          Sessions will be created on these weekdays up to and including this date.
+                        </p>
+                      </div>
+
+                      {repeatError && (
+                        <p className="text-xs text-destructive">{repeatError}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit"  disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingSession ? 'Update' : 'Create'}
-              </Button>
+              {editingSession ? (
+                <Button
+                  type="submit"
+                  disabled={updateMutation.isPending}
+                >
+                  Update
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="submit"
+                    disabled={createMutation.isPending}
+                  >
+                    Create
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={
+                      !repeatEnabled || createWithRecurrenceMutation.isPending
+                    }
+                    onClick={handleCreateWithRecurrence}
+                  >
+                    Create &amp; Repeat
+                  </Button>
+                </>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>
