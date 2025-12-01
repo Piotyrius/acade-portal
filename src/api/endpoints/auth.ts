@@ -55,11 +55,11 @@ export async function deleteUser(id: string): Promise<void> {
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {
-  await api.post('/api/v1/auth/password_reset/', { email });
+  await api.post('/api/v1/auth/password-reset/', { email });
 }
 
 export async function confirmPasswordReset(token: string, newPassword: string): Promise<void> {
-  await api.post('/api/v1/auth/password_reset/confirm/', { token, new_password: newPassword });
+  await api.post('/api/v1/auth/password-reset/confirm/', { token, new_password: newPassword });
 }
 
 // ============================================================================
