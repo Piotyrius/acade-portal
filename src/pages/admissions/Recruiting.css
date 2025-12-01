@@ -3,7 +3,7 @@
     inset: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 9999;           
+    z-index: 100;           
     background: rgba(0,0,0,0.7); 
     backdrop-filter: blur(6px);
     padding: 40px 0;
