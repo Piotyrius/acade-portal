@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPrograms, createProgram, updateProgram, deleteProgram } from '@/api/endpoints/catalog';
+import { getPrograms, createProgram, updateProgram, deleteProgram, getCourses } from '@/api/endpoints/catalog';
 import { ProgramDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ExampleBanner } from '@/components/ExampleBanner';
+import { IoIosArrowDown } from "react-icons/io";
 
 export default function Programs() {
   const { toast } = useToast();
@@ -31,6 +32,18 @@ export default function Programs() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<ProgramDto | null>(null);
   const [formData, setFormData] = useState({ name: '', code: '', description: '', active: true });
+  const [viewOnly, setViewOnly] = useState(false);
+  const [expandedProgramId, setExpandedProgramId] = useState<string | null>(null);
+
+const handleOpenView = (program: ProgramDto) => {
+  if (expandedProgramId === program.id) {
+    setExpandedProgramId(null);
+    return;
+  }
+
+  setExpandedProgramId(program.id);
+};
+
 
   // Mock data for preview
   const mockPrograms = [
@@ -39,6 +52,18 @@ export default function Programs() {
     { id: '3', name: 'Cloud Security Architecture', code: 'CS-201', description: 'Design and implement secure cloud infrastructure on AWS, Azure, and GCP', active: true, version: '1.0', created_at: '2024-01-17T00:00:00Z', updated_at: '2024-01-17T00:00:00Z' },
     { id: '4', name: 'Incident Response & Forensics', code: 'CS-401', description: 'Respond to security incidents and conduct digital forensics investigations', active: false, version: '1.0', created_at: '2024-01-18T00:00:00Z', updated_at: '2024-01-18T00:00:00Z' },
   ];
+
+const { data: courses } = useQuery({
+  queryKey: ['courses'],
+  queryFn: () => getCourses(),
+
+});
+  console.log("COURSES RESPONSE:", courses);
+
+const courseList = Array.isArray(courses) ? courses : [];
+
+
+
 
   const { data: programs = mockPrograms, isLoading } = useQuery({
     queryKey: ['programs', filter],
@@ -191,32 +216,68 @@ export default function Programs() {
       {programs.length === 0 && <ExampleBanner />}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredPrograms.map((program) => (
-          <Card key={program.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <CardTitle className="text-lg">{program.name}</CardTitle>
-                <Badge variant={program.active ? 'default' : 'secondary'}>
-                  {program.active ? 'Active' : 'Inactive'}
-                </Badge>
-              </div>
-              <CardDescription>{program.code}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground line-clamp-2">{program.description || 'No description'}</p>
-                <div className="flex gap-2 ml-2">
-                  <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(program)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(program.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+          {filteredPrograms.map((program) => {
+            const programCourses = courseList.filter(
+              (c: any) => c.program === program.id
+          );
+          return(
+            <Card key={program.id} className="hover:shadow-lg transition-shadow card-no-stretch">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg">{program.name}</CardTitle>
+                  <Badge variant={program.active ? 'default' : 'secondary'}>
+                    {program.active ? 'Active' : 'Inactive'}
+                  </Badge>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                <CardDescription>{program.code}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-muted-foreground line-clamp-2">{program.description || 'No description'}</p>
+                  <div className="flex gap-2 ml-2">
+
+                    <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(program)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(program.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+
+                  </div>
+                </div>     
+
+                <Button className='w-[100%] my-2' variant="ghost" size="sm" onClick={() => handleOpenView(program)}>
+                  <IoIosArrowDown className={expandedProgramId === program.id ? "arrow_rotated" : "arrow_default"} />
+                </Button>
+
+                <div
+                  className={`transition-all duration-300 overflow-hidden ${
+                    expandedProgramId === program.id ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="space-y-2 mt-4">
+                    <h3 className="text-lg font-semibold">Courses in this Program</h3>
+                
+                    {programCourses.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No courses assigned</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {programCourses.map((course: any) => (
+                          <Badge key={course.id} variant="outline">
+                            {course.title}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </CardContent>
+            </Card>
+          )
+          
+        })}
       </div>
 
       {filteredPrograms.length === 0 && (

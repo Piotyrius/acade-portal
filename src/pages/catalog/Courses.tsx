@@ -52,7 +52,7 @@ export default function Courses() {
 
   const { data: programs = mockPrograms } = useQuery({
     queryKey: ['programs'],
-    queryFn: getPrograms,
+    queryFn: () => getPrograms(),
   });
 
   const createMutation = useMutation({

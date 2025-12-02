@@ -92,19 +92,6 @@ export default function Applications() {
     app.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAccept = (app: ApplicationDto) => {
-    if (app.status !== 'ACCEPTED') {
-      toast({
-        title: 'Error',
-        description: 'Application must be accepted first before creating enrollment',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setSelectedApp(app);
-    setAcceptDialogOpen(true);
-  };
-
   const handleAcceptSubmit = () => {
     if (!selectedApp || !selectedCohort) return;
     acceptMutation.mutate({ id: selectedApp.id, cohortId: selectedCohort });
@@ -113,6 +100,7 @@ export default function Applications() {
   const handleStatusChange = (id: string, status: 'NEW' | 'IN_REVIEW' | 'ACCEPTED' | 'REJECTED') => {
     updateMutation.mutate({ id, data: { status } });
   };
+
 
   if (isLoading) {
     return (
@@ -205,11 +193,6 @@ export default function Applications() {
                           Reject
                         </Button>
                       </div>
-                    )}
-                    {app.status === 'ACCEPTED' && (
-                      <Button className='create_enrollment_btn' size="sm" onClick={() => handleAccept(app)}>
-                        Create Enrollment
-                      </Button>
                     )}
 
                     <div className="text-right">

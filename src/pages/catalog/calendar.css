@@ -27,6 +27,15 @@
   border-color: hsl(var(--border)) !important;
 }
 
+.card-no-stretch {
+  align-self: start;
+}
+
+.arrow_rotated {
+  transform: rotate(180deg);
+  transition: all 0.3s ease-in-out;
+}
+
 /* GRID LINES */
 .rbc-time-slot,
 .rbc-day-bg {

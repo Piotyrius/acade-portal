@@ -108,7 +108,7 @@ export default function Cohorts() {
     start_date: '',
     end_date: '',
     status: 'PLANNED' as CohortDto['status'],
-  });
+  });  
   const [sessionFormData, setSessionFormData] = useState({
     pattern: '',
     start_time: '19:00',
@@ -304,6 +304,8 @@ export default function Cohorts() {
   const toggleStudentList = (cohortId: string) => {
     setExpandedCohortId(expandedCohortId === cohortId ? null : cohortId);
   };
+
+  
   
 
   if (isLoading) {

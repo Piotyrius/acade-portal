@@ -35,7 +35,6 @@ import PublicGallery from "./pages/public/PublicGallery";
 import LecturerDashboard from "./pages/lecturer/LecturerDashboard";
 import MySessions from "./pages/lecturer/MySessions";
 import NotFound from "./pages/NotFound";
-import ManualEnrollment from "./pages/admissions/ManualEnrollment";
 import Invoices from "./pages/payments/Invoices";
 import Discounts from "./pages/payments/Discounts";
 import PaymentPlans from "./pages/payments/PaymentPlans";
@@ -82,7 +81,6 @@ const App = () => (
             <Route path="catalog/sessions" element={<Sessions />} />
             <Route path="admissions/applications" element={<Applications />} />
             <Route path="admissions/enrollments" element={<Enrollments />} />
-            <Route path="admissions/manual-enrollment" element={<ManualEnrollment />} />
             <Route path="admissions/recruiting" element={<Recruiting />} />
             <Route path="attendance/list" element={<AttendanceList />} />
             <Route path="assessment/assessments" element={<Assessments />} />
