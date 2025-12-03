@@ -180,10 +180,6 @@
         background-image: url('/src/assets/images/recruiting_mobile.jpg');
     }
 
-    .recruiting_section {
-        background-image: url('/src/assets/images/recruiting_mobile.jpg');
-    }
-
 }
 
 @media (max-width: 400px) {

@@ -85,6 +85,25 @@
   color: hsl(var(--primary-foreground)) !important;
 }
 
+.rbc-time-header-gutter {
+  background-color: #142038 !important;
+}
+
+.rbc-btn-group > button {
+  color: #fff !important;
+}
+
+.rbc-btn-group > button:hover {
+  color: #111 !important;
+}
+
+.rbc-toolbar .rbc-active {
+  color: #111 !important;
+}
+
+
+
+
 /* WEEK ROW SEPARATOR */
 .rbc-month-row + .rbc-month-row {
   border-color: hsl(var(--border)) !important;
