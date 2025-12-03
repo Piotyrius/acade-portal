@@ -7,18 +7,20 @@ import { getEnrollments } from '@/api/endpoints/admissions';
 import { getCertificates } from '@/api/endpoints/certificates';
 import { getMySessions } from '@/api/endpoints/catalog';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
+import { getAttendanceRecords } from '@/api/endpoints/attendance';
 
 export default function Dashboard() {
+
   const { user } = useAuthStore();
 
   const { data: cohorts } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
   const { data: enrollments } = useQuery({
     queryKey: ['enrollments'],
-    queryFn: getEnrollments,
+    queryFn: () => getEnrollments(),
   });
 
   const { data: certificates } = useQuery({
@@ -32,6 +34,34 @@ export default function Dashboard() {
     enabled: user?.role === 'LECTURER',
   });
 
+  const { data: attendanceRecords } = useQuery({
+    queryKey: ['attendance'],
+    queryFn: () => getAttendanceRecords(),
+  });
+
+  let attendanceRate = '0%';
+
+  if (attendanceRecords && attendanceRecords.length > 0) {
+    const presentStatuses = ['PRESENT', 'LATE', 'EXCUSED'];
+
+    let relevantRecords = attendanceRecords;
+
+    if (user?.role === 'LECTURER' && mySessions) {
+      const lecturerSessionIds = new Set(mySessions.map((s) => s.id));
+      relevantRecords = attendanceRecords.filter((r) => lecturerSessionIds.has(r.session));
+    }
+
+    if (user?.role === 'STUDENT') {
+      relevantRecords = attendanceRecords.filter((r) => r.student === user.id);
+    }
+
+    const total = relevantRecords.length;
+    const attended = relevantRecords.filter((r) => presentStatuses.includes(r.status)).length;
+
+    const rate = total === 0 ? 0 : Math.round((attended / total) * 100);
+    attendanceRate = `${rate}%`;
+  }
+
   const activeStudentsCount = enrollments?.filter((e) => e.status === 'ACTIVE').length || 0;
 
   const totalStudentsCount = enrollments?.length || 0;
@@ -44,7 +74,6 @@ export default function Dashboard() {
 
 
   
-  const attendanceRate = '87%';
 
   // Get upcoming sessions for lecturer
   const upcomingSessions = mySessions
@@ -81,9 +110,9 @@ export default function Dashboard() {
     {
       title: 'Attendance Rate',
       value: attendanceRate,
-      change: '+2%', // placeholder
+      change: '+2%',
       icon: ClipboardCheck,
-      trend: 'up' as const,
+      trend: 'up',
     },
     {
       title: 'Certificates Issued',
