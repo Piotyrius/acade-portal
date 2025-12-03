@@ -27,6 +27,15 @@
   border-color: hsl(var(--border)) !important;
 }
 
+.card-no-stretch {
+  align-self: start;
+}
+
+.arrow_rotated {
+  transform: rotate(180deg);
+  transition: all 0.3s ease-in-out;
+}
+
 /* GRID LINES */
 .rbc-time-slot,
 .rbc-day-bg {
@@ -75,6 +84,23 @@
 .rbc-event-content {
   color: hsl(var(--primary-foreground)) !important;
 }
+
+.rbc-time-header-gutter {
+  background-color: hsl(var(--card)) !important;
+}
+
+.rbc-btn-group > button {
+  color: hsl(var(--foreground)) !important;
+}
+
+.rbc-btn-group > button:hover {
+  color: #111 !important;
+}
+
+.rbc-toolbar .rbc-active {
+  color: #111 !important;
+}
+
 
 /* WEEK ROW SEPARATOR */
 .rbc-month-row + .rbc-month-row {

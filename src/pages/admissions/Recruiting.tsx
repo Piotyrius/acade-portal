@@ -8,23 +8,29 @@ import { createApplication } from '@/api/endpoints/admissions';
 import { getPrograms } from '@/api/endpoints/catalog';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
-import './Recruiting.css'
-import { IoMdClose } from "react-icons/io";
-import { GoPlus } from "react-icons/go";
-import { FaArrowLeft } from "react-icons/fa6";
+import './Recruiting.css';
+import { IoMdClose } from 'react-icons/io';
+import { GoPlus } from 'react-icons/go';
+import { FaArrowLeft } from 'react-icons/fa6';
+
+type PhoneEntry = {
+  name: string;
+  phone: string;
+};
 
 export default function Recruiting() {
   const { toast } = useToast();
   const qc = useQueryClient();
+
   const [form, setForm] = useState({
     name: '',
     email: '',
-    phone: [''],
+    phones: [{ name: '', phone: '' }] as PhoneEntry[],
     program: '',
     notes: '',
-    phoneName: '',
-    status: "NEW" as "NEW",
+    status: 'NEW' as 'NEW',
   });
+
   const [fullscreen, setFullscreen] = useState(true);
 
   const { data: programs = [] } = useQuery({
@@ -44,7 +50,14 @@ export default function Recruiting() {
     mutationFn: createApplication,
     onSuccess: () => {
       toast({ title: 'Success', description: 'Student recruited successfully' });
-      setForm({ name: '', email: '', phone: [''], program: '', notes: '', status: "NEW" as "NEW", phoneName: '' });
+      setForm({
+        name: '',
+        email: '',
+        phones: [{ name: '', phone: '' }],
+        program: '',
+        notes: '',
+        status: 'NEW',
+      });
       qc.invalidateQueries({ queryKey: ['applications'] });
     },
     onError: (error) => {
@@ -53,54 +66,62 @@ export default function Recruiting() {
   });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+
+    // Clean phones: remove empty ones, trim, and keep shape { name, phone }
+    const cleanedPhones: PhoneEntry[] = form.phones
+      .map((p) => ({
+        name: p.name.trim(),
+        phone: p.phone.trim(),
+      }))
+      .filter((p) => p.phone !== '');
+
+    if (cleanedPhones.length === 0) {
+      toast({
+        title: 'Phone required',
+        description: 'Please enter at least one phone number.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     const payload = {
       ...form,
-      phone: form.phone
-        .map(p => p.trim())
-        .filter(p => p !== '')
-        .join(', '),
+      phones: cleanedPhones,
+      phone: cleanedPhones[0].phone, // backend "phone": main phone
     };
 
-    mutation.mutate(payload)
-  }
+    mutation.mutate(payload);
+  };
 
   const removePhone = (i: number) => {
-    const updated = form.phone.filter((_, index) => index !== i)
-    setForm({ ...form, phone: updated })
-  }
-
+    const updated = form.phones.filter((_, index) => index !== i);
+    setForm({ ...form, phones: updated });
+  };
 
   return (
-    <section className={`recruiting_section ${fullscreen ? 'fullscreen_recruit' : ''}`} >
-
-      <div className='recruiting_container'>
-        <div className='recruiting_wrapper'>
-
+    <section className={`recruiting_section ${fullscreen ? 'fullscreen_recruit' : ''}`}>
+      <div className="recruiting_container">
+        <div className="recruiting_wrapper">
           {fullscreen && (
-            <button 
-              className='recruit_back_btn'
-              onClick={() => setFullscreen(false)}
-            >
+            <button className="recruit_back_btn" onClick={() => setFullscreen(false)}>
               <FaArrowLeft />
             </button>
           )}
 
-          <CardHeader className='recruiting_card_header'>
-            <CardTitle className='recruit_student_title'>Recruit Student</CardTitle>
+          <CardHeader className="recruiting_card_header">
+            <CardTitle className="recruit_student_title">Recruit Student</CardTitle>
           </CardHeader>
+
           <CardContent>
-
-
             <form className="recruiting_form" onSubmit={handleSubmit}>
               <div>
                 <label> Full Name * </label>
                 <Input
-                  className='recruiting_input'
-                  placeholder="Enter your full name"
+                  className="recruiting_input"
+                  placeholder="Enter full name"
                   value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
                 />
               </div>
@@ -109,10 +130,10 @@ export default function Recruiting() {
                 <label> Email * </label>
                 <Input
                   type="email"
-                  className='recruiting_input'
-                  placeholder="Enter your email"
+                  className="recruiting_input"
+                  placeholder="Enter email"
                   value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
                   inputMode="email"
                 />
@@ -121,59 +142,69 @@ export default function Recruiting() {
               <div>
                 <label> Phone * </label>
 
-                {form.phone.map((p, index) => (
-                  
-                  <div className='recruiting_phone_wrapper' key={index}>
-                    <div className='delete_btn__recruiting_phone'>
-
-
-                      <input
-                        className="recruiting_phone_input"
-                        placeholder="Enter your phone"
-                        value={p}
-                        inputMode="numeric"
-                        maxLength={9}
-                        onChange={e => {
-                          const newPhones = [...form.phone];
-                          newPhones[index] = e.target.value.replace(/\D/g, "");
-                          setForm({ ...form, phone: newPhones });
-                        }}
-                        required={index === 0}
-                      />
-
-                    </div>
-
-
-                    <Input 
-                      type='text'
-                      placeholder='Phone name'
-                      value={form.phoneName}
-                      onChange={e => setForm({ ...form, phoneName: e.target.value })}
-                      className='phone__name'
+                {form.phones.map((p, index) => (
+                  <div className="recruiting_phone_wrapper" key={index}>
+                    {/* Phone number */}
+                    <input
+                      className="recruiting_phone_input"
+                      placeholder="Enter phone"
+                      value={p.phone}
+                      inputMode="numeric"
+                      maxLength={9}
+                      onChange={(e) => {
+                        const updated = [...form.phones];
+                        updated[index] = {
+                          ...updated[index],
+                          phone: e.target.value.replace(/\D/g, ''),
+                        };
+                        setForm({ ...form, phones: updated });
+                      }}
+                      required={index === 0}
                     />
 
+                    {/* Phone name */}
+                    <Input
+                      type="text"
+                      placeholder="Phone name (e.g. Mom, Work)"
+                      value={p.name}
+                      onChange={(e) => {
+                        const updated = [...form.phones];
+                        updated[index] = {
+                          ...updated[index],
+                          name: e.target.value,
+                        };
+                        setForm({ ...form, phones: updated });
+                      }}
+                      className="phone__name"
+                    />
+
+                    {/* Add / remove buttons */}
                     {index === 0 && (
-                      <div className='add_another_phone_field'>
-                        <button 
-                          type='button'
-                          className='h-10'
-                          onClick={() => setForm({ ...form, phone: [...form.phone, ""] })}
+                      <div className="add_another_phone_field">
+                        <button
+                          type="button"
+                          className="h-10"
+                          onClick={() =>
+                            setForm({
+                              ...form,
+                              phones: [...form.phones, { name: '', phone: '' }],
+                            })
+                          }
                         >
-                          <GoPlus className='recruiting_plus_icon' />
+                          <GoPlus className="recruiting_plus_icon" />
                         </button>
                       </div>
                     )}
 
-
                     {index > 0 && (
-                      <button onClick={() => removePhone(index)} className='input_delete_btn_wrapper'>
-                        <IoMdClose
-                          className='input_delete_btn'
-                          
-                        />
+                      <button
+                        type="button"
+                        onClick={() => removePhone(index)}
+                        className="input_delete_btn_wrapper"
+                      >
+                        <IoMdClose className="input_delete_btn" />
                       </button>
                     )}
-                    
                   </div>
                 ))}
               </div>
@@ -182,15 +213,16 @@ export default function Recruiting() {
                 <label> Program * </label>
                 <Select
                   value={form.program}
-                  onValueChange={val => setForm({ ...form, program: val })}
-                  required
+                  onValueChange={(val) => setForm({ ...form, program: val })}
                 >
-                  <SelectTrigger className='recruiting_select'>
-                    <SelectValue className='text-gray-400' placeholder="Select program" />
+                  <SelectTrigger className="recruiting_select">
+                    <SelectValue placeholder="Select program" />
                   </SelectTrigger>
                   <SelectContent>
                     {(programs as any[]).map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -199,19 +231,17 @@ export default function Recruiting() {
               <div>
                 <label> Additional info </label>
                 <Input
-                  className='recruiting_input'
+                  className="recruiting_input"
                   placeholder="Enter additional info"
                   value={form.notes}
-                  onChange={e => setForm({ ...form, notes: e.target.value })}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
               </div>
 
-              <Button className='recruiting_btn' type="submit" disabled={mutation.isPending}>
+              <Button className="recruiting_btn" type="submit" disabled={mutation.isPending}>
                 Recruit
               </Button>
             </form>
-
-
           </CardContent>
         </div>
       </div>

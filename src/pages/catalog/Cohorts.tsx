@@ -23,6 +23,72 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
+import { getInvoices, getPayments, PaymentDto } from '@/api/endpoints/payments';
+
+function isPaidThisMonth(payments: PaymentDto[] | undefined): boolean {
+  if (!payments || payments.length === 0) return false;
+
+  const currentMonth = format(new Date(), 'yyyy-MM');
+
+  return payments.some((p) => {
+    if (!p.processed_at) return false;
+    const paymentMonth = format(new Date(p.processed_at), 'yyyy-MM');
+    return p.status === 'COMPLETED' && paymentMonth === currentMonth;
+  })
+}
+
+
+function EnrollmentRow({
+    enrollment,
+    getEnrollmentStatusColor,
+  }: {
+    enrollment: EnrollmentDto;
+    getEnrollmentStatusColor: (status: EnrollmentDto['status']) =>
+      'default' | 'destructive' | 'outline' | 'secondary';
+  }) {
+
+  const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
+    queryKey: ['invoices', enrollment.id],
+    queryFn: () => getInvoices({ enrollment: enrollment.id }),
+  });
+
+  const invoice = invoices[0];
+
+  const { data: payments = [], isLoading: loadingPayments } = useQuery({
+    queryKey: ['payments', invoice?.id],
+    queryFn: () => getPayments({ invoice: invoice.id }),
+    enabled: !!invoice,
+  });
+
+  const paid = isPaidThisMonth(payments);
+
+  return (
+    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+      <div>
+        <p className="font-medium text-sm">{enrollment.student_name}</p>
+        <p className="text-xs text-muted-foreground">
+          Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+        </p>
+      </div>
+
+      {/* Payment Badge */}
+      <div className="flex items-center gap-2">
+        {loadingInvoices || loadingPayments ? (
+          <Badge variant="outline">Checking...</Badge>
+        ) : paid ? (
+          <Badge className="bg-green-600 text-white">Paid</Badge>
+        ) : (
+          <Badge variant="destructive">Not Paid</Badge>
+        )}
+
+        {/* Enrollment Status Badge */}
+        <Badge variant={getEnrollmentStatusColor(enrollment.status)}>
+          {enrollment.status}
+        </Badge>
+      </div>
+    </div>
+  );
+}
 
 
 export default function Cohorts() {
@@ -42,7 +108,7 @@ export default function Cohorts() {
     start_date: '',
     end_date: '',
     status: 'PLANNED' as CohortDto['status'],
-  });
+  });  
   const [sessionFormData, setSessionFormData] = useState({
     pattern: '',
     start_time: '19:00',
@@ -239,6 +305,9 @@ export default function Cohorts() {
     setExpandedCohortId(expandedCohortId === cohortId ? null : cohortId);
   };
 
+  
+  
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -366,17 +435,11 @@ export default function Cohorts() {
                   ) : (
                     <div className="space-y-2">
                       {cohortEnrollments.map((enrollment: EnrollmentDto) => (
-                        <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                          <div>
-                            <p className="font-medium text-sm">{enrollment.student_name || 'Unknown Student'}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Badge variant={getEnrollmentStatusColor(enrollment.status)}>
-                            {enrollment.status}
-                          </Badge>
-                        </div>
+                        <EnrollmentRow
+                          key={enrollment.id}
+                          enrollment={enrollment}
+                          getEnrollmentStatusColor={getEnrollmentStatusColor}
+                        />
                       ))}
                     </div>
                   )}

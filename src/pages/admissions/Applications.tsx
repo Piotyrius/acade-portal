@@ -92,19 +92,6 @@ export default function Applications() {
     app.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAccept = (app: ApplicationDto) => {
-    if (app.status !== 'ACCEPTED') {
-      toast({
-        title: 'Error',
-        description: 'Application must be accepted first before creating enrollment',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setSelectedApp(app);
-    setAcceptDialogOpen(true);
-  };
-
   const handleAcceptSubmit = () => {
     if (!selectedApp || !selectedCohort) return;
     acceptMutation.mutate({ id: selectedApp.id, cohortId: selectedCohort });
@@ -113,6 +100,7 @@ export default function Applications() {
   const handleStatusChange = (id: string, status: 'NEW' | 'IN_REVIEW' | 'ACCEPTED' | 'REJECTED') => {
     updateMutation.mutate({ id, data: { status } });
   };
+
 
   if (isLoading) {
     return (
@@ -165,7 +153,16 @@ export default function Applications() {
                     </div>
                     <div>
                       <p className="font-medium">{app.name}</p>
-                      <p className="text-sm text-muted-foreground">{app.email} • {app.phone}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {app.email} • {
+                          Array.isArray(app.phones)
+                            ? app.phones
+                                .map(p => `${p.phone} (${p.name || "No name"})`)
+                                .join(" • ")
+                            : app.phone 
+                        }
+                      </p>
+
                       <p className="text-xs text-muted-foreground mt-1">{program?.name || 'Unknown Program'}</p>
                     </div>
                   </div>
@@ -205,11 +202,6 @@ export default function Applications() {
                           Reject
                         </Button>
                       </div>
-                    )}
-                    {app.status === 'ACCEPTED' && (
-                      <Button className='create_enrollment_btn' size="sm" onClick={() => handleAccept(app)}>
-                        Create Enrollment
-                      </Button>
                     )}
 
                     <div className="text-right">
