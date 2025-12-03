@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@/components/ui/select';
 import { Search, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPrograms, createProgram, updateProgram, deleteProgram, getCourses } from '@/api/endpoints/catalog';
+import { getPrograms, createProgram, updateProgram, deleteProgram, getCourses, getCohorts } from '@/api/endpoints/catalog';
 import { ProgramDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -32,17 +32,25 @@ export default function Programs() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<ProgramDto | null>(null);
   const [formData, setFormData] = useState({ name: '', code: '', description: '', active: true });
-  const [viewOnly, setViewOnly] = useState(false);
   const [expandedProgramId, setExpandedProgramId] = useState<string | null>(null);
+  const [cohortsPopup, setCohortsPopup] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
-const handleOpenView = (program: ProgramDto) => {
-  if (expandedProgramId === program.id) {
-    setExpandedProgramId(null);
-    return;
-  }
+  const handleOpenView = (program: ProgramDto) => {
+    if (expandedProgramId === program.id) {
+      setExpandedProgramId(null);
+      return;
+    }
 
-  setExpandedProgramId(program.id);
-};
+    setExpandedProgramId(program.id);
+  };
+
+  const { data: cohorts } = useQuery({
+    queryKey: ['cohorts'],
+    queryFn: () => getCohorts(),
+  });
+
+  const cohortList = Array.isArray(cohorts) ? cohorts : [];
 
 
   // Mock data for preview
@@ -53,16 +61,13 @@ const handleOpenView = (program: ProgramDto) => {
     { id: '4', name: 'Incident Response & Forensics', code: 'CS-401', description: 'Respond to security incidents and conduct digital forensics investigations', active: false, version: '1.0', created_at: '2024-01-18T00:00:00Z', updated_at: '2024-01-18T00:00:00Z' },
   ];
 
-const { data: courses } = useQuery({
-  queryKey: ['courses'],
-  queryFn: () => getCourses(),
+  const { data: courses } = useQuery({
+    queryKey: ['courses'],
+    queryFn: () => getCourses(),
 
-});
-  console.log("COURSES RESPONSE:", courses);
+  });
 
-const courseList = Array.isArray(courses) ? courses : [];
-
-
+  const courseList = Array.isArray(courses) ? courses : [];
 
 
   const { data: programs = mockPrograms, isLoading } = useQuery({
@@ -247,7 +252,7 @@ const courseList = Array.isArray(courses) ? courses : [];
                   </div>
                 </div>     
 
-                <Button className='w-[100%] my-2' variant="ghost" size="sm" onClick={() => handleOpenView(program)}>
+                <Button className='border-2 border-white-300 w-[100%] mt-2' variant="ghost" size="sm" onClick={() => handleOpenView(program)}>
                   <IoIosArrowDown className={expandedProgramId === program.id ? "arrow_rotated" : "arrow_default"} />
                 </Button>
 
@@ -257,15 +262,15 @@ const courseList = Array.isArray(courses) ? courses : [];
                   }`}
                 >
                   <div className="space-y-2 mt-4">
-                    <h3 className="text-lg font-semibold">Courses in this Program</h3>
+                    <h3 className="text-[14px] font-semibold">Courses in this Program</h3>
                 
                     {programCourses.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No courses assigned</p>
+                      <p className="text-[11px] text-muted-foreground">No courses assigned</p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {programCourses.map((course: any) => (
                           <Badge key={course.id} variant="outline">
-                            {course.title}
+                            <p className='p-2 capitalize cursor-pointer' onClick={() => {setSelectedCourse(course); setCohortsPopup(true); }}> {course.title} </p>
                           </Badge>
                         ))}
                       </div>
@@ -351,6 +356,66 @@ const courseList = Array.isArray(courses) ? courses : [];
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={cohortsPopup} onOpenChange={setCohortsPopup}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedCourse ? selectedCourse.title : "Course Cohorts"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedCourse ? "Cohorts assigned to this course" : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {(() => {
+            const cohortsOfCourse = selectedCourse
+              ? cohortList.filter((c: any) => c.course === selectedCourse.id)
+              : [];
+          
+            if (!selectedCourse) {
+              return (
+                <p className="text-muted-foreground">
+                  No course selected.
+                </p>
+              );
+            }
+          
+            if (cohortsOfCourse.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground py-3">
+                  No cohorts are using this course.
+                </p>
+              );
+            }
+          
+            return (
+              <div className="space-y-3 mt-2">
+                {cohortsOfCourse.map((cohort: any) => (
+                  <div
+                    key={cohort.id}
+                    className="flex justify-between items-center p-3 border rounded-lg"
+                  >
+                    <div>
+                      <p className="font-semibold">{cohort.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        ID: {cohort.id}
+                      </p>
+                    </div>
+                
+                    <Badge variant={cohort.active ? "default" : "secondary"}>
+                      {cohort.active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+
+
     </div>
   );
 }

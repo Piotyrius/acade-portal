@@ -86,11 +86,11 @@
 }
 
 .rbc-time-header-gutter {
-  background-color: #142038 !important;
+  background-color: hsl(var(--card)) !important;
 }
 
 .rbc-btn-group > button {
-  color: #fff !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 .rbc-btn-group > button:hover {
@@ -100,8 +100,6 @@
 .rbc-toolbar .rbc-active {
   color: #111 !important;
 }
-
-
 
 
 /* WEEK ROW SEPARATOR */
