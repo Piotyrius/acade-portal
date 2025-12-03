@@ -153,7 +153,16 @@ export default function Applications() {
                     </div>
                     <div>
                       <p className="font-medium">{app.name}</p>
-                      <p className="text-sm text-muted-foreground">{app.email} • {app.phone}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {app.email} • {
+                          Array.isArray(app.phones)
+                            ? app.phones
+                                .map(p => `${p.phone} (${p.name || "No name"})`)
+                                .join(" • ")
+                            : app.phone 
+                        }
+                      </p>
+
                       <p className="text-xs text-muted-foreground mt-1">{program?.name || 'Unknown Program'}</p>
                     </div>
                   </div>

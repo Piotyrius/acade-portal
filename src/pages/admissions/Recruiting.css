@@ -16,7 +16,7 @@
     position: absolute;
     left: 20px;
     top: 20px;
-    z-index: 10000;
+    z-index: 101;
     font-size: 24px;
     background: rgba(255,255,255,0.15);
     color: white;
