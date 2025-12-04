@@ -62,7 +62,6 @@ const navigation: NavItem[] = [
   { name: 'Users', href: '/users', icon: UserCog, roles: ['ADMIN'] },
   { name: 'Lecturer Portal', href: '/lecturer/dashboard', icon: GraduationCap, roles: ['LECTURER'] },
   { name: 'My Sessions', href: '/lecturer/sessions', icon: Calendar, roles: ['LECTURER'] },
-  { name: 'Manual Enrollment', href: '/admissions/manual-enrollment', icon: UserPlus, roles: ['ADMIN'] },
 ];
 import './Layout.css'
 

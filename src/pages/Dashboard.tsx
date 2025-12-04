@@ -7,93 +7,180 @@ import { getEnrollments } from '@/api/endpoints/admissions';
 import { getCertificates } from '@/api/endpoints/certificates';
 import { getMySessions } from '@/api/endpoints/catalog';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
+import { getAttendanceRecords } from '@/api/endpoints/attendance';
+
+function getPercentChange(current: number, previous: number) {
+  if (previous === 0) return '+0%';
+  const change = ((current - previous) / previous) * 100;
+  const rounded = Math.round(change);
+  return `${rounded > 0 ? '+' : ''}${rounded}%`;
+}
 
 export default function Dashboard() {
+
   const { user } = useAuthStore();
 
-  const { data: cohorts } = useQuery({
+  const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohorts,
+    queryFn: () => getCohorts(),
   });
 
-  const { data: enrollments } = useQuery({
+  const { data: enrollments = [] } = useQuery({
     queryKey: ['enrollments'],
-    queryFn: getEnrollments,
+    queryFn: () => getEnrollments(),
   });
 
-  const { data: certificates } = useQuery({
+  const { data: certificates = [] } = useQuery({
     queryKey: ['certificates'],
     queryFn: () => getCertificates(),
   });
 
-  const { data: mySessions } = useQuery({
+  const { data: mySessions = [] } = useQuery({
     queryKey: ['my-sessions-dashboard'],
     queryFn: () => getMySessions(),
     enabled: user?.role === 'LECTURER',
   });
 
-  const activeStudentsCount = enrollments?.filter((e) => e.status === 'ACTIVE').length || 0;
-
-  const totalStudentsCount = enrollments?.length || 0;
-
-  const activeCohorts =
-    cohorts?.filter((c) => c.status === 'ACTIVE').length || 0;
-
-  const certificatesIssued =
-    certificates?.filter((c) => c.status === 'ISSUED').length || 0;
+  const { data: attendanceRecords = [] } = useQuery({
+    queryKey: ['attendance'],
+    queryFn: () => getAttendanceRecords(),
+  });
 
 
-  
-  const attendanceRate = '87%';
+  const activeStudentsCount = enrollments.filter((e) => e.status === 'ACTIVE').length;
+  const totalStudentsCount = enrollments.length;
+  const activeCohorts = cohorts.filter((c) => c.status === 'ACTIVE').length;
+  const certificatesIssued = certificates.filter((c) => c.status === 'ISSUED').length;
 
-  // Get upcoming sessions for lecturer
-  const upcomingSessions = mySessions
-    ?.filter((session) => {
-      const sessionDate = parseISO(session.date);
-      return isToday(sessionDate) || isTomorrow(sessionDate);
-    })
-    .sort((a, b) => {
-      const dateA = new Date(`${a.date}T${a.start_time}`);
-      const dateB = new Date(`${b.date}T${b.start_time}`);
-      return dateA.getTime() - dateB.getTime();
-    })
-    .slice(0, 3) || [];
+
+  const upcomingSessions =
+    mySessions
+      ?.filter((session) => {
+        const d = parseISO(session.date);
+        return isToday(d) || isTomorrow(d);
+      })
+      .sort((a, b) => {
+        const A = new Date(`${a.date}T${a.start_time}`);
+        const B = new Date(`${b.date}T${b.start_time}`);
+        return A.getTime() - B.getTime();
+      })
+      .slice(0, 3) ?? [];
+
+
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, now.getDate());
+
+  const countThisMonth = (items: any[], dateField: string) =>
+    items.filter((item) => new Date(item[dateField]) >= lastMonth).length;
+
+  const countLastMonth = (items: any[], dateField: string) =>
+    items.filter((item) => {
+      const d = new Date(item[dateField]);
+      return d < lastMonth && d >= twoMonthsAgo;
+    }).length;
+
+  const studentsChange = getPercentChange(
+    countThisMonth(enrollments, 'enrolled_at'),
+    countLastMonth(enrollments, 'enrolled_at')
+  );
+
+  const cohortsChange = getPercentChange(
+    countThisMonth(cohorts, 'created_at'),
+    countLastMonth(cohorts, 'created_at')
+  );
+
+  const certificatesChange = getPercentChange(
+    countThisMonth(certificates, 'issued_at'),
+    countLastMonth(certificates, 'issued_at')
+  );
+
+
+  const presentStatuses = ['PRESENT', 'LATE', 'EXCUSED'];
+
+  // Determine which attendance records matter for this user
+  let relevantAttendance = attendanceRecords;
+
+  if (user?.role === 'LECTURER' && mySessions?.length > 0) {
+    const lecturerSessionIds = new Set(mySessions.map((s) => s.id));
+    relevantAttendance = attendanceRecords.filter((r) => lecturerSessionIds.has(r.session));
+  }
+
+  if (user?.role === 'STUDENT') {
+    relevantAttendance = attendanceRecords.filter((r) => r.student === user.id);
+  }
+
+  const totalAttendance = relevantAttendance.length;
+  const attendedCount = relevantAttendance.filter((r) =>
+    presentStatuses.includes(r.status)
+  ).length;
+
+  const attendanceRate =
+    totalAttendance === 0 ? '0%' : `${Math.round((attendedCount / totalAttendance) * 100)}%`;
+
+  const attendanceThisMonthRecords = relevantAttendance.filter(
+    (r) => new Date(r.marked_at) >= lastMonth
+  );
+  const attendanceLastMonthRecords = relevantAttendance.filter((r) => {
+    const d = new Date(r.marked_at);
+    return d < lastMonth && d >= twoMonthsAgo;
+  });
+
+  const attendanceThisMonth =
+    attendanceThisMonthRecords.length === 0
+      ? 0
+      : Math.round(
+          (attendanceThisMonthRecords.filter((r) =>
+            presentStatuses.includes(r.status)
+          ).length /
+            attendanceThisMonthRecords.length) *
+            100
+        );
+
+  const attendanceLastMonth =
+    attendanceLastMonthRecords.length === 0
+      ? 0
+      : Math.round(
+          (attendanceLastMonthRecords.filter((r) =>
+            presentStatuses.includes(r.status)
+          ).length /
+            attendanceLastMonthRecords.length) *
+            100
+        );
+
+  const attendanceChange = getPercentChange(attendanceThisMonth, attendanceLastMonth);
+
 
   const stats = [
     {
       title: user?.role === 'ADMIN' ? 'Total Students' : 'Active Students',
-      // FIX: Admin sees total students, others see active students.
-      value: (user?.role === 'ADMIN'
-        ? totalStudentsCount
-        : activeStudentsCount
-      ).toString(),
-      change: '+12%', // still placeholder
+      value: (user?.role === 'ADMIN' ? totalStudentsCount : activeStudentsCount).toString(),
+      change: studentsChange,
       icon: Users,
       trend: 'up' as const,
     },
     {
       title: 'Active Cohorts',
       value: activeCohorts.toString(),
-      change: '+3', // placeholder
+      change: cohortsChange,
       icon: BookOpen,
       trend: 'up' as const,
     },
     {
       title: 'Attendance Rate',
       value: attendanceRate,
-      change: '+2%', // placeholder
+      change: attendanceChange,
       icon: ClipboardCheck,
       trend: 'up' as const,
     },
     {
       title: 'Certificates Issued',
       value: certificatesIssued.toString(),
-      // Placeholder: simple "growth" number derived from count
-      change: `+${Math.floor(certificatesIssued * 0.08)}`,
+      change: certificatesChange,
       icon: Award,
       trend: 'up' as const,
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">

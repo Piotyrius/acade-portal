@@ -107,12 +107,20 @@ export interface SessionDto {
 }
 
 // Admissions
+export interface ApplicationPhone {
+  name: string;
+  phone: string;
+}
+
 export interface ApplicationDto {
   id: UUID;
   program: UUID;
   name: string;
   email: string;
+  
   phone: string;
+  phones?: ApplicationPhone[];
+
   schedule_pref?: string;
   experience_level?: string;
   referral_source?: string;
@@ -124,6 +132,7 @@ export interface ApplicationDto {
   program_code?: string;
   status_display?: string;
 }
+
 
 export interface EnrollmentDto {
   id: UUID;

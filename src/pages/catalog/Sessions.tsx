@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Calendar as CalendarIcon, Edit, Trash2, X, List, Calendar as Cal } from 'lucide-react';
 import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import '@/pages/catalog/calendar.css';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getSessions,

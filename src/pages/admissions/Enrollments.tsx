@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import ManualEnrollment from './ManualEnrollment';
 
 export default function Enrollments() {
   const { user } = useAuthStore();
@@ -40,6 +41,13 @@ export default function Enrollments() {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
+
+  const [manualEnrolPopup, setManualEnrolPopup] = useState(false)
+  
+  
+  const handleOpen = () => {
+    setManualEnrolPopup(true)
+  }
 
   const { data: enrollments = [], isLoading } = useQuery({
     queryKey: ['enrollments', selectedStatus],
@@ -284,6 +292,8 @@ export default function Enrollments() {
               Bulk Activate
             </Button>
           )}
+
+          <Button onClick={handleOpen}>Manual enrollment</Button>
         </div>
       </div>
 
@@ -471,6 +481,30 @@ export default function Enrollments() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {manualEnrolPopup && (
+      
+        <Dialog open={manualEnrolPopup} onOpenChange={setManualEnrolPopup}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Manual Enrollment</DialogTitle>
+              <DialogDescription>Enroll a student into a cohort manually</DialogDescription>
+            </DialogHeader>
+
+            <ManualEnrollment
+              onSuccess={() => setManualEnrolPopup(false)}
+            />
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setManualEnrolPopup(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      
+      )}
+
     </div>
   );
 }

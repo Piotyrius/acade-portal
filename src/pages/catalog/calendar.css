@@ -1,0 +1,108 @@
+/* MAIN SURFACE */
+.rbc-calendar {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* HEADER (Sun, Mon, etc) */
+.rbc-header {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* WEEK / DAY VIEW BACKGROUND */
+.rbc-time-view,
+.rbc-time-content,
+.rbc-day-slot,
+.rbc-timeslot-group {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* TIME GUTTER */
+.rbc-time-gutter,
+.rbc-time-header-gutter {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.card-no-stretch {
+  align-self: start;
+}
+
+.arrow_rotated {
+  transform: rotate(180deg);
+  transition: all 0.3s ease-in-out;
+}
+
+/* GRID LINES */
+.rbc-time-slot,
+.rbc-day-bg {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* TODAY HIGHLIGHT */
+.rbc-today {
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* MONTH VIEW BASE */
+.rbc-month-view,
+.rbc-month-row,
+.rbc-day-bg {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* DAYS OUTSIDE CURRENT MONTH */
+.rbc-off-range-bg {
+  background-color: hsl(var(--card)) !important;
+
+}
+
+.rbc-off-range {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* DATE NUMBER IN MONTH CELLS */
+.rbc-date-cell {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* EVENTS */
+.rbc-event {
+  background-color: hsl(var(--primary)) !important;
+  border: none !important;
+  color: hsl(var(--primary-foreground)) !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+}
+
+/* EVENT TEXT */
+.rbc-event-label,
+.rbc-event-content {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.rbc-time-header-gutter {
+  background-color: hsl(var(--card)) !important;
+}
+
+.rbc-btn-group > button {
+  color: hsl(var(--foreground)) !important;
+}
+
+.rbc-btn-group > button:hover {
+  color: #111 !important;
+}
+
+.rbc-toolbar .rbc-active {
+  color: #111 !important;
+}
+
+
+/* WEEK ROW SEPARATOR */
+.rbc-month-row + .rbc-month-row {
+  border-color: hsl(var(--border)) !important;
+}
