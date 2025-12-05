@@ -42,6 +42,11 @@ import PaymentMethods from "./pages/payments/PaymentMethods";
 import PaymentSchedules from "./pages/payments/PaymentSchedules";
 import Payments from "./pages/payments/Payments";
 import Pricings from "./pages/payments/Pricings";
+import ArchiveBrowser from "./pages/archive/ArchiveBrowser";
+import Organizations from "./pages/subscriptions/Organizations";
+import SubscriptionPlans from "./pages/subscriptions/SubscriptionPlans";
+import Subscriptions from "./pages/subscriptions/Subscriptions";
+import MySubscription from "./pages/subscriptions/MySubscription";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +110,11 @@ const App = () => (
             <Route path="payments/payment-schedules" element={<PaymentSchedules />} />
             <Route path="payments/payments" element={<Payments />} />
             <Route path="payments/pricings" element={<Pricings />} />
+            <Route path="archive" element={<ArchiveBrowser />} />
+            <Route path="subscriptions/organizations" element={<Organizations />} />
+            <Route path="subscriptions/plans" element={<SubscriptionPlans />} />
+            <Route path="subscriptions/subscriptions" element={<Subscriptions />} />
+            <Route path="subscriptions/my-subscription" element={<MySubscription />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
