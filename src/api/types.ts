@@ -42,6 +42,7 @@ export interface WorkDto {
   status: 'DRAFT' | 'PUBLISHED';
   is_public: boolean;
   published_at: string | null;
+  media_url: string;
 }
 
 // Catalog

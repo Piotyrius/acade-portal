@@ -6,15 +6,25 @@ export async function getMyWorks(): Promise<WorkDto[]> {
   return data.results || data;
 }
 
-export async function uploadWork(payload: { title: string; description?: string; file: File }): Promise<WorkDto> {
+export async function uploadWork(payload: {
+  owner: string;
+  title: string;
+  description?: string;
+  file: File;
+}): Promise<WorkDto> {
   const form = new FormData();
+
+  form.append('owner', payload.owner);
   form.append('title', payload.title);
-  if (payload.description) form.append('description', payload.description);
+  form.append('description', payload.description ?? '');
   form.append('media', payload.file);
-  // Don't set Content-Type header - let axios set it automatically with boundary for FormData
+  form.append('status', 'DRAFT');
+  form.append('is_public', 'false');
+
   const { data } = await api.post('/api/v1/gallery/works/', form);
   return data;
 }
+
 
 export async function getWork(id: string): Promise<WorkDto> {
   const { data } = await api.get(`/api/v1/gallery/works/${id}/`);
