@@ -62,7 +62,8 @@ export default function MySubscription() {
   const createMutation = useMutation({
     mutationFn: createNewSubscription,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['my-subscription', 'feature-status'] });
+      qc.invalidateQueries({ queryKey: ['my-subscription'] });
+      qc.invalidateQueries({ queryKey: ['feature-status'] });
       toast({ title: 'Success', description: 'Subscription created successfully' });
       setIsCreateDialogOpen(false);
       setSelectedPlanId('');

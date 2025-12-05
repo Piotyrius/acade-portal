@@ -136,7 +136,7 @@ export async function deleteSubscription(id: string): Promise<void> {
 }
 
 export async function getMySubscription(): Promise<SubscriptionDto> {
-  const { data } = await api.get('/api/v1/subscriptions/subscriptions/my_subscription/');
+  const { data } = await api.get('/api/v1/subscriptions/subscriptions/my/');
   return data;
 }
 
@@ -144,7 +144,7 @@ export async function createNewSubscription(payload: {
   plan_id: string;
   organization_id?: string;
 }): Promise<SubscriptionDto> {
-  const { data } = await api.post('/api/v1/subscriptions/subscriptions/create_subscription/', payload);
+  const { data } = await api.post('/api/v1/subscriptions/subscriptions/create_new/', payload);
   return data;
 }
 
