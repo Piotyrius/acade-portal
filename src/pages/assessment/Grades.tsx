@@ -89,7 +89,8 @@ export default function Grades() {
   });
 
   const moderateMutation = useMutation({
-    mutationFn: ({ id, approved }: { id: string; approved: boolean }) => moderateGrade(id, approved),
+    mutationFn: ({ id, approved, comment }: { id: string; approved: boolean; comment?: string }) =>
+      moderateGrade(id, approved, comment),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['grades'] });
       toast({
@@ -117,6 +118,7 @@ export default function Grades() {
     moderateMutation.mutate({
       id: selectedGradeForModeration.id,
       approved: moderationAction === 'approve',
+      comment: moderationComment.trim() || undefined,
     });
   };
 
@@ -512,7 +514,7 @@ export default function Grades() {
                   placeholder="Add a comment about this moderation decision..."
                 />
                 <p className="text-xs text-muted-foreground">
-                  Note: Comments may be stored if the API supports it
+                  Your comment will be saved with the moderation decision
                 </p>
               </div>
             </div>
