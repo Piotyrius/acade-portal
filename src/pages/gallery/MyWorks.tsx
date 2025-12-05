@@ -1,3 +1,4 @@
+// MyWorks.tsx
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +10,13 @@ import { Plus, Image as ImageIcon, Eye, Edit, Trash2 } from 'lucide-react';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { exampleWorks } from '@/utils/exampleData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getMyWorks, uploadWork, publishWork, unpublishWork, toggleWorkVisibility } from '@/api/endpoints/gallery';
+import {
+  getMyWorks,
+  uploadWork,
+  publishWork,
+  unpublishWork,
+  toggleWorkVisibility,
+} from '@/api/endpoints/gallery';
 import { WorkDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,40 +29,66 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useAuthStore } from '@/store/authStore';
 import api from '@/api/client';
 
 export default function MyWorks() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['my-works'], queryFn: getMyWorks });
+  const user = useAuthStore((state) => state.user);
   const works = data || [];
-  const displayWorks = works.length === 0 ? exampleWorks.slice(0, 1) : works;
+const displayWorks: WorkDto[] =
+  works.length === 0
+    ? exampleWorks.slice(0, 1).map((ex: Partial<WorkDto>, idx) => ({
+        id: ex.id ?? `example-${idx}`,
+        owner: ex.owner ?? '',
+        title: ex.title,
+        description: ex.description ?? '',
+        media: ex.media ?? '',
+        media_url: (ex as any).media_url ?? '', // or cast to any if media_url isn’t in WorkDto
+        status: ex.status ?? 'DRAFT',
+        is_public: ex.is_public ?? false,
+        published_at: ex.published_at ?? null,
+        created_at: (ex as any).created_at ?? null,
+        updated_at: (ex as any).updated_at ?? null,
+      }))
+    : works;
+
+
 
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingWork, setEditingWork] = useState<any>(null);
+  const [editingWork, setEditingWork] = useState<WorkDto | null>(null);
   const [editFormData, setEditFormData] = useState({ title: '', description: '' });
   const [togglingWorkId, setTogglingWorkId] = useState<string | null>(null);
 
+  // Upload mutation: pass owner from auth store; description is optional
   const uploadMut = useMutation({
-    mutationFn: (payload: { title: string; file: File }) => uploadWork(payload),
+    mutationFn: (payload: { owner: string; title: string; description?: string; file: File }) =>
+      uploadWork(payload),
     onSuccess: () => {
       toast({ title: 'Uploaded', description: 'Work uploaded as draft' });
       setTitle('');
+      setDescription('');
       setFile(null);
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
-    onError: (e: any) => toast({ title: 'Upload failed', description: getErrorMessage(e), variant: 'destructive' }),
+    onError: (e: any) =>
+      toast({ title: 'Upload failed', description: getErrorMessage(e), variant: 'destructive' }),
   });
 
+  // Publish/unpublish/visibility/update/delete mutations (unchanged)
   const publishMut = useMutation({
     mutationFn: (id: string) => publishWork(id),
     onSuccess: () => {
       toast({ title: 'Published', description: 'Work is now visible' });
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
-    onError: (e: any) => toast({ title: 'Publish failed', description: getErrorMessage(e), variant: 'destructive' }),
+    onError: (e: any) =>
+      toast({ title: 'Publish failed', description: getErrorMessage(e), variant: 'destructive' }),
   });
 
   const unpublishMut = useMutation({
@@ -64,18 +97,20 @@ export default function MyWorks() {
       toast({ title: 'Unpublished', description: 'Work unpublished successfully' });
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
-    onError: (e: any) => toast({ title: 'Unpublish failed', description: getErrorMessage(e), variant: 'destructive' }),
+    onError: (e: any) =>
+      toast({ title: 'Unpublish failed', description: getErrorMessage(e), variant: 'destructive' }),
   });
 
   const toggleVisibilityMut = useMutation({
-    mutationFn: ({ id, isPublic }: { id: string; isPublic: boolean }) => toggleWorkVisibility(id, isPublic),
+    mutationFn: ({ id, isPublic }: { id: string; isPublic: boolean }) =>
+      toggleWorkVisibility(id, isPublic),
     onMutate: ({ id }) => {
       setTogglingWorkId(id);
     },
     onSuccess: (_, variables) => {
-      toast({ 
-        title: 'Visibility Updated', 
-        description: `Work is now ${variables.isPublic ? 'public' : 'private'}` 
+      toast({
+        title: 'Visibility Updated',
+        description: `Work is now ${variables.isPublic ? 'public' : 'private'}`,
       });
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
@@ -87,6 +122,7 @@ export default function MyWorks() {
     },
   });
 
+
   const updateMut = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { title: string; description?: string } }) =>
       api.patch(`/api/v1/gallery/works/${id}/`, data),
@@ -96,7 +132,8 @@ export default function MyWorks() {
       setIsEditDialogOpen(false);
       setEditingWork(null);
     },
-    onError: (e: any) => toast({ title: 'Update failed', description: getErrorMessage(e), variant: 'destructive' }),
+    onError: (e: any) =>
+      toast({ title: 'Update failed', description: getErrorMessage(e), variant: 'destructive' }),
   });
 
   const deleteMut = useMutation({
@@ -105,10 +142,11 @@ export default function MyWorks() {
       toast({ title: 'Deleted', description: 'Work deleted successfully' });
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
-    onError: (e: any) => toast({ title: 'Delete failed', description: getErrorMessage(e), variant: 'destructive' }),
+    onError: (e: any) =>
+      toast({ title: 'Delete failed', description: getErrorMessage(e), variant: 'destructive' }),
   });
 
-  const handleOpenEdit = (work: any) => {
+  const handleOpenEdit = (work: WorkDto) => {
     setEditingWork(work);
     setEditFormData({ title: work.title, description: work.description || '' });
     setIsEditDialogOpen(true);
@@ -125,10 +163,11 @@ export default function MyWorks() {
       deleteMut.mutate(id);
     }
   };
+  
 
   return (
     <div className="space-y-6">
-
+      {/* Header and upload form */}
       <div className="flex items-center justify-between gallery_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">My Works</h2>
@@ -137,28 +176,61 @@ export default function MyWorks() {
         <div className="flex items-end gap-2 header_upload_btns">
           <div className="space-y-1">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" className='gallery_add_btn' placeholder="Project title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input
+              id="title"
+              className="gallery_add_btn"
+              placeholder="Project title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
             <Label htmlFor="file">File</Label>
-            <Input id="file" type="file" className='gallery_add_btn' onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <Input
+              id="file"
+              type="file"
+              className="gallery_add_btn"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
           </div>
-          <Button className='gallery_add_btn' onClick={() => file && title && uploadMut.mutate({ title, file })} disabled={!file || !title || uploadMut.isPending}>
+          <Button
+            className="gallery_add_btn"
+            onClick={() => {
+              if (file && title && user?.id) {
+                uploadMut.mutate({ owner: user.id, title, description, file });
+              }
+            }}
+            disabled={!file || !title || uploadMut.isPending}
+          >
             <Plus className="mr-2 h-4 w-4" />
             {uploadMut.isPending ? 'Uploading...' : 'Upload'}
           </Button>
         </div>
       </div>
 
-      {works.length === 0 && <ExampleBanner />}
+      {/* Optional example banner if no works */}
+      {displayWorks.length === 0 && <ExampleBanner />}
+
+      {/* List of works */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {displayWorks.map((work: WorkDto) => (
           <Card key={work.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardHeader className="p-0">
-              <div className="aspect-video bg-muted flex items-center justify-center">
-                <ImageIcon className="h-12 w-12 text-muted-foreground" />
-              </div>
-            </CardHeader>
+  <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+    {work.media ? (
+      <img
+        src={
+          work.media_url
+        }
+        alt={work.title}
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <ImageIcon className="h-12 w-12 text-muted-foreground" />
+    )}
+  </div>
+</CardHeader>
+
             <CardContent className="p-4">
               <CardTitle className="text-base mb-2">{work.title}</CardTitle>
               <div className="flex items-center justify-between gap-2">
@@ -169,17 +241,20 @@ export default function MyWorks() {
                   {work.is_public && <Badge variant="outline">Public</Badge>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label htmlFor={`visibility-${work.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                  <Label
+                    htmlFor={`visibility-${work.id}`}
+                    className="text-xs text-muted-foreground cursor-pointer"
+                  >
                     Public
                   </Label>
-                  <Switch
-                    id={`visibility-${work.id}`}
-                    checked={work.is_public ?? false}
-                    onCheckedChange={(checked) => {
-                      toggleVisibilityMut.mutate({ id: work.id, isPublic: checked });
-                    }}
-                    disabled={togglingWorkId === work.id || toggleVisibilityMut.isPending}
-                  />
+                    <Switch
+                      id={`visibility-${work.id}`}
+                      checked={work.is_public ?? false}
+                      onCheckedChange={(checked) => {
+                        toggleVisibilityMut.mutate({ id: work.id, isPublic: checked });
+                      }}
+                      disabled={togglingWorkId === work.id || toggleVisibilityMut.isPending}
+                    />
                 </div>
               </div>
             </CardContent>
@@ -190,19 +265,19 @@ export default function MyWorks() {
               </div>
               <div className="flex gap-2">
                 {work.status === 'PUBLISHED' ? (
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={() => unpublishMut.mutate(work.id)} 
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => unpublishMut.mutate(work.id)}
                     disabled={unpublishMut.isPending}
                   >
                     {unpublishMut.isPending ? 'Unpublishing...' : 'Unpublish'}
                   </Button>
                 ) : (
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={() => publishMut.mutate(work.id)} 
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => publishMut.mutate(work.id)}
                     disabled={publishMut.isPending}
                   >
                     {publishMut.isPending ? 'Publishing...' : 'Publish'}
@@ -211,7 +286,12 @@ export default function MyWorks() {
                 <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(work)}>
                   <Edit className="h-4 w-4" />
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteWork(work.id)} disabled={deleteMut.isPending}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteWork(work.id)}
+                  disabled={deleteMut.isPending}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -219,6 +299,8 @@ export default function MyWorks() {
           </Card>
         ))}
       </div>
+
+      {/* Fallback if user has works but none match filters */}
       {displayWorks.length === 0 && works.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
@@ -227,6 +309,7 @@ export default function MyWorks() {
         </Card>
       )}
 
+      {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -239,7 +322,9 @@ export default function MyWorks() {
               <Input
                 id="edit-title"
                 value={editFormData.title}
-                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, title: e.target.value })
+                }
                 placeholder="Work title"
               />
             </div>
@@ -248,7 +333,9 @@ export default function MyWorks() {
               <Textarea
                 id="edit-description"
                 value={editFormData.description}
-                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, description: e.target.value })
+                }
                 placeholder="Describe your work..."
                 rows={4}
               />
@@ -258,7 +345,10 @@ export default function MyWorks() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateWork} disabled={!editFormData.title || updateMut.isPending}>
+            <Button
+              onClick={handleUpdateWork}
+              disabled={!editFormData.title || updateMut.isPending}
+            >
               {updateMut.isPending ? 'Updating...' : 'Update'}
             </Button>
           </DialogFooter>
