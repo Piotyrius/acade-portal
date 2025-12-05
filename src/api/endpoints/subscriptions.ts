@@ -93,6 +93,20 @@ export async function getAvailablePlans(): Promise<SubscriptionPlanDto[]> {
   return data;
 }
 
+export async function createSubscriptionPlan(payload: Partial<SubscriptionPlanDto>): Promise<SubscriptionPlanDto> {
+  const { data } = await api.post('/api/v1/subscriptions/plans/', payload);
+  return data;
+}
+
+export async function updateSubscriptionPlan(id: string, payload: Partial<SubscriptionPlanDto>): Promise<SubscriptionPlanDto> {
+  const { data } = await api.patch(`/api/v1/subscriptions/plans/${id}/`, payload);
+  return data;
+}
+
+export async function deleteSubscriptionPlan(id: string): Promise<void> {
+  await api.delete(`/api/v1/subscriptions/plans/${id}/`);
+}
+
 // Subscriptions
 export async function getSubscriptions(organizationId?: string, status?: string): Promise<SubscriptionDto[]> {
   const params: Record<string, string> = {};

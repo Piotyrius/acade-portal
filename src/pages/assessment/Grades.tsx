@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, GraduationCap, Edit, CheckCircle, Eye } from 'lucide-react';
+import { Plus, GraduationCap, Edit, CheckCircle, XCircle, Eye, Filter } from 'lucide-react';
 import { exampleGrades } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -32,6 +32,11 @@ export default function Grades() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGrade, setEditingGrade] = useState<GradeDto | null>(null);
   const [selectedAssessment, setSelectedAssessment] = useState<string>('all');
+  const [moderationStatusFilter, setModerationStatusFilter] = useState<string>('all');
+  const [isModerationDialogOpen, setIsModerationDialogOpen] = useState(false);
+  const [selectedGradeForModeration, setSelectedGradeForModeration] = useState<GradeDto | null>(null);
+  const [moderationAction, setModerationAction] = useState<'approve' | 'reject'>('approve');
+  const [moderationComment, setModerationComment] = useState('');
   const [formData, setFormData] = useState({
     assessment: '',
     student: '',
@@ -85,14 +90,35 @@ export default function Grades() {
 
   const moderateMutation = useMutation({
     mutationFn: ({ id, approved }: { id: string; approved: boolean }) => moderateGrade(id, approved),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['grades'] });
-      toast({ title: 'Success', description: 'Grade moderated successfully' });
+      toast({
+        title: 'Success',
+        description: `Grade ${variables.approved ? 'approved' : 'rejected'} successfully`,
+      });
+      setIsModerationDialogOpen(false);
+      setSelectedGradeForModeration(null);
+      setModerationComment('');
     },
     onError: (error) => {
       toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
     },
   });
+
+  const handleOpenModerationDialog = (grade: GradeDto, action: 'approve' | 'reject') => {
+    setSelectedGradeForModeration(grade);
+    setModerationAction(action);
+    setModerationComment('');
+    setIsModerationDialogOpen(true);
+  };
+
+  const handleModerate = () => {
+    if (!selectedGradeForModeration) return;
+    moderateMutation.mutate({
+      id: selectedGradeForModeration.id,
+      approved: moderationAction === 'approve',
+    });
+  };
 
   const resetForm = () => {
     setFormData({ assessment: '', student: '', score: '', max_score: '', feedback: '' });
@@ -142,9 +168,35 @@ export default function Grades() {
   };
 
   const displayGrades = grades.length === 0 ? exampleGrades.slice(0, 1) : grades;
-  const filteredGrades = selectedAssessment && selectedAssessment !== 'all'
-    ? displayGrades.filter((g: any) => g.assessment === selectedAssessment)
-    : displayGrades;
+  const filteredGrades = displayGrades.filter((g: any) => {
+    const matchesAssessment = !selectedAssessment || selectedAssessment === 'all' || g.assessment === selectedAssessment;
+    // Note: Moderation status filter would work if API returns moderation_status field
+    // For now, we'll filter based on is_moderated if available
+    const matchesModeration = moderationStatusFilter === 'all' ||
+      (moderationStatusFilter === 'pending' && !g.is_moderated) ||
+      (moderationStatusFilter === 'approved' && g.is_moderated && g.moderation_status === 'APPROVED') ||
+      (moderationStatusFilter === 'rejected' && g.is_moderated && g.moderation_status === 'REJECTED');
+    return matchesAssessment && matchesModeration;
+  });
+
+  const getModerationStatusBadge = (grade: any) => {
+    if (!grade.is_moderated) {
+      return <Badge variant="secondary">Pending</Badge>;
+    }
+    if (grade.moderation_status === 'APPROVED') {
+      return <Badge variant="default" className="flex items-center gap-1">
+        <CheckCircle className="h-3 w-3" />
+        Approved
+      </Badge>;
+    }
+    if (grade.moderation_status === 'REJECTED') {
+      return <Badge variant="destructive" className="flex items-center gap-1">
+        <XCircle className="h-3 w-3" />
+        Rejected
+      </Badge>;
+    }
+    return null;
+  };
 
   if (user?.role === 'STUDENT') {
     const studentGrades = grades.filter((g: any) => g.student === user.id);
@@ -213,6 +265,19 @@ export default function Grades() {
               ))}
             </SelectContent>
           </Select>
+          {user?.role === 'ADMIN' && (
+            <Select value={moderationStatusFilter} onValueChange={setModerationStatusFilter}>
+              <SelectTrigger className="grade_select">
+                <SelectValue placeholder="Moderation status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <div className="flex gap-2 add_grade_btn_wrapper">
             <Button onClick={() => handleOpenDialog()} className='add_grade_btn'>
               <Plus className="mr-2 h-4 w-4" />
@@ -251,6 +316,22 @@ export default function Grades() {
                           Score: {grade.score} / {grade.max_score}
                         </p>
                         {grade.feedback && <p className="text-xs text-muted-foreground mt-1">{grade.feedback}</p>}
+                        {user?.role === 'ADMIN' && (
+                          <div className="mt-2">
+                            {getModerationStatusBadge(grade)}
+                            {grade.moderated_by_name && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Moderated by {grade.moderated_by_name}
+                                {grade.moderated_at && ` on ${new Date(grade.moderated_at).toLocaleDateString()}`}
+                              </p>
+                            )}
+                            {grade.moderation_comment && (
+                              <p className="text-xs text-muted-foreground mt-1 italic">
+                                Comment: {grade.moderation_comment}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 grades_right_wrapper">
@@ -264,13 +345,28 @@ export default function Grades() {
                         <Edit className="h-4 w-4" />
                       </Button>
                       {user?.role === 'ADMIN' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => moderateMutation.mutate({ id: grade.id, approved: true })}
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                        </Button>
+                        <>
+                          {(!grade.is_moderated || grade.moderation_status !== 'APPROVED') && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenModerationDialog(grade, 'approve')}
+                              title="Approve grade"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {(!grade.is_moderated || grade.moderation_status !== 'REJECTED') && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenModerationDialog(grade, 'reject')}
+                              title="Reject grade"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -375,6 +471,68 @@ export default function Grades() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Moderation Dialog */}
+      <Dialog open={isModerationDialogOpen} onOpenChange={setIsModerationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {moderationAction === 'approve' ? 'Approve Grade' : 'Reject Grade'}
+            </DialogTitle>
+            <DialogDescription>
+              {moderationAction === 'approve'
+                ? 'Approve this grade for the student'
+                : 'Reject this grade and require review'}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedGradeForModeration && (
+            <div className="space-y-4 py-4">
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm font-medium">
+                  Assessment: {assessments.find((a: any) => a.id === selectedGradeForModeration.assessment)?.title || 'Unknown'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Student: {students.find((s: any) => s.id === selectedGradeForModeration.student) 
+                    ? `${students.find((s: any) => s.id === selectedGradeForModeration.student)?.first_name} ${students.find((s: any) => s.id === selectedGradeForModeration.student)?.last_name}`
+                    : selectedGradeForModeration.student_name || selectedGradeForModeration.student}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Score: {selectedGradeForModeration.score} / {selectedGradeForModeration.max_score} ({parseFloat(selectedGradeForModeration.percentage).toFixed(1)}%)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="moderation_comment">Moderation Comment (Optional)</Label>
+                <Textarea
+                  id="moderation_comment"
+                  value={moderationComment}
+                  onChange={(e) => setModerationComment(e.target.value)}
+                  rows={3}
+                  placeholder="Add a comment about this moderation decision..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Note: Comments may be stored if the API supports it
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsModerationDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleModerate}
+              disabled={moderateMutation.isPending}
+              variant={moderationAction === 'reject' ? 'destructive' : 'default'}
+            >
+              {moderateMutation.isPending
+                ? 'Processing...'
+                : moderationAction === 'approve'
+                ? 'Approve'
+                : 'Reject'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
