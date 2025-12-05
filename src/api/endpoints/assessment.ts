@@ -91,8 +91,12 @@ export async function updateGrade(id: string, payload: Partial<GradeDto>): Promi
   return data;
 }
 
-export async function moderateGrade(id: string, approved: boolean): Promise<GradeDto> {
-  const { data } = await api.post(`/api/v1/assessment/grades/${id}/moderate/`, { approved });
+export async function moderateGrade(id: string, approved: boolean, comment?: string): Promise<GradeDto> {
+  const payload: { approved: boolean; comment?: string } = { approved };
+  if (comment && comment.trim()) {
+    payload.comment = comment.trim();
+  }
+  const { data } = await api.post(`/api/v1/assessment/grades/${id}/moderate/`, payload);
   return data;
 }
 
