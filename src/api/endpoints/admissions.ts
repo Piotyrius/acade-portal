@@ -1,5 +1,6 @@
 import api from '@/api/client';
 import { ApplicationDto, EnrollmentDto } from '@/api/types';
+import { ensureArray } from '@/api/utils';
 
 // Applications (Public - no auth required)
 export async function submitPublicApplication(payload: Partial<ApplicationDto>): Promise<ApplicationDto> {
@@ -13,7 +14,7 @@ export async function getApplications(programId?: string, status?: string): Prom
   if (programId) params.program = programId;
   if (status) params.status = status;
   const { data } = await api.get('/api/v1/admissions/applications/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getApplication(id: string): Promise<ApplicationDto> {
@@ -42,7 +43,7 @@ export async function getEnrollments(cohortId?: string, status?: string): Promis
   if (cohortId) params.cohort = cohortId;
   if (status) params.status = status;
   const { data } = await api.get('/api/v1/admissions/enrollments/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getEnrollment(id: string): Promise<EnrollmentDto> {
@@ -107,7 +108,7 @@ export async function completeEnrollment(
 
 export async function getWaitlist(): Promise<EnrollmentDto[]> {
   const { data } = await api.get('/api/v1/admissions/enrollments/waitlist/');
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function bulkActivateEnrollments(ids: string[]): Promise<{ activated: number; errors: string[] }> {

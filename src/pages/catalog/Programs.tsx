@@ -111,6 +111,8 @@ export default function Programs() {
     },
   });
 
+  const programList = Array.isArray(programs) ? programs : [];
+
   const createMutation = useMutation({
     mutationFn: createProgram,
     onSuccess: () => {
@@ -175,7 +177,7 @@ export default function Programs() {
     }
   };
 
-  const displayPrograms = programs;
+  const displayPrograms = programList;
   const filteredPrograms = displayPrograms.filter((p) =>
     !searchTerm ||
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -662,7 +664,7 @@ export default function Programs() {
                     <SelectValue placeholder="Select program" />
                   </SelectTrigger>
                   <SelectContent>
-                    {programs.map((p) => (
+                    {programList.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.name}
                       </SelectItem>
@@ -755,7 +757,7 @@ export default function Programs() {
                     <SelectValue placeholder="Select course" />
                   </SelectTrigger>
                   <SelectContent>
-                    {courses.map((c) => (
+                    {courseList.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.title}
                       </SelectItem>

@@ -1,12 +1,13 @@
 import api from '@/api/client';
 import { CertificateDto } from '@/api/types';
+import { ensureArray } from '@/api/utils';
 
 export async function getCertificates(cohortId?: string, studentId?: string): Promise<CertificateDto[]> {
   const params: Record<string, string> = {};
   if (cohortId) params.cohort = cohortId;
   if (studentId) params.student = studentId;
   const { data } = await api.get('/api/v1/certificates/certificates/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getCertificate(id: string): Promise<CertificateDto> {

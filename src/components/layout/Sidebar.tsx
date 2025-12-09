@@ -56,13 +56,10 @@ const navigation: NavItem[] = [
   { name: 'Gallery', href: '/gallery/mine', icon: Image },
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Reporting', href: '/reporting', icon: FileSpreadsheet, roles: ['ADMIN'] },
-  { name: 'Invoices', href: '/payments/invoices', icon: Receipt, roles: ['ADMIN'] },
+
   { name: 'Payments', href: '/payments/payments', icon: CreditCard, roles: ['ADMIN'] },
-  { name: 'Discounts', href: '/payments/discounts', icon: Tag, roles: ['ADMIN'] },
-  { name: 'Payment Plans', href: '/payments/payment-plans', icon: CalendarIcon, roles: ['ADMIN'] },
-  { name: 'Payment Methods', href: '/payments/payment-methods', icon: Wallet, roles: ['ADMIN'] },
-  { name: 'Payment Schedules', href: '/payments/payment-schedules', icon: CalendarIcon, roles: ['ADMIN'] },
-  { name: 'Pricings', href: '/payments/pricings', icon: DollarSign, roles: ['ADMIN'] },
+
+
   { name: 'Archive', href: '/archive', icon: Archive, roles: ['ADMIN'] },
   { name: 'Organizations', href: '/subscriptions/organizations', icon: Building2, roles: ['ADMIN'] },
   { name: 'Subscription Plans', href: '/subscriptions/plans', icon: Package, roles: ['ADMIN'] },
@@ -78,7 +75,7 @@ export function Sidebar() {
   const { user } = useAuthStore();
 
   // Filter navigation items based on user role
-  const visibleNavigation = navigation.filter((item) => {
+  const visibleNavigation = (navigation || []).filter((item) => {
     if (!item.roles) return true; // No role restriction
     return item.roles.includes(user?.role || '');
   });
@@ -90,7 +87,7 @@ export function Sidebar() {
         <span className="text-sm font-semibold text-sidebar-foreground">Cyber Academy</span>
       </div>
       <nav className="sidebar_link_wrapper">
-        {visibleNavigation.map((item) => (
+        {(visibleNavigation || []).map((item) => (
           <NavLink
             key={item.name}
             to={item.href}
