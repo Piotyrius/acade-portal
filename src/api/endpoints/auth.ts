@@ -62,6 +62,10 @@ export async function confirmPasswordReset(token: string, newPassword: string): 
   await api.post('/api/v1/auth/password-reset/confirm/', { token, new_password: newPassword });
 }
 
+export async function logout(refresh: string): Promise<void> {
+  await api.post('/api/v1/auth/logout/', { refresh });
+}
+
 // ============================================================================
 // MFA (Multi-Factor Authentication) Functions
 // ============================================================================
