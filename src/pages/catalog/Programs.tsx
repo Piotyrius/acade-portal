@@ -25,7 +25,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { IoIosArrowDown } from "react-icons/io";
-import {  } from '@/api/endpoints/catalog';
 
 
 export default function Programs() {
@@ -40,12 +39,12 @@ export default function Programs() {
   const [expandedProgramId, setExpandedProgramId] = useState<string | null>(null);
   const [cohortsPopup, setCohortsPopup] = useState(false)
 
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [editingCourse, setEditingCourse] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState<CourseDto | null>(null);
+  const [editingCourse, setEditingCourse] = useState<CourseDto | null>(null);
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
 
-  const [selectedCohort, setSelectedCohort] = useState(null);
-  const [editingCohort, setEditingCohort] = useState(null);
+  const [selectedCohort, setSelectedCohort] = useState<CohortDto | null>(null);
+  const [editingCohort, setEditingCohort] = useState<CohortDto | null>(null);
   const [isCohortDialogOpen, setIsCohortDialogOpen] = useState(false);
 
   const [cohortForm, setCohortForm] = useState({
@@ -77,6 +76,8 @@ export default function Programs() {
   const { data: cohorts } = useQuery({
     queryKey: ['cohorts'],
     queryFn: () => getCohorts(),
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
   });
 
   const cohortList = Array.isArray(cohorts) ? cohorts : [];
@@ -93,12 +94,14 @@ export default function Programs() {
   const { data: courses } = useQuery({
     queryKey: ['courses'],
     queryFn: () => getCourses(),
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
   });
 
   const courseList = Array.isArray(courses) ? courses : [];
 
 
-  const { data: programs = mockPrograms, isLoading } = useQuery({
+  const { data: programs = mockPrograms, isLoading, isError } = useQuery({
     queryKey: ['programs', filter],
     queryFn: async () => {
       if (filter === 'active') {
@@ -109,7 +112,11 @@ export default function Programs() {
         return await getPrograms();
       }
     },
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
   });
+
+  const programList = Array.isArray(programs) ? programs : [];
 
   const createMutation = useMutation({
     mutationFn: createProgram,
@@ -175,12 +182,13 @@ export default function Programs() {
     }
   };
 
-  const displayPrograms = programs;
-  const filteredPrograms = displayPrograms.filter((p) =>
-    !searchTerm ||
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const displayPrograms = programList || [];
+  const filteredPrograms = (displayPrograms || []).filter((p) => {
+    if (!p || !p.name || !p.code) return false;
+    return !searchTerm ||
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.code.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const handleOpenCreate = () => {
     setEditingProgram(null);
@@ -372,6 +380,24 @@ export default function Programs() {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Programs</h2>
+            <p className="text-muted-foreground">Manage your educational programs</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="py-8 text-center text-destructive">
+            <p>Failed to load programs. Please try again later.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between programs_header_wrapper">
@@ -411,12 +437,13 @@ export default function Programs() {
 
       </div>
 
-      {programs.length === 0 && <ExampleBanner />}
+      {programList.length === 0 && <ExampleBanner />}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredPrograms.map((program) => {
-            const programCourses = courseList.filter(
-              (c: any) => c.program === program.id
+            if (!program || !program.id) return null;
+            const programCourses = (courseList || []).filter(
+              (c: any) => c && c.program && c.program === program.id
           );
           return(
             <Card key={program.id} className="hover:shadow-lg transition-shadow card-no-stretch">
@@ -580,7 +607,7 @@ export default function Programs() {
 
           {(() => {
             const cohortsOfCourse = selectedCourse
-              ? cohortList.filter((c: any) => c.course === selectedCourse.id)
+              ? (cohortList || []).filter((c: any) => c.course === selectedCourse.id)
               : [];
           
             if (!selectedCourse) {
@@ -662,7 +689,7 @@ export default function Programs() {
                     <SelectValue placeholder="Select program" />
                   </SelectTrigger>
                   <SelectContent>
-                    {programs.map((p) => (
+                    {programList.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.name}
                       </SelectItem>
@@ -755,7 +782,7 @@ export default function Programs() {
                     <SelectValue placeholder="Select course" />
                   </SelectTrigger>
                   <SelectContent>
-                    {courses.map((c) => (
+                    {courseList.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.title}
                       </SelectItem>

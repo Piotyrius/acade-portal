@@ -70,7 +70,7 @@ export function Sidebar() {
   const { user } = useAuthStore();
 
   // Filter navigation items based on user role
-  const visibleNavigation = navigation.filter((item) => {
+  const visibleNavigation = (navigation || []).filter((item) => {
     if (!item.roles) return true; // No role restriction
     return item.roles.includes(user?.role || '');
   });
@@ -82,7 +82,7 @@ export function Sidebar() {
         <span className="text-sm font-semibold text-sidebar-foreground">Cyber Academy</span>
       </div>
       <nav className="sidebar_link_wrapper">
-        {visibleNavigation.map((item) => (
+        {(visibleNavigation || []).map((item) => (
           <NavLink
             key={item.name}
             to={item.href}

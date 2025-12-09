@@ -1,12 +1,13 @@
 import api from '@/api/client';
 import { AttendanceRecordDto } from '@/api/types';
+import { ensureArray } from '@/api/utils';
 
 export async function getAttendanceRecords(sessionId?: string, studentId?: string): Promise<AttendanceRecordDto[]> {
   const params: Record<string, string> = {};
   if (sessionId) params.session = sessionId;
   if (studentId) params.student = studentId;
   const { data } = await api.get('/api/v1/attendance/attendance/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getAttendanceRecord(id: string): Promise<AttendanceRecordDto> {

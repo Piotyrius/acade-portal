@@ -1,10 +1,11 @@
 import api from '@/api/client';
 import { ProgramDto, CourseDto, CohortDto, SessionDto } from '@/api/types';
+import { ensureArray } from '@/api/utils';
 
 // Programs
 export async function getPrograms(params?: { active?: boolean }): Promise<ProgramDto[]> {
   const { data } = await api.get('/api/v1/catalog/programs/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getProgram(id: string): Promise<ProgramDto> {
@@ -30,7 +31,7 @@ export async function deleteProgram(id: string): Promise<void> {
 export async function getCourses(programId?: string): Promise<CourseDto[]> {
   const params = programId ? { program: programId } : {};
   const { data } = await api.get('/api/v1/catalog/courses/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getCourse(id: string): Promise<CourseDto> {
@@ -56,7 +57,7 @@ export async function deleteCourse(id: string): Promise<void> {
 export async function getCohorts(courseId?: string): Promise<CohortDto[]> {
   const params = courseId ? { course: courseId } : {};
   const { data } = await api.get('/api/v1/catalog/cohorts/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getCohort(id: string): Promise<CohortDto> {
@@ -98,7 +99,7 @@ export async function generateSessions(cohortId: string, payload: {
 export async function getSessions(cohortId?: string): Promise<SessionDto[]> {
   const params = cohortId ? { cohort: cohortId } : {};
   const { data } = await api.get('/api/v1/catalog/sessions/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getSession(id: string): Promise<SessionDto> {
@@ -136,12 +137,12 @@ export async function createSessionWithRecurrence(
 // Lecturer-specific endpoints
 export async function getMyCohorts(): Promise<CohortDto[]> {
   const { data } = await api.get('/api/v1/catalog/cohorts/me/');
-  return data.results || data;
+  return ensureArray(data);
 }
 
 export async function getMySessions(params?: { date_from?: string; date_to?: string }): Promise<SessionDto[]> {
   const { data } = await api.get('/api/v1/catalog/sessions/me/', { params });
-  return data.results || data;
+  return ensureArray(data);
 }
 
 
