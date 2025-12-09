@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, ChevronUp, Calendar } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPrograms, createProgram, updateProgram, deleteProgram, getCourses, getCohorts, createCourse, updateCourse, deleteCourse, createCohort, updateCohort, deleteCohort, generateSessions } from '@/api/endpoints/catalog';
 import { ProgramDto } from '@/api/types';
@@ -25,6 +25,27 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { IoIosArrowDown } from "react-icons/io";
+import { getEnrollments } from '@/api/endpoints/admissions';
+
+
+function EnrollmentRow({
+  enrollment,
+}: {
+  enrollment: EnrollmentDto;
+}) {
+  return (
+    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+      <div>
+        <p className="font-medium text-sm">{enrollment.student_name}</p>
+        <p className="text-xs text-muted-foreground">
+          Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+        </p>
+      </div>
+
+      <Badge variant="outline">{enrollment.status}</Badge>
+    </div>
+  );
+}
 
 
 export default function Programs() {
@@ -57,12 +78,19 @@ export default function Programs() {
     status: 'PLANNED' as CohortDto['status'],
   }); 
 
+  const [expandedCohortId, setExpandedCohortId] = useState(null)
+  const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false);
   const [sessionFormData, setSessionFormData] = useState({
     pattern: '',
     start_time: '19:00',
     end_time: '21:00',
     exclude_holidays: true,
   });
+  const [selectedCohortForSessions, setSelectedCohortForSessions] = useState<CohortDto | null>(null);
+  const [isStudentsPopupOpen, setIsStudentsPopupOpen] = useState(false);
+  const [studentsPopupCohort, setStudentsPopupCohort] = useState<CohortDto | null>(null);
+
+  
 
   const handleOpenView = (program: ProgramDto) => {
     if (expandedProgramId === program.id) {
@@ -360,6 +388,33 @@ export default function Programs() {
     }
   };
 
+  // new generate sessions and students
+
+  const { data: cohortEnrollments = [], isLoading: isLoadingEnrollments } = useQuery({
+    queryKey: ['enrollments', expandedCohortId],
+    queryFn: () => getEnrollments(expandedCohortId!, undefined),
+    enabled: !!expandedCohortId,
+  });
+
+  const generateSessionsMutation = useMutation({
+  mutationFn: ({ cohortId, payload }: { cohortId: string; payload: any }) =>
+    generateSessions(cohortId, payload),
+  onSuccess: (data) => {
+    qc.invalidateQueries({ queryKey: ['sessions'] });
+    toast({
+      title: 'Success',
+      description: `Generated ${data.created} sessions successfully`,
+    });
+    setIsSessionDialogOpen(false);
+    setSelectedCohortForSessions(null);
+  },
+  onError: (error) => {
+    toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+  },
+});
+
+
+
 
   if (isLoading) {
     return (
@@ -490,12 +545,12 @@ export default function Programs() {
                     {programCourses.length === 0 ? (
                       <p className="text-[11px] text-muted-foreground">No courses assigned</p>
                     ) : (
-                      <div className="flex flex-col flex-wrap gap-2 max-h-[500px] overflow-y-auto ">
+                      <div className="flex flex-col flex-wrap gap-2 max-h-[500px] overflow-y-auto">
                         {programCourses.map((course: any) => (
-                          <Badge key={course.id} variant="outline" className='flex justify-between'>
-                            <p className='p-3 text-[14px] cursor-pointer capitalize' onClick={() => {setSelectedCourse(course); setCohortsPopup(true); }}>{course.title} </p>
+                          <Badge key={course.id} variant="outline" className='flex justify-between cursor-pointer' onClick={() => {setSelectedCourse(course); setCohortsPopup(true); }} >
+                            <p className='p-3 text-[14px] capitalize'>{course.title} </p>
 
-                            <div>
+                            <div onClick={(e) => e.stopPropagation()}>
                               <Button variant="ghost" size="sm" onClick={() => handleOpenCourseEdit(course)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -645,6 +700,31 @@ export default function Programs() {
                       <Badge variant={cohort.active ? "default" : "secondary"}>
                         {cohort.active ? "Active" : "Inactive"}
                       </Badge>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setStudentsPopupCohort(cohort);
+                          setExpandedCohortId(cohort.id);
+                          setIsStudentsPopupOpen(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCohortForSessions(cohort);
+                          setIsSessionDialogOpen(true);
+                        }}
+                      >
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+
                     
                     </div>
 
@@ -864,6 +944,99 @@ export default function Programs() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate Sessions</DialogTitle>
+            <DialogDescription>
+              Generate recurring sessions for {selectedCohortForSessions?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              generateSessionsMutation.mutate({
+                cohortId: selectedCohortForSessions!.id,
+                payload: sessionFormData,
+              });
+            }}
+          >
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Pattern *</Label>
+                <Input
+                  value={sessionFormData.pattern}
+                  onChange={(e) =>
+                    setSessionFormData({ ...sessionFormData, pattern: e.target.value.toUpperCase() })
+                  }
+                  placeholder="MON,WED,FRI"
+                  required
+                />
+              </div>
+                
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  type="time"
+                  value={sessionFormData.start_time}
+                  onChange={(e) =>
+                    setSessionFormData({ ...sessionFormData, start_time: e.target.value })
+                  }
+                />
+                <Input
+                  type="time"
+                  value={sessionFormData.end_time}
+                  onChange={(e) =>
+                    setSessionFormData({ ...sessionFormData, end_time: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+                
+            <DialogFooter>
+              <Button type="submit" disabled={generateSessionsMutation.isPending}>
+                Generate Sessions
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+                
+      <Dialog open={isStudentsPopupOpen} onOpenChange={setIsStudentsPopupOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              Students in {studentsPopupCohort?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Enrolled students for this cohort.
+            </DialogDescription>
+          </DialogHeader>
+                
+          {isLoadingEnrollments ? (
+            <p>Loading...</p>
+          ) : cohortEnrollments.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-3">
+              No students enrolled yet.
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {cohortEnrollments.map((enrollment: EnrollmentDto) => (
+                <EnrollmentRow key={enrollment.id} enrollment={enrollment} />
+              ))}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setIsStudentsPopupOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
 
     </div>
   );

@@ -39,8 +39,8 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Programs', href: '/catalog/programs', icon: BookOpen, roles: ['ADMIN'] },
-  { name: 'Courses', href: '/catalog/courses', icon: GraduationCap, roles: ['ADMIN', 'LECTURER'] },
-  { name: 'Cohorts', href: '/catalog/cohorts', icon: Users, roles: ['ADMIN', 'LECTURER'] },
+  // { name: 'Courses', href: '/catalog/courses', icon: GraduationCap, roles: ['ADMIN', 'LECTURER'] },
+  // { name: 'Cohorts', href: '/catalog/cohorts', icon: Users, roles: ['ADMIN', 'LECTURER'] },
   { name: 'Sessions', href: '/catalog/sessions', icon: Calendar, roles: ['ADMIN', 'LECTURER'] },
   { name: 'Admissions', href: '/admissions/applications', icon: UserPlus, roles: ['ADMIN'] },
   { name: 'Recruit Students', href: '/admissions/recruiting', icon: UserPlus, roles: ['ADMIN'] },
