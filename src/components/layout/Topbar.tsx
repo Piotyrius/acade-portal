@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/store/authStore';
+import { logout } from '@/api/endpoints/auth';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,14 +18,24 @@ import { LuMenu } from "react-icons/lu";
 
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
-  const { user, clearAuth } = useAuthStore();
+  const { user, refreshToken, clearAuth } = useAuthStore();
   const navigate = useNavigate();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  const handleLogout = () => {
-    clearAuth();
-    navigate('/login');
-  };
+
+const handleLogout = async () => {
+  try {
+    if (refreshToken) {
+      await logout(refreshToken);
+    }
+  } catch (err) {
+    console.log('Error')
+  }
+
+  clearAuth();
+  navigate('/login');
+};
+
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';

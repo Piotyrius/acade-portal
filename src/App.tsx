@@ -48,6 +48,8 @@ import SubscriptionPlans from "./pages/subscriptions/SubscriptionPlans";
 import Subscriptions from "./pages/subscriptions/Subscriptions";
 import MySubscription from "./pages/subscriptions/MySubscription";
 
+import PaymentWrapper from "./components/PaymentWrapper";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -103,13 +105,19 @@ const App = () => (
             <Route path="users" element={<Users />} />
             <Route path="lecturer/dashboard" element={<LecturerDashboard />} />
             <Route path="lecturer/sessions" element={<MySessions />} />
-            <Route path="payments/invoices" element={<Invoices />} />
-            <Route path="payments/discounts" element={<Discounts />} />
-            <Route path="payments/payment-plans" element={<PaymentPlans />} />
-            <Route path="payments/payment-methods" element={<PaymentMethods />} />
-            <Route path="payments/payment-schedules" element={<PaymentSchedules />} />
-            <Route path="payments/payments" element={<Payments />} />
-            <Route path="payments/pricings" element={<Pricings />} />
+
+            <Route path="/payments" element={ <PaymentWrapper /> } >
+
+              <Route path="invoices" element={<Invoices />} />
+              <Route path="discounts" element={<Discounts />} />
+              <Route path="payment-plans" element={<PaymentPlans />} />
+              <Route path="payment-methods" element={<PaymentMethods />} />
+              <Route path="payment-schedules" element={<PaymentSchedules />} />
+              <Route path="payments" element={<Payments />} />
+              <Route path="pricings" element={<Pricings />} />
+            
+            </Route>
+
             <Route path="archive" element={<ArchiveBrowser />} />
             <Route path="subscriptions/organizations" element={<Organizations />} />
             <Route path="subscriptions/plans" element={<SubscriptionPlans />} />
