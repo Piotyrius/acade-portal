@@ -50,6 +50,7 @@ import MySubscription from "./pages/subscriptions/MySubscription";
 
 import PaymentWrapper from "./components/PaymentWrapper";
 import SubscriptionWrapper from "./components/SubscriptionWrapper";
+import AdmissionsWrapper from "./components/AdmissionsWrapper";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,11 +85,18 @@ const App = () => (
           }>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="catalog/programs" element={<Programs />} />
-            <Route path="catalog/courses" element={<Courses />} />
-            <Route path="catalog/cohorts" element={<Cohorts />} />
+            
+            {/* <Route path="catalog/courses" element={<Courses />} />
+            <Route path="catalog/cohorts" element={<Cohorts />} /> */}
+
+            <Route path="/admissions" element={ <AdmissionsWrapper /> }>
+
+              <Route path="applications" element={<Applications />} />
+              <Route path="enrollments" element={<Enrollments />} />
+            
+            </Route>
+            
             <Route path="catalog/sessions" element={<Sessions />} />
-            <Route path="admissions/applications" element={<Applications />} />
-            <Route path="admissions/enrollments" element={<Enrollments />} />
             <Route path="admissions/recruiting" element={<Recruiting />} />
             <Route path="attendance/list" element={<AttendanceList />} />
             <Route path="assessment/assessments" element={<Assessments />} />
@@ -124,11 +132,11 @@ const App = () => (
               <Route path="organizations" element={<Organizations />} />
               <Route path="plans" element={<SubscriptionPlans />} />
               <Route path="subscriptions" element={<Subscriptions />} />
+              <Route path="my-subscription" element={<MySubscription />} />
             
             </Route>
 
             <Route path="archive" element={<ArchiveBrowser />} />
-            <Route path="subscriptions/my-subscription" element={<MySubscription />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
