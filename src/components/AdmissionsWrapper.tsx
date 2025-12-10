@@ -13,6 +13,7 @@ const AdmissionsWrapper = () => {
         
         <NavLink to="applications" className={({ isActive }) => `${base} ${isActive ? active : ""}`}> Applications </NavLink>
         <NavLink to="enrollments" className={({ isActive }) => `${base} ${isActive ? active : ""}`}> Enrollments </NavLink>
+        <NavLink to="recruiting" className={({ isActive }) => `${base} ${isActive ? active : ""}`}> Recruit Students </NavLink>
 
       </div>
 

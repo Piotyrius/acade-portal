@@ -93,11 +93,11 @@ const App = () => (
 
               <Route path="applications" element={<Applications />} />
               <Route path="enrollments" element={<Enrollments />} />
+              <Route path="recruiting" element={<Recruiting />} />
             
             </Route>
             
             <Route path="catalog/sessions" element={<Sessions />} />
-            <Route path="admissions/recruiting" element={<Recruiting />} />
             <Route path="attendance/list" element={<AttendanceList />} />
             <Route path="assessment/assessments" element={<Assessments />} />
             <Route path="assessment/submissions" element={<Submissions />} />

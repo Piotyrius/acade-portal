@@ -42,7 +42,7 @@ const navigation: NavItem[] = [
   // { name: 'Courses', href: '/catalog/courses', icon: GraduationCap, roles: ['ADMIN', 'LECTURER'] },
   // { name: 'Cohorts', href: '/catalog/cohorts', icon: Users, roles: ['ADMIN', 'LECTURER'] },
   { name: 'Sessions', href: '/catalog/sessions', icon: Calendar, roles: ['ADMIN', 'LECTURER'] },
-  { name: 'Recruit Students', href: '/admissions/recruiting', icon: UserPlus, roles: ['ADMIN'] },
+  // { name: 'Recruit Students', href: '/admissions/recruiting', icon: UserPlus, roles: ['ADMIN'] },
   { name: 'Admissions', href: '/admissions/applications', icon: UserPlus, roles: ['ADMIN'] },
   // { name: 'Enrollments', href: '/admissions/enrollments', icon: Users, roles: ['ADMIN', 'LECTURER'] },
   { name: 'Attendance', href: '/attendance/list', icon: ClipboardCheck, roles: ['ADMIN', 'LECTURER'] },
