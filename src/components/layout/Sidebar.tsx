@@ -39,8 +39,8 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Programs', href: '/catalog/programs', icon: BookOpen, roles: ['ADMIN'] },
-  { name: 'Courses', href: '/catalog/courses', icon: GraduationCap, roles: ['ADMIN', 'LECTURER'] },
-  { name: 'Cohorts', href: '/catalog/cohorts', icon: Users, roles: ['ADMIN', 'LECTURER'] },
+  // { name: 'Courses', href: '/catalog/courses', icon: GraduationCap, roles: ['ADMIN', 'LECTURER'] },
+  // { name: 'Cohorts', href: '/catalog/cohorts', icon: Users, roles: ['ADMIN', 'LECTURER'] },
   { name: 'Sessions', href: '/catalog/sessions', icon: Calendar, roles: ['ADMIN', 'LECTURER'] },
   { name: 'Admissions', href: '/admissions/applications', icon: UserPlus, roles: ['ADMIN'] },
   { name: 'Recruit Students', href: '/admissions/recruiting', icon: UserPlus, roles: ['ADMIN'] },
@@ -56,13 +56,8 @@ const navigation: NavItem[] = [
   { name: 'Gallery', href: '/gallery/mine', icon: Image },
   { name: 'Documents', href: '/documents', icon: FileText },
   { name: 'Reporting', href: '/reporting', icon: FileSpreadsheet, roles: ['ADMIN'] },
-
   { name: 'Payments', href: '/payments/payments', icon: CreditCard, roles: ['ADMIN'] },
-
-
   { name: 'Archive', href: '/archive', icon: Archive, roles: ['ADMIN'] },
-  { name: 'Organizations', href: '/subscriptions/organizations', icon: Building2, roles: ['ADMIN'] },
-  { name: 'Subscription Plans', href: '/subscriptions/plans', icon: Package, roles: ['ADMIN'] },
   { name: 'Subscriptions', href: '/subscriptions/subscriptions', icon: CreditCard, roles: ['ADMIN'] },
   { name: 'My Subscription', href: '/subscriptions/my-subscription', icon: UserCheck },
   { name: 'Users', href: '/users', icon: UserCog, roles: ['ADMIN'] },

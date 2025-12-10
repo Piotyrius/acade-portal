@@ -49,6 +49,7 @@ import Subscriptions from "./pages/subscriptions/Subscriptions";
 import MySubscription from "./pages/subscriptions/MySubscription";
 
 import PaymentWrapper from "./components/PaymentWrapper";
+import SubscriptionWrapper from "./components/SubscriptionWrapper";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,10 +119,15 @@ const App = () => (
             
             </Route>
 
+            <Route path="/subscriptions" element={ <SubscriptionWrapper /> } >
+
+              <Route path="organizations" element={<Organizations />} />
+              <Route path="plans" element={<SubscriptionPlans />} />
+              <Route path="subscriptions" element={<Subscriptions />} />
+            
+            </Route>
+
             <Route path="archive" element={<ArchiveBrowser />} />
-            <Route path="subscriptions/organizations" element={<Organizations />} />
-            <Route path="subscriptions/plans" element={<SubscriptionPlans />} />
-            <Route path="subscriptions/subscriptions" element={<Subscriptions />} />
             <Route path="subscriptions/my-subscription" element={<MySubscription />} />
           </Route>
           <Route path="*" element={<NotFound />} />
