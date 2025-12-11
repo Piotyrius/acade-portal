@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { User, Mail, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import { MfaSetup } from '@/components/MfaSetup';
+import { uploadProfilePicture } from '@/api/endpoints/gallery';
+
 
 export default function Profile() {
   const { user, setAuth } = useAuthStore();
@@ -138,6 +140,40 @@ export default function Profile() {
     },
   });
 
+  // add profile picture
+
+  const uploadPictureMutation = useMutation({
+  mutationFn: uploadProfilePicture,
+  onSuccess: (data) => {
+    const currentAuth = useAuthStore.getState();
+
+    if (currentAuth.user) {
+      setAuth(
+        {
+          ...currentAuth.user,
+          profile_picture_url: data.profile_picture_url
+        },
+        currentAuth.accessToken!,
+        currentAuth.refreshToken!
+      );
+    }
+
+    qc.invalidateQueries({ queryKey: ['me'] });
+
+    toast({
+      title: "Success",
+      description: "Profile picture updated!"
+    });
+  },
+  onError: (error) => {
+    toast({
+      title: "Error",
+      description: getErrorMessage(error),
+      variant: "destructive"
+    });
+  }
+});
+
   // MFA Disable Mutation
   const mfaDisableMutation = useMutation({
     mutationFn: disableMfa,
@@ -190,6 +226,8 @@ export default function Profile() {
     return <div className="p-6">Loading profile...</div>;
   }
 
+  
+
   return (
     <div className="space-y-6">
       <div>
@@ -204,25 +242,34 @@ export default function Profile() {
             <CardDescription>Your personal details and account information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {(displayUser as any)?.firstName || (displayUser as any)?.first_name} {(displayUser as any)?.lastName || (displayUser as any)?.last_name}
-                </h3>
-                <p className="text-sm text-muted-foreground">{displayUser?.email}</p>
-                <Badge variant="secondary" className="mt-2">
-                  {displayUser?.role}
-                </Badge>
-              </div>
-            </div>
+
 
             {!isEditing ? (
               <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-20 w-20">
+                    {displayUser?.profile_picture_url ? (
+                      <img 
+                        src={displayUser.profile_picture_url} 
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                        {initials}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {(displayUser as any)?.firstName || (displayUser as any)?.first_name} {(displayUser as any)?.lastName || (displayUser as any)?.last_name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{displayUser?.email}</p>
+                    <Badge variant="secondary" className="mt-2">
+                      {displayUser?.role}
+                    </Badge>
+                  </div>
+                </div>
                 <div className="flex items-center gap-3">
                   <User className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -250,6 +297,39 @@ export default function Profile() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-20 w-20">
+                    {displayUser?.profile_picture_url ? (
+                      <img src={displayUser.profile_picture_url} className="h-full w-full object-cover" />
+                    ) : (
+                      <AvatarFallback className="bg-primary text-white text-2xl">
+                        {initials}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  
+                  <div>
+                    <Label
+                      htmlFor="profile-upload"
+                      className="cursor-pointer text-sm font-medium underline"
+                    >
+                      Change Picture
+                    </Label>
+                    <input
+                      id="profile-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        uploadPictureMutation.mutate(file);
+                      }}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="first_name">First Name</Label>
                   <Input

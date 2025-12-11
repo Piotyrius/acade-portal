@@ -26,6 +26,7 @@ export async function uploadWork(payload: {
 }
 
 
+
 export async function getWork(id: string): Promise<WorkDto> {
   const { data } = await api.get(`/api/v1/gallery/works/${id}/`);
   return data;
@@ -56,4 +57,19 @@ export async function toggleWorkVisibility(id: string, isPublic: boolean): Promi
 }
 
 
+export async function uploadProfilePicture(file: File) {
+  const form = new FormData();
+  form.append('profile_picture', file);
 
+  const { data } = await api.post(
+    '/api/v1/users/upload_profile_picture/',
+    form,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return data;
+}
