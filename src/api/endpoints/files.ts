@@ -13,12 +13,12 @@ export async function getFiles(params?: {
   ordering?: string;
   page?: number;
 }): Promise<FileObjectDto[]> {
-  const { data } = await api.get('/api/v1/files/files/', { params });
+  const { data } = await api.get('/api/v1/files/', { params });
   return data.results || data;
 }
 
 export async function getFile(id: string): Promise<FileObjectDto> {
-  const { data } = await api.get(`/api/v1/files/files/${id}/`);
+  const { data } = await api.get(`/api/v1/files/${id}/`);
   return data;
 }
 
@@ -26,10 +26,18 @@ export async function getFile(id: string): Promise<FileObjectDto> {
  * Download a file (generic download endpoint for non-archived files)
  */
 export async function downloadFile(id: string): Promise<Blob> {
-  const response = await api.get(`/api/v1/files/files/${id}/download/`, {
+  const response = await api.get(`/api/v1/files/${id}/download/`, {
     responseType: 'blob',
   });
   return response.data;
+}
+
+/**
+ * Archive a file by moving it to archive folder and marking as archived
+ */
+export async function archiveFile(id: string, payload?: Partial<FileObjectDto>): Promise<FileObjectDto> {
+  const { data } = await api.post(`/api/v1/files/${id}/archive/`, payload || {});
+  return data;
 }
 
 /**

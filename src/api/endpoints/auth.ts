@@ -86,9 +86,10 @@ export async function setupMfa(): Promise<MfaSetupResponse> {
 
 /**
  * Verify an MFA code and enable MFA if valid
+ * @param mfaCode - 6-digit TOTP code from authenticator app
  */
-export async function verifyMfa(code: string): Promise<UserDto> {
-  const { data } = await api.post('/api/v1/users/mfa_verify/', { code });
+export async function verifyMfa(mfaCode: string): Promise<{ mfa_enabled: boolean }> {
+  const { data } = await api.post('/api/v1/users/mfa_verify/', { mfa_code: mfaCode });
   return data;
 }
 

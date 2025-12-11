@@ -136,12 +136,12 @@ export async function createSessionWithRecurrence(
 
 // Lecturer-specific endpoints
 export async function getMyCohorts(): Promise<CohortDto[]> {
-  const { data } = await api.get('/api/v1/catalog/cohorts/me/');
+  const { data } = await api.get('/api/v1/catalog/my/cohorts/');
   return ensureArray(data);
 }
 
 export async function getMySessions(params?: { date_from?: string; date_to?: string }): Promise<SessionDto[]> {
-  const { data } = await api.get('/api/v1/catalog/sessions/me/', { params });
+  const { data } = await api.get('/api/v1/catalog/my/sessions/', { params });
   return ensureArray(data);
 }
 

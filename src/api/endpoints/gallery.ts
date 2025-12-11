@@ -14,15 +14,54 @@ export async function uploadWork(payload: {
 }): Promise<WorkDto> {
   const form = new FormData();
 
+  // Only append fields that the backend expects
   form.append('owner', payload.owner);
   form.append('title', payload.title);
-  form.append('description', payload.description ?? '');
+  if (payload.description) {
+    form.append('description', payload.description);
+  }
   form.append('media', payload.file);
   form.append('status', 'DRAFT');
   form.append('is_public', 'false');
 
-  const { data } = await api.post('/api/v1/gallery/works/', form);
-  return data;
+  try {
+    const { data } = await api.post('/api/v1/gallery/works/', form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000, // 60 seconds for file uploads
+    });
+    return data;
+  } catch (error: any) {
+    // Provide more helpful error messages for database schema issues
+    const errorDetail = error.response?.data?.detail;
+    if (errorDetail) {
+      const detailString = typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail);
+      
+      // Check for database schema errors
+      if (detailString.includes('does not exist') || detailString.includes('column')) {
+        const columnMatch = detailString.match(/column\s+"([^"]+)"\s+of\s+relation\s+"([^"]+)"/i);
+        if (columnMatch) {
+          const [, columnName, tableName] = columnMatch;
+          throw new Error(
+            `Database Schema Error: The backend database table "${tableName}" is missing the column "${columnName}". ` +
+            `This is a backend configuration issue. Please contact the administrator to run database migrations. ` +
+            `\n\nTechnical details: ${detailString.substring(0, 200)}...`
+          );
+        }
+      }
+      
+      // Check for Cloudinary upload errors
+      if (detailString.includes('Failed to upload file to Cloudinary')) {
+        throw new Error(
+          `File Upload Error: ${detailString} ` +
+          `\n\nThis appears to be a backend database schema issue. The storage_files table is missing required columns. ` +
+          `Please contact the administrator.`
+        );
+      }
+    }
+    throw error;
+  }
 }
 
 

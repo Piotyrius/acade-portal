@@ -108,11 +108,18 @@ export async function deleteSubscriptionPlan(id: string): Promise<void> {
 }
 
 // Subscriptions
-export async function getSubscriptions(organizationId?: string, status?: string): Promise<SubscriptionDto[]> {
-  const params: Record<string, string> = {};
-  if (organizationId) params.organization = organizationId;
-  if (status) params.status = status;
-  const { data } = await api.get('/api/v1/subscriptions/subscriptions/', { params });
+export async function getSubscriptions(params?: {
+  organizationId?: string;
+  plan?: string;
+  status?: 'ACTIVE' | 'CANCELLED' | 'EXPIRED' | 'SUSPENDED' | 'TRIAL';
+  page?: number;
+}): Promise<SubscriptionDto[]> {
+  const queryParams: Record<string, string> = {};
+  if (params?.organizationId) queryParams.organization = params.organizationId;
+  if (params?.plan) queryParams.plan = params.plan;
+  if (params?.status) queryParams.status = params.status;
+  if (params?.page) queryParams.page = params.page.toString();
+  const { data } = await api.get('/api/v1/subscriptions/subscriptions/', { params: queryParams });
   return data.results || data;
 }
 
@@ -136,7 +143,7 @@ export async function deleteSubscription(id: string): Promise<void> {
 }
 
 export async function getMySubscription(): Promise<SubscriptionDto> {
-  const { data } = await api.get('/api/v1/subscriptions/subscriptions/my/');
+  const { data } = await api.get('/api/v1/subscriptions/subscriptions/my_subscription/');
   return data;
 }
 

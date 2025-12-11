@@ -49,10 +49,10 @@ export default function Subscriptions() {
   const { data: subscriptions = [], isLoading } = useQuery({
     queryKey: ['subscriptions', orgFilter, statusFilter],
     queryFn: () =>
-      getSubscriptions(
-        orgFilter !== 'all' ? orgFilter : undefined,
-        statusFilter !== 'all' ? statusFilter : undefined
-      ),
+      getSubscriptions({
+        organizationId: orgFilter !== 'all' ? orgFilter : undefined,
+        status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
+      }),
     enabled: user?.role === 'ADMIN',
   });
 
