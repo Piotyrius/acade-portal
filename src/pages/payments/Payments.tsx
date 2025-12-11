@@ -52,6 +52,7 @@ export default function Payments() {
     transaction_id: '',
     notes: '',
     processed_at: new Date().toISOString().split('T')[0],
+    payment_date: new Date().toISOString().split('T')[0],
   });
   const [refundData, setRefundData] = useState({
     amount: '',
@@ -74,6 +75,9 @@ export default function Payments() {
     enabled: user?.role === 'ADMIN',
   });
 
+  console.log(invoices)
+
+
   const { data: students = [] } = useQuery({
     queryKey: ['students'],
     queryFn: () => getUsers('STUDENT'),
@@ -81,7 +85,7 @@ export default function Payments() {
   });
 
   const createMutation = useMutation({
-    mutationFn: recordPayment,
+    mutationFn: createPayment,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
@@ -146,6 +150,7 @@ export default function Payments() {
       transaction_id: '',
       notes: '',
       processed_at: new Date().toISOString().split('T')[0],
+      payment_date: formData.payment_date,
     });
   };
 
@@ -161,6 +166,7 @@ export default function Payments() {
         transaction_id: payment.transaction_id || '',
         notes: payment.notes || '',
         processed_at: payment.processed_at.split('T')[0],
+        payment_date: formData.payment_date,
       });
     } else {
       setEditingPayment(null);
@@ -180,16 +186,34 @@ export default function Payments() {
       return;
     }
 
-    const payload: PaymentRequest = {
-      invoice: formData.invoice,
-      student: formData.student,
-      payment_method: formData.payment_method,
-      amount: formData.amount,
-      currency: formData.currency,
-      transaction_id: formData.transaction_id || undefined,
-      notes: formData.notes || undefined,
-      processed_at: new Date(formData.processed_at).toISOString(),
-    };
+const selectedInvoiceObj = invoices.find(i => i.id === formData.invoice);
+
+
+const payload: PaymentRequest = {
+  amount: formData.amount,
+  currency: formData.currency || "USD",
+  payment_method: formData.payment_method,
+  payment_gateway: "MANUAL",
+
+  gateway_transaction_id: formData.transaction_id || "",
+  gateway_response: "", // REQUIRED!
+
+
+  status: "PENDING",
+
+  payment_date: new Date(formData.payment_date).toISOString(),
+  processed_at: new Date().toISOString(),
+  notes: formData.notes || "",
+
+  organization: selectedInvoiceObj.organization,
+  invoice: formData.invoice,
+  student: formData.student,
+
+  recorded_by: user.id // REQUIRED!
+};
+
+
+
 
     if (editingPayment) {
       updateMutation.mutate({ id: editingPayment.id, data: payload });
@@ -445,6 +469,31 @@ export default function Payments() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Input
+                    id="currency"
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    placeholder="USD"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount *</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+              </div>
+
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="payment_method">Payment Method *</Label>
                   <Select
                     value={formData.payment_method}
@@ -466,27 +515,27 @@ export default function Payments() {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount *</Label>
+                  <Label htmlFor="transaction_id">Transaction ID</Label>
                   <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    placeholder="0.00"
-                    required
+                    id="transaction_id"
+                    value={formData.transaction_id}
+                    onChange={(e) => setFormData({ ...formData, transaction_id: e.target.value })}
+                    placeholder="Optional transaction reference"
                   />
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="payment_date">Payment Date *</Label>
                   <Input
-                    id="currency"
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    placeholder="USD"
+                    id="payment_date"
+                    type="date"
+                    value={formData.payment_date}
+                    onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -500,15 +549,7 @@ export default function Payments() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="transaction_id">Transaction ID</Label>
-                <Input
-                  id="transaction_id"
-                  value={formData.transaction_id}
-                  onChange={(e) => setFormData({ ...formData, transaction_id: e.target.value })}
-                  placeholder="Optional transaction reference"
-                />
-              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
