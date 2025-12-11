@@ -326,13 +326,30 @@ processed_at: string;
     return data;
   }
 
-  export async function getInvoiceOutstandingBalance(id: string): Promise<{ outstanding_balance_minor: number; currency: string }> {
+  export async function getInvoiceOutstandingBalance(id: string): Promise<{
+    invoice_number: string;
+    total_amount: string;
+    paid_amount: string;
+    outstanding_amount: string;
+    status: string;
+  }> {
     const { data } = await api.get(`/api/v1/payments/invoices/${id}/outstanding_balance/`);
     return data;
   }
 
-  export async function createInvoiceForEnrollment(enrollmentId: string): Promise<InvoiceDto> {
-    const { data } = await api.post('/api/v1/payments/invoices/create_for_enrollment/', { enrollment: enrollmentId });
+  export async function createInvoiceForEnrollment(
+    enrollmentId: string,
+    paymentPlanId: string,
+    discountIds?: string[]
+  ): Promise<InvoiceDto> {
+    const payload: { enrollment: string; payment_plan: string; discounts?: string[] } = {
+      enrollment: enrollmentId,
+      payment_plan: paymentPlanId,
+    };
+    if (discountIds && discountIds.length > 0) {
+      payload.discounts = discountIds;
+    }
+    const { data } = await api.post('/api/v1/payments/invoices/create_for_enrollment/', payload);
     return data;
   }
 
@@ -483,7 +500,15 @@ processed_at: string;
     return data;
   }
 
-  export async function recordPayment(payload: PaymentRequest): Promise<PaymentDto> {
+  export interface RecordPaymentRequest {
+    invoice: string;
+    amount: string;
+    payment_method?: 'MANUAL' | 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'CHECK' | 'OTHER';
+    notes?: string;
+    payment_date?: string; // ISO 8601 format
+  }
+
+  export async function recordPayment(payload: RecordPaymentRequest): Promise<PaymentDto> {
     const { data } = await api.post('/api/v1/payments/payments/record_payment/', payload);
     return data;
   }

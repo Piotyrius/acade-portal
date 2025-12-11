@@ -144,7 +144,7 @@ export async function createNewSubscription(payload: {
   plan_id: string;
   organization_id?: string;
 }): Promise<SubscriptionDto> {
-  const { data } = await api.post('/api/v1/subscriptions/subscriptions/create_new/', payload);
+  const { data } = await api.post('/api/v1/subscriptions/subscriptions/create_subscription/', payload);
   return data;
 }
 

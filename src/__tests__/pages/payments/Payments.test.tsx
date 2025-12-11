@@ -102,6 +102,40 @@ describe('Payments Component', () => {
         expect(screen.getByText(/process refund/i)).toBeInTheDocument();
       });
     });
+
+    it('should create payment with organization and recorded_by in payload', async () => {
+      const user = userEvent.setup();
+      const mockInvoice = { id: 'inv-1', organization: 'org-123', invoice_number: 'INV-001' };
+      vi.mocked(paymentsApi.getPayments).mockResolvedValue([]);
+      vi.mocked(paymentsApi.getInvoices).mockResolvedValue([mockInvoice] as any);
+      vi.mocked(authApi.getUsers).mockResolvedValue([]);
+      vi.mocked(paymentsApi.createPayment).mockResolvedValue({ id: '1' } as any);
+      
+      renderWithProviders(<Payments />);
+      
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /record payment/i })).toBeInTheDocument();
+      });
+      
+      const recordBtn = screen.getByRole('button', { name: /record payment/i });
+      await user.click(recordBtn);
+      
+      await waitFor(() => {
+        expect(screen.getByText(/record payment/i)).toBeInTheDocument();
+      });
+      
+      // Fill form and submit - the payload should include organization and recorded_by
+      // This test verifies the component uses the correct payload structure
+      const submitBtn = screen.getByRole('button', { name: /save/i });
+      await user.click(submitBtn);
+      
+      await waitFor(() => {
+        expect(paymentsApi.createPayment).toHaveBeenCalled();
+        const callArgs = vi.mocked(paymentsApi.createPayment).mock.calls[0][0];
+        expect(callArgs).toHaveProperty('organization');
+        expect(callArgs).toHaveProperty('recorded_by');
+      });
+    });
   });
 });
 

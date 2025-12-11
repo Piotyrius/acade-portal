@@ -436,5 +436,98 @@ describe('Invoices Component', () => {
       });
     });
   });
+
+  describe('Create Invoice from Enrollment', () => {
+    it('should call createInvoiceForEnrollment with enrollment, payment_plan, and optional discounts', async () => {
+      const user = userEvent.setup();
+      const mockInvoice = { id: '1', invoice_number: 'INV-001' };
+      vi.mocked(paymentsApi.getInvoices).mockResolvedValue([]);
+      vi.mocked(paymentsApi.createInvoiceForEnrollment).mockResolvedValue(mockInvoice as any);
+      vi.mocked(admissionsApi.getEnrollments).mockResolvedValue([
+        { id: 'enroll-1', student_name: 'John Doe', cohort_name: 'Cohort 1' },
+      ] as any);
+      vi.mocked(paymentsApi.getPaymentPlans).mockResolvedValue([
+        { id: 'plan-1', name: 'Monthly Plan', type: 'MONTHLY' },
+      ] as any);
+      vi.mocked(paymentsApi.getDiscounts).mockResolvedValue([
+        { id: 'disc-1', name: 'Discount 1' },
+      ] as any);
+      vi.mocked(paymentsApi.getPricings).mockResolvedValue([]);
+
+      renderWithProviders(<Invoices />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /create from enrollment/i })).toBeInTheDocument();
+      });
+
+      const createFromEnrollmentButton = screen.getByRole('button', { name: /create from enrollment/i });
+      await user.click(createFromEnrollmentButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/create invoice from enrollment/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/enrollment/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/payment plan/i)).toBeInTheDocument();
+      });
+
+      // Select enrollment
+      const enrollmentSelect = screen.getByLabelText(/enrollment/i);
+      await user.click(enrollmentSelect);
+      await waitFor(async () => {
+        const option = screen.getByText(/john doe/i);
+        await user.click(option);
+      });
+
+      // Select payment plan
+      await waitFor(() => {
+        const planSelect = screen.getByLabelText(/payment plan/i);
+        expect(planSelect).toBeInTheDocument();
+      });
+
+      const planSelect = screen.getByLabelText(/payment plan/i);
+      await user.click(planSelect);
+      await waitFor(async () => {
+        const planOption = screen.getByText(/monthly plan/i);
+        await user.click(planOption);
+      });
+
+      // Submit form
+      const submitButton = screen.getByRole('button', { name: /create invoice/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(paymentsApi.createInvoiceForEnrollment).toHaveBeenCalledWith(
+          'enroll-1',
+          'plan-1',
+          undefined // No discounts selected
+        );
+      });
+    });
+
+    it('should require payment_plan when creating from enrollment', async () => {
+      const user = userEvent.setup();
+      vi.mocked(paymentsApi.getInvoices).mockResolvedValue([]);
+      vi.mocked(admissionsApi.getEnrollments).mockResolvedValue([
+        { id: 'enroll-1', student_name: 'John Doe', cohort_name: 'Cohort 1' },
+      ] as any);
+      vi.mocked(paymentsApi.getPaymentPlans).mockResolvedValue([
+        { id: 'plan-1', name: 'Monthly Plan' },
+      ] as any);
+      vi.mocked(paymentsApi.getPricings).mockResolvedValue([]);
+
+      renderWithProviders(<Invoices />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /create from enrollment/i })).toBeInTheDocument();
+      });
+
+      const createFromEnrollmentButton = screen.getByRole('button', { name: /create from enrollment/i });
+      await user.click(createFromEnrollmentButton);
+
+      await waitFor(() => {
+        const submitButton = screen.getByRole('button', { name: /create invoice/i });
+        expect(submitButton).toBeDisabled(); // Should be disabled without payment_plan
+      });
+    });
+  });
 });
 

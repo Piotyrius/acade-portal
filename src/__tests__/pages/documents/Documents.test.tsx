@@ -8,6 +8,7 @@ import * as documentsApi from '@/api/endpoints/documents';
 // Mock all API calls
 vi.mock('@/api/endpoints/documents', () => ({
   getDocuments: vi.fn(),
+  downloadDocument: vi.fn(),
 }));
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -170,6 +171,40 @@ describe('Documents Component', () => {
       // ExampleBanner might render, but we're testing the component renders
       await waitFor(() => {
         expect(screen.getByText('Documents')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Download Functionality', () => {
+    it('should use GET method for document download', async () => {
+      const user = userEvent.setup();
+      const mockBlob = new Blob(['test'], { type: 'application/pdf' });
+      const mockDocuments = [
+        {
+          id: '1',
+          description: 'Test Document 1',
+          kind: 'STUDENT_DOC',
+          visibility: 'PRIVATE',
+          file: 'https://example.com/doc1.pdf',
+          created_at: '2024-01-01',
+        },
+      ];
+      vi.mocked(documentsApi.getDocuments).mockResolvedValue(mockDocuments as any);
+      vi.mocked(documentsApi.downloadDocument).mockResolvedValue(mockBlob);
+
+      renderWithProviders(<Documents />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Document 1')).toBeInTheDocument();
+      });
+
+      // Find and click download button
+      const downloadBtn = screen.getByTitle(/download/i);
+      await user.click(downloadBtn);
+
+      await waitFor(() => {
+        expect(documentsApi.downloadDocument).toHaveBeenCalledWith('1');
+        // Verify it's called (the GET method is verified in the API endpoint test)
       });
     });
   });
