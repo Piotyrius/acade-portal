@@ -35,6 +35,8 @@ import {
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getDiscounts, DiscountDto } from '@/api/endpoints/payments';
+import { CardListSkeleton } from '@/components/ui/table-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Invoices() {
   const { user } = useAuthStore();
@@ -336,8 +338,17 @@ export default function Invoices() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-9 w-40 bg-muted animate-pulse rounded" />
-        <div className="h-96 bg-muted animate-pulse rounded-lg" />
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+        <CardListSkeleton count={5} />
       </div>
     );
   }
