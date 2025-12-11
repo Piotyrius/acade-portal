@@ -16,6 +16,7 @@ const SubscriptionWrapper = () => {
             <NavLink className={({ isActive }) => `${base} ${isActive ? active : ''} ` } to={'subscriptions'}> Subscriptions  </NavLink>
             <NavLink className={({ isActive }) => `${base} ${isActive ? active : ''} ` } to={'plans'}> Subscription Plans </NavLink>
             <NavLink className={({ isActive }) => `${base} ${isActive ? active : ''} ` } to={'organizations'}> Organizations </NavLink>
+            <NavLink className={({ isActive }) => `${base} ${isActive ? active : ''} ` } to={'my-subscription'}> My Subscriptions </NavLink>
 
         </div>
 

@@ -144,6 +144,8 @@ export default function Applications() {
           <div className="space-y-4">
             {filteredApplications.map((app) => {
               const program = programs.find((p) => p.id === app.program);
+              console.log(app.phones);
+
               return (
                 <div key={app.id} className="flex items-center justify-between p-4 border border-border rounded-lg application_item">
                   
@@ -154,13 +156,12 @@ export default function Applications() {
                     <div>
                       <p className="font-medium">{app.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {app.email} • {
-                          Array.isArray(app.phones)
-                            ? app.phones
-                                .map(p => `${p.phone} (${p.name || "No name"})`)
-                                .join(" • ")
-                            : app.phone 
-                        }
+                        {app.email} •{" "}
+                        {Array.isArray(app.phones) && app.phones.length > 0
+                          ? app.phones
+                              .map(p => `${p.phone} (${p.name || "No name"})`)
+                              .join(" • ")
+                          : app.phone}
                       </p>
 
                       <p className="text-xs text-muted-foreground mt-1">{program?.name || 'Unknown Program'}</p>
