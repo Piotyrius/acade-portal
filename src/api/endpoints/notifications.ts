@@ -142,3 +142,5 @@ export function getReadNotificationIds(): string[] {
   return JSON.parse(localStorage.getItem('readNotifications') || '[]');
 }
 
+
+
