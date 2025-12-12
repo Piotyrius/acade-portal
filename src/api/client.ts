@@ -18,6 +18,19 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
 
+  if (import.meta.env.DEV) {
+    try {
+      const method = (config.method || 'GET').toUpperCase();
+      const url = config.url;
+      // Log request body for debugging API mismatches; do NOT log headers/tokens.
+      if (method !== 'GET') {
+        console.debug('➡️ API request', { method, url, data: config.data });
+      }
+    } catch {
+      // ignore logging failures
+    }
+  }
+
   if (token) {
     // config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -42,6 +55,18 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
+
+    if (import.meta.env.DEV) {
+      try {
+        const status = error?.response?.status;
+        const method = (original?.method || 'GET').toUpperCase();
+        const url = original?.url;
+        const data = error?.response?.data;
+        console.warn('🌐 API error', { status, method, url, data });
+      } catch {
+        // ignore logging failures
+      }
+    }
 
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
