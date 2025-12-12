@@ -10,7 +10,7 @@ import Pricings from './Pricings';
 export default function PaymentsUnified() {
   return (
     <div className="space-y-6">
-      <div>
+      {/* <div>
         <h2 className="text-3xl font-bold tracking-tight">Payments</h2>
         <p className="text-muted-foreground">Manage all payment-related operations</p>
       </div>
@@ -68,7 +68,7 @@ export default function PaymentsUnified() {
         <TabsContent value="schedules" className="mt-6">
           <PaymentSchedules />
         </TabsContent>
-      </Tabs>
+      </Tabs> */}
     </div>
   );
 }

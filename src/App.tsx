@@ -237,14 +237,15 @@ const App = () => (
             } />
 
             <Route path="/payments" element={ <PaymentWrapper /> } >
-              <Route index element={<PaymentsUnified />} />
-              <Route path="unified" element={<PaymentsUnified />} />
+              {/* <Route index element={<PaymentsUnified />} /> */}
+              <Route index element={<Payments />} />
+              {/* <Route path="unified" element={<PaymentsUnified />} /> */}
               <Route path="invoices" element={<Invoices />} />
+              <Route path="payments" element={<Payments />} />
               <Route path="discounts" element={<Discounts />} />
               <Route path="payment-plans" element={<PaymentPlans />} />
               <Route path="payment-methods" element={<PaymentMethods />} />
               <Route path="payment-schedules" element={<PaymentSchedules />} />
-              <Route path="payments" element={<Payments />} />
               <Route path="pricings" element={<Pricings />} />
             </Route>
 
