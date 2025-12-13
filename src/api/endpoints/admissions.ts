@@ -33,7 +33,10 @@ export async function updateApplication(id: string, payload: Partial<Application
 }
 
 export async function acceptApplication(id: string, cohortId: string): Promise<EnrollmentDto> {
-  const { data } = await api.post(`/api/v1/admissions/applications/${id}/accept/`, { cohort_id: cohortId });
+  // Swagger: "Requires cohort_id in request body."
+  const { data } = await api.post(`/api/v1/admissions/applications/${id}/accept/`, {
+    cohort_id: cohortId,
+  });
   return data;
 }
 

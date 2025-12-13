@@ -131,6 +131,7 @@ export interface ApplicationDto {
   updated_at: string;
   program_name?: string;
   program_code?: string;
+  organization?: UUID | null;
   status_display?: string;
 }
 
