@@ -587,7 +587,6 @@ export default function Programs() {
           </CardContent>
         </Card>
       )}
-{/* 
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -646,6 +645,9 @@ export default function Programs() {
           </form>
         </DialogContent>
       </Dialog>
+  
+  
+  {/* 
 
       <Dialog open={cohortsPopup} onOpenChange={setCohortsPopup}>
         <DialogContent>
