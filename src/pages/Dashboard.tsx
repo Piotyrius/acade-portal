@@ -284,7 +284,7 @@ export default function Dashboard() {
       change: cohortsChange,
       icon: BookOpen,
       trend: 'up' as const,
-      href: '/catalog/sessions',
+      href: '/catalog/cohorts',
     },
     {
       title: 'Pending Applications',

@@ -55,11 +55,29 @@ export async function deleteUser(id: string): Promise<void> {
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {
-  await api.post('/api/v1/auth/password-reset/', { email });
+  const normalizedEmail = email.trim();
+  try {
+    await api.post('/api/v1/auth/password-reset/', { email: normalizedEmail });
+  } catch (err: any) {
+    // Some backends expose this endpoint as password_reset (underscore) instead of password-reset (dash).
+    if (err?.response?.status === 404) {
+      await api.post('/api/v1/auth/password_reset/', { email: normalizedEmail });
+      return;
+    }
+    throw err;
+  }
 }
 
 export async function confirmPasswordReset(token: string, newPassword: string): Promise<void> {
-  await api.post('/api/v1/auth/password-reset/confirm/', { token, new_password: newPassword });
+  try {
+    await api.post('/api/v1/auth/password-reset/confirm/', { token, new_password: newPassword });
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      await api.post('/api/v1/auth/password_reset/confirm/', { token, new_password: newPassword });
+      return;
+    }
+    throw err;
+  }
 }
 
 export async function logout(refresh: string): Promise<void> {
