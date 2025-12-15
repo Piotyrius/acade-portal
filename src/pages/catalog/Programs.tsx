@@ -526,12 +526,12 @@ export default function Programs() {
 
                   </div>
                 </div>     
-
+{/*
                 <Button className='border-2 border-white-300 w-[100%] mt-2' variant="ghost" size="sm" onClick={() => handleOpenView(program)}>
                   <IoIosArrowDown className={expandedProgramId === program.id ? "arrow_rotated" : "arrow_default"} />
                 </Button>
 
-                <div
+                 <div
                   className={`transition-all duration-300 overflow-hidden ${
                     expandedProgramId === program.id ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
                   }`}
@@ -565,7 +565,7 @@ export default function Programs() {
                       </div>
                     )}
                   </div>
-                </div>
+                </div> */}
 
               </CardContent>
             </Card>
@@ -587,6 +587,7 @@ export default function Programs() {
           </CardContent>
         </Card>
       )}
+{/* 
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -840,7 +841,6 @@ export default function Programs() {
         </DialogContent>
       </Dialog>
 
-      {/* Cohort Dialog */}
 
       <Dialog open={isCohortDialogOpen} onOpenChange={setIsCohortDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -1027,14 +1027,13 @@ export default function Programs() {
               ))}
             </div>
           )}
-
           <DialogFooter>
             <Button onClick={() => setIsStudentsPopupOpen(false)}>
               Close
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
 
 

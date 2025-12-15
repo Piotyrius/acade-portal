@@ -13,6 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 // Lazy load pages for code splitting
 const Programs = lazy(() => import("./pages/catalog/Programs"));
+const Courses = lazy(() => import("./pages/catalog/Courses"));
+const Cohorts = lazy(() => import("./pages/catalog/Cohorts"));
 const Sessions = lazy(() => import("./pages/catalog/Sessions"));
 const Applications = lazy(() => import("./pages/admissions/Applications"));
 const Enrollments = lazy(() => import("./pages/admissions/Enrollments"));
@@ -52,6 +54,7 @@ const Organizations = lazy(() => import("./pages/subscriptions/Organizations"));
 const SubscriptionPlans = lazy(() => import("./pages/subscriptions/SubscriptionPlans"));
 const Subscriptions = lazy(() => import("./pages/subscriptions/Subscriptions"));
 const MySubscription = lazy(() => import("./pages/subscriptions/MySubscription"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const PageSkeleton = () => (
   <div className="space-y-6 p-6">
@@ -63,6 +66,7 @@ const PageSkeleton = () => (
 import PaymentWrapper from "./components/PaymentWrapper";
 import SubscriptionWrapper from "./components/SubscriptionWrapper";
 import AdmissionsWrapper from "./components/AdmissionsWrapper";
+import ProgramsWrapper from "./components/ProgramsWrapper";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +95,14 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/reset-password"
+            element={
+              <Suspense fallback={<PageSkeleton />}>
+                <ResetPassword />
+              </Suspense>
+            }
+          />
           <Route path="/verify" element={
             <Suspense fallback={<PageSkeleton />}>
               <VerifyCertificate />
@@ -113,14 +125,6 @@ const App = () => (
             </RequireAuth>
           }>
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="catalog/programs" element={
-              <Suspense fallback={<PageSkeleton />}>
-                <Programs />
-              </Suspense>
-            } />
-            
-            {/* <Route path="catalog/courses" element={<Courses />} />
-            <Route path="catalog/cohorts" element={<Cohorts />} /> */}
 
             <Route path="/admissions" element={ <AdmissionsWrapper /> }>
               <Route path="applications" element={
@@ -237,8 +241,8 @@ const App = () => (
             } />
 
             <Route path="/payments" element={ <PaymentWrapper /> } >
-              {/* <Route index element={<PaymentsUnified />} /> */}
               <Route index element={<Payments />} />
+              {/* <Route index element={<PaymentsUnified />} /> */}
               {/* <Route path="unified" element={<PaymentsUnified />} /> */}
               <Route path="invoices" element={<Invoices />} />
               <Route path="payments" element={<Payments />} />
@@ -255,6 +259,15 @@ const App = () => (
               <Route path="plans" element={<SubscriptionPlans />} />
               <Route path="subscriptions" element={<Subscriptions />} />
               <Route path="my-subscription" element={<MySubscription />} />
+            
+            </Route>
+
+            <Route path="/catalog" element={ <ProgramsWrapper /> } >
+
+              <Route index element={<Programs />} />
+              <Route path="programs" element={<Programs />} />
+              <Route path="courses" element={<Courses />} />
+              <Route path="cohorts" element={<Cohorts />} />
             
             </Route>
 
