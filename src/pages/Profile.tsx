@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuthStore } from '@/store/authStore';
@@ -249,15 +249,15 @@ export default function Profile() {
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
                     {displayUser?.profile_picture_url ? (
-                      <img 
+                      <AvatarImage 
                         src={displayUser.profile_picture_url} 
-                        className="h-full w-full object-cover"
+                        alt={`${displayUser?.firstName || displayUser?.first_name} ${displayUser?.lastName || displayUser?.last_name}`}
+                        className="object-cover"
                       />
-                    ) : (
-                      <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                        {initials}
-                      </AvatarFallback>
-                    )}
+                    ) : null}
+                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                      {initials}
+                    </AvatarFallback>
                   </Avatar>
 
                   <div>
@@ -301,12 +301,15 @@ export default function Profile() {
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
                     {displayUser?.profile_picture_url ? (
-                      <img src={displayUser.profile_picture_url} className="h-full w-full object-cover" />
-                    ) : (
-                      <AvatarFallback className="bg-primary text-white text-2xl">
-                        {initials}
-                      </AvatarFallback>
-                    )}
+                      <AvatarImage 
+                        src={displayUser.profile_picture_url} 
+                        alt={`${displayUser?.firstName || displayUser?.first_name} ${displayUser?.lastName || displayUser?.last_name}`}
+                        className="object-cover"
+                      />
+                    ) : null}
+                    <AvatarFallback className="bg-primary text-white text-2xl">
+                      {initials}
+                    </AvatarFallback>
                   </Avatar>
                   
                   <div>

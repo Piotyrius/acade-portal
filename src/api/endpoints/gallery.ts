@@ -100,15 +100,8 @@ export async function uploadProfilePicture(file: File) {
   const form = new FormData();
   form.append('profile_picture', file);
 
-  const { data } = await api.post(
-    '/api/v1/users/upload_profile_picture/',
-    form,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
-  );
+  // Don't set Content-Type header - browser sets it automatically with boundary
+  const { data } = await api.post('/api/v1/users/upload_profile_picture/', form);
 
   return data;
 }

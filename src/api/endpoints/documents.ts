@@ -56,7 +56,7 @@ export async function deleteDocument(id: string): Promise<void> {
  * Download a document file
  */
 export async function downloadDocument(id: string): Promise<Blob> {
-  const response = await api.post(`/api/v1/documents/documents/${id}/download/`, {}, {
+  const response = await api.get(`/api/v1/documents/documents/${id}/download/`, {
     responseType: 'blob',
   });
   return response.data;

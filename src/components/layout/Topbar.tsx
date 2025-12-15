@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/store/authStore';
-import { logout } from '@/api/endpoints/auth';
+import { logout, fetchMe } from '@/api/endpoints/auth';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,18 +10,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Moon, Sun } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { LogOut, User, Moon, Sun, Search, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { LuMenu } from "react-icons/lu";
+import { CommandPalette, useCommandPalette } from '@/components/search/CommandPalette';
+import { GlobalSearch } from '@/components/search/GlobalSearch';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { user, refreshToken, clearAuth } = useAuthStore();
   const navigate = useNavigate();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { open: commandOpen, setOpen: setCommandOpen } = useCommandPalette();
+
+  // Fetch full user data to get profile picture
+  const { data: fullUserData } = useQuery({
+    queryKey: ['me'],
+    queryFn: fetchMe,
+    enabled: !!user, // Only fetch if user is logged in
+  });
+
+  const displayUser = fullUserData || user;
 
 
 const handleLogout = async () => {
@@ -57,7 +71,18 @@ const handleLogout = async () => {
         <Badge variant="secondary" className='topbar_user_role'>{user?.role}</Badge>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 flex-1 justify-end max-w-md">
+        <GlobalSearch />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setCommandOpen(true)}
+          className="hidden md:flex"
+          title="Open command palette (Cmd+K)"
+        >
+          <Search className="h-5 w-5" />
+        </Button>
+        <NotificationCenter />
         <Button variant="ghost" size="icon" onClick={toggleTheme}>
           {theme === 'light' ? (
             <Moon className="h-5 w-5" />
@@ -65,7 +90,6 @@ const handleLogout = async () => {
             <Sun className="h-5 w-5" />
           )}
         </Button>
-
         <LuMenu className='menu_icon' onClick={onMenuClick} />
 
 
@@ -73,6 +97,12 @@ const handleLogout = async () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar>
+                {(displayUser as any)?.profile_picture_url ? (
+                  <AvatarImage 
+                    src={(displayUser as any).profile_picture_url} 
+                    alt={`${displayUser?.firstName} ${displayUser?.lastName}`}
+                  />
+                ) : null}
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
@@ -99,6 +129,7 @@ const handleLogout = async () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
     </header>
   );
 }

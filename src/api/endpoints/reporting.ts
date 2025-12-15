@@ -80,17 +80,18 @@ export async function exportCertificates(params?: {
 
 /**
  * Export payroll data as CSV
+ * Note: This redirects to timekeeping payroll export endpoint
+ * @deprecated Use exportPayroll from timekeeping.ts instead
  */
 export async function exportPayroll(params?: { 
   from?: string; 
   to?: string;
   lecturer?: string;
 }): Promise<Blob> {
-  const response = await api.get('/api/v1/reporting/reports/payroll/', {
-    params,
-    responseType: 'blob',
-  });
-  return response.data;
+  // Redirect to timekeeping payroll export endpoint
+  // Import dynamically to avoid circular dependency
+  const timekeepingModule = await import('./timekeeping');
+  return timekeepingModule.exportPayroll(params?.from, params?.to);
 }
 
 /**

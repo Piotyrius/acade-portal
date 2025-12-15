@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getGrades, createGrade, updateGrade, moderateGrade, GradeDto } from '@/api/endpoints/assessment';
 import { getAssessments } from '@/api/endpoints/assessment';
 import { getUsers } from '@/api/endpoints/auth';
+import { getEnrollments } from '@/api/endpoints/admissions';
 import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -55,11 +56,30 @@ export default function Grades() {
     queryFn: () => getAssessments(),
   });
 
-  const { data: students = [] } = useQuery({
+  // Get the cohort from the selected assessment
+  const selectedAssessmentObj = assessments.find((a: any) => a.id === formData.assessment);
+  const cohortId = selectedAssessmentObj?.cohort;
+
+  // Get enrollments for the selected assessment's cohort
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ['enrollments', cohortId],
+    queryFn: () => getEnrollments(cohortId, 'ACTIVE'),
+    enabled: !!(user?.role === 'ADMIN' || user?.role === 'LECTURER') && !!cohortId,
+  });
+
+  // Get all students (we'll filter by enrollments)
+  const { data: allStudents = [] } = useQuery({
     queryKey: ['students'],
     queryFn: () => getUsers('STUDENT'),
     enabled: user?.role === 'ADMIN' || user?.role === 'LECTURER',
   });
+
+  // Filter students to only show enrolled students when an assessment is selected
+  const students = cohortId && enrollments.length > 0
+    ? allStudents.filter((student: any) => 
+        enrollments.some((enrollment: any) => enrollment.student === student.id)
+      )
+    : allStudents;
 
   const createMutation = useMutation({
     mutationFn: createGrade,
@@ -393,7 +413,10 @@ export default function Grades() {
                 <Label htmlFor="assessment">Assessment *</Label>
                 <Select
                   value={formData.assessment}
-                  onValueChange={(value) => setFormData({ ...formData, assessment: value })}
+                  onValueChange={(value) => {
+                    // Clear student selection when assessment changes
+                    setFormData({ ...formData, assessment: value, student: '' });
+                  }}
                   disabled={!!editingGrade}
                 >
                   <SelectTrigger>
@@ -410,22 +433,32 @@ export default function Grades() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="student">Student *</Label>
-                <Select
-                  value={formData.student}
-                  onValueChange={(value) => setFormData({ ...formData, student: value })}
-                  disabled={!!editingGrade}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select student" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student: any) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.first_name} {student.last_name} ({student.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {!formData.assessment ? (
+                  <div className="text-sm text-muted-foreground p-2 border rounded-md">
+                    Please select an assessment first to see enrolled students
+                  </div>
+                ) : students.length === 0 ? (
+                  <div className="text-sm text-muted-foreground p-2 border rounded-md">
+                    No enrolled students found for this assessment's cohort
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.student}
+                    onValueChange={(value) => setFormData({ ...formData, student: value })}
+                    disabled={!!editingGrade}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students.map((student: any) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.first_name} {student.last_name} ({student.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

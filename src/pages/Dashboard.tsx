@@ -1,13 +1,22 @@
 import { useAuthStore } from '@/store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, ClipboardCheck, Award, TrendingUp, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, BookOpen, ClipboardCheck, Award, TrendingUp, Calendar, DollarSign, FileText, Plus, ArrowRight, Clock, GraduationCap, FileCheck, Upload } from 'lucide-react';
 import { getCohorts } from '@/api/endpoints/catalog';
-import { getEnrollments } from '@/api/endpoints/admissions';
+import { getEnrollments, getApplications } from '@/api/endpoints/admissions';
 import { getCertificates } from '@/api/endpoints/certificates';
 import { getMySessions } from '@/api/endpoints/catalog';
-import { format, isToday, isTomorrow, parseISO } from 'date-fns';
+import { format, isToday, isTomorrow, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { getAttendanceRecords } from '@/api/endpoints/attendance';
+import { getInvoices, getPayments } from '@/api/endpoints/payments';
+import { getWorkLogs, getTimesheets, getRates } from '@/api/endpoints/timekeeping';
+import { getAssessments, getSubmissions, getGrades } from '@/api/endpoints/assessment';
+import { getAnalyticsOverview } from '@/api/endpoints/reporting';
+import { ClickableMetricCard } from '@/components/dashboard/ClickableMetricCard';
+import { ActivityTimeline } from '@/components/dashboard/ActivityTimeline';
+import { useNavigate } from 'react-router-dom';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 function getPercentChange(current: number, previous: number) {
   if (previous === 0) return '+0%';
@@ -17,8 +26,8 @@ function getPercentChange(current: number, previous: number) {
 }
 
 export default function Dashboard() {
-
   const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
@@ -44,6 +53,87 @@ export default function Dashboard() {
   const { data: attendanceRecords = [] } = useQuery({
     queryKey: ['attendance'],
     queryFn: () => getAttendanceRecords(),
+  });
+
+  // Admin-specific queries
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['invoices-dashboard'],
+    queryFn: () => getInvoices(),
+    enabled: user?.role === 'ADMIN',
+  });
+
+  const { data: payments = [] } = useQuery({
+    queryKey: ['payments-dashboard'],
+    queryFn: () => getPayments(),
+    enabled: user?.role === 'ADMIN',
+  });
+
+  const { data: applications = [] } = useQuery({
+    queryKey: ['applications-dashboard'],
+    queryFn: () => getApplications(),
+    enabled: user?.role === 'ADMIN',
+  });
+
+  const { data: analyticsOverview, error: analyticsError } = useQuery({
+    queryKey: ['analytics-overview-dashboard'],
+    queryFn: () => getAnalyticsOverview(),
+    enabled: user?.role === 'ADMIN',
+    retry: false, // Don't retry on error
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    onError: (error) => {
+      // Silently handle analytics errors - don't break the dashboard
+      console.warn('Analytics overview failed:', error);
+    },
+  });
+
+  // Lecturer-specific queries
+  const { data: workLogs = [] } = useQuery({
+    queryKey: ['worklogs-dashboard', user?.id],
+    queryFn: () => getWorkLogs({ lecturer: user?.id }),
+    enabled: user?.role === 'LECTURER' && !!user?.id,
+  });
+
+  const { data: timesheets = [] } = useQuery({
+    queryKey: ['timesheets-dashboard', user?.id],
+    queryFn: () => getTimesheets(user?.id),
+    enabled: user?.role === 'LECTURER' && !!user?.id,
+  });
+
+  const { data: rates = [] } = useQuery({
+    queryKey: ['rates-dashboard', user?.id],
+    queryFn: () => getRates(user?.id),
+    enabled: user?.role === 'LECTURER' && !!user?.id,
+  });
+
+  const { data: submissions = [] } = useQuery({
+    queryKey: ['submissions-dashboard-lecturer'],
+    queryFn: () => getSubmissions(),
+    enabled: user?.role === 'LECTURER',
+  });
+
+  const { data: grades = [] } = useQuery({
+    queryKey: ['grades-dashboard-lecturer'],
+    queryFn: () => getGrades(),
+    enabled: user?.role === 'LECTURER',
+  });
+
+  // Student-specific queries
+  const { data: studentAssessments = [] } = useQuery({
+    queryKey: ['assessments-dashboard-student'],
+    queryFn: () => getAssessments(),
+    enabled: user?.role === 'STUDENT',
+  });
+
+  const { data: studentSubmissions = [] } = useQuery({
+    queryKey: ['submissions-dashboard-student', user?.id],
+    queryFn: () => getSubmissions(),
+    enabled: user?.role === 'STUDENT' && !!user?.id,
+  });
+
+  const { data: studentGrades = [] } = useQuery({
+    queryKey: ['grades-dashboard-student', user?.id],
+    queryFn: () => getGrades(undefined, user?.id),
+    enabled: user?.role === 'STUDENT' && !!user?.id,
   });
 
 
@@ -150,14 +240,43 @@ export default function Dashboard() {
 
   const attendanceChange = getPercentChange(attendanceThisMonth, attendanceLastMonth);
 
+  // Calculate additional metrics
+  const pendingApplications = applications.filter((a: any) => a.status === 'PENDING').length;
+  const outstandingInvoices = invoices.filter((i: any) => i.status === 'OVERDUE' || i.status === 'ISSUED').length;
+  const totalRevenue = payments
+    .filter((p: any) => p.status === 'COMPLETED')
+    .reduce((sum: number, p: any) => sum + parseFloat(p.amount || '0'), 0);
+  
+  const pendingSubmissions = submissions.filter((s: any) => !s.graded).length;
+  const hoursThisMonth = workLogs
+    .filter((w: any) => {
+      const logDate = new Date(w.start_at);
+      return logDate >= lastMonth;
+    })
+    .reduce((sum: number, w: any) => sum + (w.minutes || 0) / 60, 0);
+  
+  const pendingAssessments = studentAssessments.filter((a: any) => {
+    const dueDate = new Date(a.due_at);
+    return dueDate > new Date() && !studentSubmissions.some((s: any) => s.assessment === a.id);
+  }).length;
 
-  const stats = [
+  const averageGrade = studentGrades.length > 0
+    ? studentGrades.reduce((sum: number, g: any) => {
+        const score = parseFloat(g.score || '0');
+        const maxScore = parseFloat(g.max_score || '1');
+        return sum + (score / maxScore) * 100;
+      }, 0) / studentGrades.length
+    : 0;
+
+  // Admin stats
+  const adminStats = [
     {
-      title: user?.role === 'ADMIN' ? 'Total Students' : 'Active Students',
-      value: (user?.role === 'ADMIN' ? totalStudentsCount : activeStudentsCount).toString(),
+      title: 'Total Students',
+      value: totalStudentsCount.toString(),
       change: studentsChange,
       icon: Users,
       trend: 'up' as const,
+      href: '/admissions/enrollments',
     },
     {
       title: 'Active Cohorts',
@@ -165,6 +284,79 @@ export default function Dashboard() {
       change: cohortsChange,
       icon: BookOpen,
       trend: 'up' as const,
+      href: '/catalog/cohorts',
+    },
+    {
+      title: 'Pending Applications',
+      value: pendingApplications.toString(),
+      change: '+0%',
+      icon: FileText,
+      trend: 'neutral' as const,
+      href: '/admissions/applications',
+    },
+    {
+      title: 'Outstanding Invoices',
+      value: outstandingInvoices.toString(),
+      change: '+0%',
+      icon: DollarSign,
+      trend: outstandingInvoices > 0 ? 'down' as const : 'neutral' as const,
+      href: '/payments/invoices',
+    },
+  ];
+
+  // Lecturer stats
+  const lecturerStats = [
+    {
+      title: 'Hours This Month',
+      value: hoursThisMonth.toFixed(1),
+      change: '+0%',
+      icon: Clock,
+      trend: 'up' as const,
+      href: '/timekeeping/worklogs',
+    },
+    {
+      title: 'Pending Submissions',
+      value: pendingSubmissions.toString(),
+      change: '+0%',
+      icon: FileCheck,
+      trend: 'neutral' as const,
+      href: '/assessment/submissions',
+    },
+    {
+      title: 'Upcoming Sessions',
+      value: upcomingSessions.length.toString(),
+      change: '+0%',
+      icon: Calendar,
+      trend: 'neutral' as const,
+      href: '/lecturer/sessions',
+    },
+    {
+      title: 'Active Rate',
+      value: rates.find((r: any) => r.active) ? 'Set' : 'Not Set',
+      change: '',
+      icon: DollarSign,
+      trend: 'neutral' as const,
+      href: '/timekeeping/rates',
+    },
+  ];
+
+  // Student stats
+  const studentStats = [
+    {
+      title: 'Pending Assessments',
+      value: pendingAssessments.toString(),
+      change: '+0%',
+      icon: FileCheck,
+      trend: 'neutral' as const,
+      href: '/assessment/assessments',
+    },
+    {
+      title: 'Average Grade',
+      value: averageGrade > 0 ? averageGrade.toFixed(1) + '%' : 'N/A',
+      change: '+0%',
+      icon: GraduationCap,
+      trend: 'up' as const,
+      href: '/assessment/grades',
     },
     {
       title: 'Attendance Rate',
@@ -172,15 +364,19 @@ export default function Dashboard() {
       change: attendanceChange,
       icon: ClipboardCheck,
       trend: 'up' as const,
+      href: '/attendance/list',
     },
     {
-      title: 'Certificates Issued',
-      value: certificatesIssued.toString(),
-      change: certificatesChange,
+      title: 'Certificates',
+      value: certificates.filter((c: any) => c.student === user?.id && c.status === 'ISSUED').length.toString(),
+      change: '+0%',
       icon: Award,
       trend: 'up' as const,
+      href: '/certificates/list',
     },
   ];
+
+  const stats = user?.role === 'ADMIN' ? adminStats : user?.role === 'LECTURER' ? lecturerStats : studentStats;
 
   return (
     <div className="space-y-6">
@@ -193,21 +389,73 @@ export default function Dashboard() {
         </p>
       </div>
 
+      {/* Quick Actions */}
+      {user?.role === 'ADMIN' && (
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => navigate('/admissions/applications')} variant="outline">
+            <Plus className="mr-2 h-4 w-4" />
+            New Application
+          </Button>
+          <Button onClick={() => navigate('/admissions/enrollments')} variant="outline">
+            <Plus className="mr-2 h-4 w-4" />
+            New Enrollment
+          </Button>
+          <Button onClick={() => navigate('/payments/invoices')} variant="outline">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Invoice
+          </Button>
+          <Button onClick={() => navigate('/reporting')} variant="outline">
+            <FileText className="mr-2 h-4 w-4" />
+            View Reports
+          </Button>
+        </div>
+      )}
+
+      {user?.role === 'LECTURER' && (
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => navigate('/timekeeping/worklogs')} variant="outline">
+            <Plus className="mr-2 h-4 w-4" />
+            Log Hours
+          </Button>
+          <Button onClick={() => navigate('/lecturer/sessions')} variant="outline">
+            <Calendar className="mr-2 h-4 w-4" />
+            View Sessions
+          </Button>
+          <Button onClick={() => navigate('/assessment/submissions')} variant="outline">
+            <FileCheck className="mr-2 h-4 w-4" />
+            Grade Submissions
+          </Button>
+        </div>
+      )}
+
+      {user?.role === 'STUDENT' && (
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => navigate('/assessment/assessments')} variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Submit Assignment
+          </Button>
+          <Button onClick={() => navigate('/catalog/sessions')} variant="outline">
+            <Calendar className="mr-2 h-4 w-4" />
+            View Schedule
+          </Button>
+          <Button onClick={() => navigate('/certificates/list')} variant="outline">
+            <Award className="mr-2 h-4 w-4" />
+            My Certificates
+          </Button>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                <TrendingUp className="h-3 w-3 text-success" />
-                <span className="text-success">{stat.change}</span> from last month
-              </p>
-            </CardContent>
-          </Card>
+          <ClickableMetricCard
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            change={stat.change}
+            icon={stat.icon}
+            trend={stat.trend}
+            href={stat.href}
+          />
         ))}
       </div>
 
@@ -225,7 +473,8 @@ export default function Dashboard() {
                   upcomingSessions.map((session) => (
                     <div
                       key={session.id}
-                      className="flex items-center justify-between p-4 border border-border rounded-lg"
+                      className="flex items-center justify-between p-4 border border-border rounded-lg cursor-pointer hover:bg-accent transition-colors"
+                      onClick={() => navigate('/lecturer/sessions')}
                     >
                       <div className="flex items-center gap-3">
                         <div className="rounded-lg bg-primary/10 p-2">
@@ -239,10 +488,11 @@ export default function Dashboard() {
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex items-center gap-2">
                         <p className="text-sm font-medium">
                           {session.location || 'No location'}
                         </p>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
                   ))
@@ -252,12 +502,41 @@ export default function Dashboard() {
                   </p>
                 )}
               </div>
+            ) : user?.role === 'STUDENT' ? (
+              <div className="space-y-4">
+                {studentAssessments.slice(0, 3).map((assessment: any) => (
+                  <div
+                    key={assessment.id}
+                    className="flex items-center justify-between p-4 border border-border rounded-lg cursor-pointer hover:bg-accent transition-colors"
+                    onClick={() => navigate('/assessment/assessments')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-primary/10 p-2">
+                        <FileCheck className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{assessment.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Due: {format(parseISO(assessment.due_at), 'MMM dd, yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                ))}
+                {studentAssessments.length === 0 && (
+                  <p className="text-muted-foreground text-center py-8">
+                    No assessments available
+                  </p>
+                )}
+              </div>
             ) : (
               <div className="space-y-4">
-                {enrollments && enrollments.slice(0, 3).map((enrollment) => (
+                {enrollments && enrollments.slice(0, 3).map((enrollment: any) => (
                   <div
                     key={enrollment.id}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg"
+                    className="flex items-center justify-between p-4 border border-border rounded-lg cursor-pointer hover:bg-accent transition-colors"
+                    onClick={() => navigate('/admissions/enrollments')}
                   >
                     <div className="flex items-center gap-3">
                       <div className="rounded-lg bg-primary/10 p-2">
@@ -270,11 +549,14 @@ export default function Dashboard() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{enrollment.status}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(parseISO(enrollment.enrolled_at), 'MMM dd, yyyy')}
-                      </p>
+                    <div className="text-right flex items-center gap-2">
+                      <div>
+                        <p className="text-sm font-medium">{enrollment.status}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(parseISO(enrollment.enrolled_at), 'MMM dd, yyyy')}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                 ))}
@@ -290,26 +572,82 @@ export default function Dashboard() {
 
         <Card className="col-span-3">
           <CardHeader>
-            <CardTitle>Recent Certificates</CardTitle>
+            <CardTitle>
+              {user?.role === 'ADMIN' ? 'Recent Certificates' : user?.role === 'STUDENT' ? 'My Certificates' : 'Recent Activity'}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {certificates && certificates.slice(0, 4).map((cert) => (
-                <div key={cert.id} className="flex gap-3">
-                  <div className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Certificate Issued</p>
-                    <p className="text-xs text-muted-foreground">{cert.student_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(parseISO(cert.issued_at), 'MMM dd, yyyy')}
+              {user?.role === 'ADMIN' && (
+                <>
+                  {certificates && certificates.slice(0, 4).map((cert: any) => (
+                    <div
+                      key={cert.id}
+                      className="flex gap-3 cursor-pointer hover:bg-accent p-2 rounded transition-colors"
+                      onClick={() => navigate('/certificates/list')}
+                    >
+                      <div className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Certificate Issued</p>
+                        <p className="text-xs text-muted-foreground">{cert.student_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(parseISO(cert.issued_at), 'MMM dd, yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {(!certificates || certificates.length === 0) && (
+                    <p className="text-muted-foreground text-center py-8">
+                      No certificates issued yet
                     </p>
-                  </div>
-                </div>
-              ))}
-              {(!certificates || certificates.length === 0) && (
-                <p className="text-muted-foreground text-center py-8">
-                  No certificates issued yet
-                </p>
+                  )}
+                </>
+              )}
+              {user?.role === 'LECTURER' && (
+                <>
+                  {submissions.slice(0, 4).map((submission: any) => (
+                    <div
+                      key={submission.id}
+                      className="flex gap-3 cursor-pointer hover:bg-accent p-2 rounded transition-colors"
+                      onClick={() => navigate('/assessment/submissions')}
+                    >
+                      <div className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">New Submission</p>
+                        <p className="text-xs text-muted-foreground">Needs grading</p>
+                      </div>
+                    </div>
+                  ))}
+                  {submissions.length === 0 && (
+                    <p className="text-muted-foreground text-center py-8">
+                      No pending submissions
+                    </p>
+                  )}
+                </>
+              )}
+              {user?.role === 'STUDENT' && (
+                <>
+                  {certificates.filter((c: any) => c.student === user?.id).slice(0, 4).map((cert: any) => (
+                    <div
+                      key={cert.id}
+                      className="flex gap-3 cursor-pointer hover:bg-accent p-2 rounded transition-colors"
+                      onClick={() => navigate('/certificates/list')}
+                    >
+                      <div className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Certificate Earned</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(parseISO(cert.issued_at), 'MMM dd, yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {certificates.filter((c: any) => c.student === user?.id).length === 0 && (
+                    <p className="text-muted-foreground text-center py-8">
+                      No certificates yet
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </CardContent>

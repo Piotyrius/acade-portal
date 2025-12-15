@@ -22,7 +22,7 @@ export async function createWorkLog(payload: {
 }
 
 export async function exportPayroll(from?: string, to?: string): Promise<Blob> {
-  const { data } = await api.get('/api/v1/timekeeping/payroll/export', {
+  const { data } = await api.get('/api/v1/timekeeping/payroll/export/', {
     params: { from, to },
     responseType: 'blob',
   });

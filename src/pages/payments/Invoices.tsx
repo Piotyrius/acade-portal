@@ -35,6 +35,8 @@ import {
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getDiscounts, DiscountDto } from '@/api/endpoints/payments';
+import { CardListSkeleton } from '@/components/ui/table-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Invoices() {
   const { user } = useAuthStore();
@@ -154,7 +156,8 @@ export default function Invoices() {
   });
 
   const createFromEnrollmentMutation = useMutation({
-    mutationFn: createInvoiceForEnrollment,
+    mutationFn: ({ enrollmentId, paymentPlanId, discountIds }: { enrollmentId: string; paymentPlanId: string; discountIds?: string[] }) =>
+      createInvoiceForEnrollment(enrollmentId, paymentPlanId, discountIds),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['invoices'] });
       toast({ title: 'Success', description: 'Invoice created from enrollment successfully' });
@@ -270,7 +273,19 @@ export default function Invoices() {
       });
       return;
     }
-    createFromEnrollmentMutation.mutate(formData.enrollment);
+    if (!formData.payment_plan) {
+      toast({
+        title: 'Error',
+        description: 'Please select a payment plan',
+        variant: 'destructive',
+      });
+      return;
+    }
+    createFromEnrollmentMutation.mutate({
+      enrollmentId: formData.enrollment,
+      paymentPlanId: formData.payment_plan,
+      discountIds: selectedDiscounts.length > 0 ? selectedDiscounts : undefined,
+    });
   };
 
   const getStatusVariant = (status: string) => {
@@ -323,8 +338,17 @@ export default function Invoices() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-9 w-40 bg-muted animate-pulse rounded" />
-        <div className="h-96 bg-muted animate-pulse rounded-lg" />
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+        <CardListSkeleton count={5} />
       </div>
     );
   }
@@ -664,7 +688,7 @@ export default function Invoices() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Invoice from Enrollment</DialogTitle>
-            <DialogDescription>Select an enrollment to automatically create an invoice</DialogDescription>
+            <DialogDescription>Select an enrollment and payment plan to automatically create an invoice</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -685,6 +709,51 @@ export default function Invoices() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="payment-plan-select">Payment Plan *</Label>
+              <Select
+                value={formData.payment_plan || ''}
+                onValueChange={(value) => setFormData({ ...formData, payment_plan: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {paymentPlans.map((plan: any) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} ({plan.type_display || plan.type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Discounts (Optional)</Label>
+              <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-2">
+                {discounts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-2">No active discounts available</p>
+                ) : (
+                  discounts.map((discount: DiscountDto) => (
+                    <div key={discount.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`discount-${discount.id}`}
+                        checked={selectedDiscounts.includes(discount.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedDiscounts([...selectedDiscounts, discount.id]);
+                          } else {
+                            setSelectedDiscounts(selectedDiscounts.filter((id) => id !== discount.id));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`discount-${discount.id}`} className="flex-1 cursor-pointer text-sm">
+                        {discount.name} - {discount.type === 'PERCENTAGE' ? `${discount.value}%` : formatCurrency(discount.value)}
+                      </Label>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsCreateFromEnrollmentOpen(false)}>
@@ -693,7 +762,7 @@ export default function Invoices() {
             <Button
               type="button"
               onClick={handleCreateFromEnrollment}
-              disabled={createFromEnrollmentMutation.isPending || !formData.enrollment}
+              disabled={createFromEnrollmentMutation.isPending || !formData.enrollment || !formData.payment_plan}
             >
               Create Invoice
             </Button>
