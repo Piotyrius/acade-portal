@@ -178,6 +178,11 @@
     id: string;
     invoice: string;
     student: string;
+    // Optional computed fields (backend may include these)
+    enrollment?: string;
+    invoice_number?: string;
+    student_name?: string;
+    cohort_name?: string;
     payment_method: 'MANUAL' | 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'CHECK' | 'OTHER';
     amount: string;
     currency: string;

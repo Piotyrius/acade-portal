@@ -14,6 +14,9 @@ export interface UserDto {
   is_staff?: boolean;
   is_superuser?: boolean;
   mfa_enabled?: boolean;
+  profile_picture: string;
+  profile_picture_url: string;
+
 }
 
 export interface TokenPair {
