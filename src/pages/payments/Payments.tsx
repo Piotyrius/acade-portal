@@ -77,6 +77,23 @@ export default function Payments() {
     enabled: user?.role === 'ADMIN',
   });
 
+  const getEnrollmentLabelForPayment = (payment: PaymentDto): string => {
+    if (payment.student_name || payment.cohort_name) {
+      const student = payment.student_name || payment.student || 'Unknown Student';
+      const cohort = payment.cohort_name || 'Unknown Cohort';
+      return `${student} - ${cohort}`;
+    }
+
+    const invoice = invoices.find((i: any) => i.id === payment.invoice);
+    if (invoice) {
+      const student = invoice.student_name || payment.student || 'Unknown Student';
+      const cohort = invoice.cohort_name || invoice.enrollment || 'Unknown Cohort';
+      return `${student} - ${cohort}`;
+    }
+
+    return payment.enrollment || '';
+  };
+
   console.log(invoices)
 
 
@@ -198,7 +215,7 @@ const payload: PaymentRequest = {
   payment_gateway: "MANUAL",
 
   gateway_transaction_id: formData.transaction_id || "",
-  gateway_response: "", // REQUIRED!
+  gateway_response: "", 
 
 
   status: "PENDING",
@@ -211,7 +228,7 @@ const payload: PaymentRequest = {
   invoice: formData.invoice,
   student: formData.student,
 
-  recorded_by: user.id // REQUIRED!
+  recorded_by: user.id
 };
 
 
@@ -388,6 +405,9 @@ const payload: PaymentRequest = {
                     <p className="text-sm font-medium">Amount: {formatCurrency(payment.amount)}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Processed: {new Date(payment.processed_at).toLocaleDateString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {getEnrollmentLabelForPayment(payment) || 'Enrollment: Unknown'}
                     </p>
                     {payment.notes && (
                       <p className="text-xs text-muted-foreground mt-1">Notes: {payment.notes}</p>

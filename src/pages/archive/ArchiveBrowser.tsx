@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +54,7 @@ export default function ArchiveBrowser() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [ownerTypeFilter, setOwnerTypeFilter] = useState<string>('all');
   const [deletedByFilter, setDeletedByFilter] = useState<string>('all');
@@ -61,7 +62,15 @@ export default function ArchiveBrowser() {
   const [selectedFile, setSelectedFile] = useState<FileObjectDto | null>(null);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
-  const { data: archivedFiles = [], isLoading } = useQuery({
+  // Debounce search so typing doesn't refetch + show full-page skeleton each keystroke.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setSearchTerm(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  const { data: archivedFiles = [], isLoading, isFetching } = useQuery({
     queryKey: ['archivedFiles', ownerTypeFilter, deletedByFilter, searchTerm],
     queryFn: () =>
       getArchivedFiles({
@@ -69,6 +78,7 @@ export default function ArchiveBrowser() {
         deleted_by: deletedByFilter !== 'all' ? deletedByFilter : undefined,
         search: searchTerm || undefined,
       }),
+    placeholderData: keepPreviousData,
     enabled: user?.role === 'ADMIN',
   });
 
@@ -137,7 +147,7 @@ export default function ArchiveBrowser() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading && archivedFiles.length === 0) {
     return (
       <div className="space-y-6">
         <div className="h-9 w-48 bg-muted animate-pulse rounded" />
@@ -168,8 +178,8 @@ export default function ArchiveBrowser() {
                 <Input
                   placeholder="Search files..."
                   className="pl-9"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                 />
               </div>
               <Select value={ownerTypeFilter} onValueChange={setOwnerTypeFilter}>
@@ -199,6 +209,11 @@ export default function ArchiveBrowser() {
             </div>
 
             {/* Table */}
+            {isFetching && (
+              <p className="text-xs text-muted-foreground">
+                Searching…
+              </p>
+            )}
             {archivedFiles.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Archive className="h-12 w-12 mx-auto mb-4 opacity-50" />

@@ -51,7 +51,7 @@ export default function Users() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('STUDENT');
 
   // Form state
   const [formData, setFormData] = useState({

@@ -25,14 +25,38 @@ export default function Profile() {
   const [mfaSetupOpen, setMfaSetupOpen] = useState(false);
   const [mfaDisableOpen, setMfaDisableOpen] = useState(false);
   const [mfaSecret, setMfaSecret] = useState<string | null>(null);
+  const [avatarBuster, setAvatarBuster] = useState(() => Date.now());
+  const [pendingProfilePictureFile, setPendingProfilePictureFile] = useState<File | null>(null);
+  // Fetch full user data (includes profile picture + MFA state)
   const { data: currentUser, isLoading } = useQuery({
     queryKey: ['me'],
     queryFn: fetchMe,
-    enabled: !user, // Only fetch if user not in store
+    enabled: !!user,
   });
 
-  const displayUser = user || currentUser;
-  const mfaEnabled = (displayUser as any)?.mfa_enabled || false;
+  const displayUser = currentUser || user;
+  const firstName = displayUser
+    ? 'firstName' in displayUser
+      ? displayUser.firstName
+      : displayUser.first_name
+    : '';
+  const lastName = displayUser
+    ? 'lastName' in displayUser
+      ? displayUser.lastName
+      : displayUser.last_name
+    : '';
+  const profilePictureUrl: string | undefined = (displayUser as any)?.profile_picture_url || undefined;
+  const profilePictureSrc = profilePictureUrl
+    ? `${profilePictureUrl}${profilePictureUrl.includes('?') ? '&' : '?'}v=${avatarBuster}`
+    : undefined;
+  const mfaEnabled = Boolean((displayUser as any)?.mfa_enabled);
+
+  // Bump cache buster whenever /me refetches so the browser doesn't reuse the old cached image.
+  useEffect(() => {
+    if (currentUser) {
+      setAvatarBuster(Date.now());
+    }
+  }, [currentUser]);
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -44,12 +68,12 @@ export default function Profile() {
   useEffect(() => {
     if (displayUser) {
       setFormData({
-        first_name: (displayUser as any).firstName || (displayUser as any).first_name || '',
-        last_name: (displayUser as any).lastName || (displayUser as any).last_name || '',
+        first_name: firstName || '',
+        last_name: lastName || '',
         email: displayUser.email || '',
       });
     }
-  }, [displayUser]);
+  }, [displayUser, firstName, lastName]);
 
   const updateMutation = useMutation({
     mutationFn: updateProfile,
@@ -77,12 +101,27 @@ export default function Profile() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate({
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-    });
+
+    try {
+      const fileToUpload = pendingProfilePictureFile;
+
+      // Update name fields first so the store reflects the latest user details.
+      await updateMutation.mutateAsync({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+      });
+
+      // Only upload picture when user submits the form.
+      if (fileToUpload) {
+        await uploadPictureMutation.mutateAsync(fileToUpload);
+      }
+
+      setPendingProfilePictureFile(null);
+    } catch {
+      // Errors are handled by mutation onError/toasts.
+    }
   };
 
   // MFA Setup Mutation
@@ -143,36 +182,44 @@ export default function Profile() {
   // add profile picture
 
   const uploadPictureMutation = useMutation({
-  mutationFn: uploadProfilePicture,
-  onSuccess: (data) => {
-    const currentAuth = useAuthStore.getState();
+    mutationFn: uploadProfilePicture,
+    onSuccess: async () => {
+      // The upload endpoint doesn't always return the full profile_picture_url.
+      // Refetch /me to get the authoritative updated URL, then update cache + store.
+      try {
+        const freshMe = await fetchMe();
+        qc.setQueryData(['me'], freshMe);
 
-    if (currentAuth.user) {
-      setAuth(
-        {
-          ...currentAuth.user,
-          profile_picture_url: data.profile_picture_url
-        },
-        currentAuth.accessToken!,
-        currentAuth.refreshToken!
-      );
-    }
+        const currentAuth = useAuthStore.getState();
+        if (currentAuth.user) {
+          setAuth(
+            {
+              ...currentAuth.user,
+              profile_picture_url: (freshMe as any).profile_picture_url,
+            },
+            currentAuth.accessToken!,
+            currentAuth.refreshToken!
+          );
+        }
 
-    qc.invalidateQueries({ queryKey: ['me'] });
+        setAvatarBuster(Date.now());
+      } finally {
+        qc.invalidateQueries({ queryKey: ['me'] });
+      }
 
-    toast({
-      title: "Success",
-      description: "Profile picture updated!"
-    });
-  },
-  onError: (error) => {
-    toast({
-      title: "Error",
-      description: getErrorMessage(error),
-      variant: "destructive"
-    });
-  }
-});
+      toast({
+        title: 'Success',
+        description: 'Profile picture updated!',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
 
   // MFA Disable Mutation
   const mfaDisableMutation = useMutation({
@@ -219,10 +266,10 @@ export default function Profile() {
   };
 
   const initials = displayUser
-    ? `${(displayUser as any).firstName?.[0] || (displayUser as any).first_name?.[0] || ''}${(displayUser as any).lastName?.[0] || (displayUser as any).last_name?.[0] || ''}`
+    ? `${firstName?.[0] || ''}${lastName?.[0] || ''}`
     : 'U';
 
-  if (isLoading && !user) {
+  if (isLoading && !displayUser) {
     return <div className="p-6">Loading profile...</div>;
   }
 
@@ -248,10 +295,10 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
-                    {displayUser?.profile_picture_url ? (
+                    {profilePictureUrl ? (
                       <AvatarImage 
-                        src={displayUser.profile_picture_url} 
-                        alt={`${displayUser?.firstName || displayUser?.first_name} ${displayUser?.lastName || displayUser?.last_name}`}
+                        src={profilePictureSrc} 
+                        alt={`${firstName} ${lastName}`}
                         className="object-cover"
                       />
                     ) : null}
@@ -262,7 +309,7 @@ export default function Profile() {
 
                   <div>
                     <h3 className="text-lg font-semibold">
-                      {(displayUser as any)?.firstName || (displayUser as any)?.first_name} {(displayUser as any)?.lastName || (displayUser as any)?.last_name}
+                      {firstName} {lastName}
                     </h3>
                     <p className="text-sm text-muted-foreground">{displayUser?.email}</p>
                     <Badge variant="secondary" className="mt-2">
@@ -275,7 +322,7 @@ export default function Profile() {
                   <div>
                     <p className="text-sm font-medium">Full Name</p>
                     <p className="text-sm text-muted-foreground">
-                      {(displayUser as any)?.firstName || (displayUser as any)?.first_name} {(displayUser as any)?.lastName || (displayUser as any)?.last_name}
+                      {firstName} {lastName}
                     </p>
                   </div>
                 </div>
@@ -300,10 +347,10 @@ export default function Profile() {
 
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
-                    {displayUser?.profile_picture_url ? (
+                    {profilePictureUrl ? (
                       <AvatarImage 
-                        src={displayUser.profile_picture_url} 
-                        alt={`${displayUser?.firstName || displayUser?.first_name} ${displayUser?.lastName || displayUser?.last_name}`}
+                        src={profilePictureSrc} 
+                        alt={`${firstName} ${lastName}`}
                         className="object-cover"
                       />
                     ) : null}
@@ -327,9 +374,14 @@ export default function Profile() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        uploadPictureMutation.mutate(file);
+                        setPendingProfilePictureFile(file);
                       }}
                     />
+                    {pendingProfilePictureFile ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Selected: {pendingProfilePictureFile.name}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -363,10 +415,17 @@ export default function Profile() {
                   <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button type="submit" disabled={updateMutation.isPending}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  <Button type="submit" disabled={updateMutation.isPending || uploadPictureMutation.isPending}>
+                    {updateMutation.isPending || uploadPictureMutation.isPending ? 'Saving...' : 'Save Changes'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setPendingProfilePictureFile(null);
+                    }}
+                  >
                     Cancel
                   </Button>
                 </div>

@@ -46,12 +46,12 @@ export async function getArchivedFiles(params?: {
   ordering?: string;
   page?: number;
 }): Promise<FileObjectDto[]> {
-  const { data } = await api.get('/api/v1/archive/files/', { params });
+  const { data } = await api.get('/api/v1/files/', { params });
   return data.results || data;
 }
 
 export async function getArchivedFile(id: string): Promise<FileObjectDto> {
-  const { data } = await api.get(`/api/v1/archive/files/${id}/`);
+  const { data } = await api.get(`/api/v1/files/${id}/`);
   return data;
 }
 
@@ -59,7 +59,7 @@ export async function getArchivedFile(id: string): Promise<FileObjectDto> {
  * Download an archived file
  */
 export async function downloadArchivedFile(id: string): Promise<Blob> {
-  const response = await api.get(`/api/v1/archive/files/${id}/download/`, {
+  const response = await api.get(`/api/v1/files/${id}/download/`, {
     responseType: 'blob',
   });
   return response.data;
@@ -69,7 +69,7 @@ export async function downloadArchivedFile(id: string): Promise<Blob> {
  * Restore an archived file
  */
 export async function restoreArchivedFile(id: string, payload: FileObjectRequest): Promise<FileObjectDto> {
-  const { data } = await api.post(`/api/v1/archive/files/${id}/restore/`, payload);
+  const { data } = await api.post(`/api/v1/files/${id}/restore/`, payload);
   return data;
 }
 

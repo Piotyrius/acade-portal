@@ -46,7 +46,7 @@ const displayWorks: WorkDto[] =
         title: ex.title,
         description: ex.description ?? '',
         media: ex.media ?? '',
-        media_url: (ex as any).media_url ?? '', // or cast to any if media_url isn’t in WorkDto
+        media_url: (ex as any).media_url ?? '', 
         status: ex.status ?? 'DRAFT',
         is_public: ex.is_public ?? false,
         published_at: ex.published_at ?? null,

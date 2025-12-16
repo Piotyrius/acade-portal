@@ -14,7 +14,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, User, Moon, Sun, Search, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LuMenu } from "react-icons/lu";
 import { CommandPalette, useCommandPalette } from '@/components/search/CommandPalette';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
@@ -26,6 +26,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const navigate = useNavigate();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const { open: commandOpen, setOpen: setCommandOpen } = useCommandPalette();
+  const [avatarBuster, setAvatarBuster] = useState(() => Date.now());
 
   // Fetch full user data to get profile picture
   const { data: fullUserData } = useQuery({
@@ -35,6 +36,16 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   });
 
   const displayUser = fullUserData || user;
+
+  const displayFirstName = (displayUser as any)?.firstName || (displayUser as any)?.first_name || '';
+  const displayLastName = (displayUser as any)?.lastName || (displayUser as any)?.last_name || '';
+
+  // When /me refetches (e.g., after uploading a new picture), bump the cache buster.
+  useEffect(() => {
+    if (fullUserData) {
+      setAvatarBuster(Date.now());
+    }
+  }, [fullUserData]);
 
 
 const handleLogout = async () => {
@@ -99,8 +110,8 @@ const handleLogout = async () => {
               <Avatar>
                 {(displayUser as any)?.profile_picture_url ? (
                   <AvatarImage 
-                    src={(displayUser as any).profile_picture_url} 
-                    alt={`${displayUser?.firstName} ${displayUser?.lastName}`}
+                    src={`${(displayUser as any).profile_picture_url}${(displayUser as any).profile_picture_url?.includes('?') ? '&' : '?'}v=${avatarBuster}`}
+                    alt={`${displayFirstName} ${displayLastName}`}
                   />
                 ) : null}
                 <AvatarFallback className="bg-primary text-primary-foreground">

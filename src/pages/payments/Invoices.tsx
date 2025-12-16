@@ -73,6 +73,19 @@ export default function Invoices() {
     enabled: user?.role === 'ADMIN',
   });
 
+  const formatEnrollmentLabel = (enrollment: any): string => {
+    if (!enrollment) return '';
+    const student = enrollment.student_name || enrollment.student_email || enrollment.student || 'Unknown Student';
+    const cohort = enrollment.cohort_name || enrollment.cohort || 'Unknown Cohort';
+    return `${student} - ${cohort}`;
+  };
+
+  const getEnrollmentLabelById = (enrollmentId?: string | null): string => {
+    if (!enrollmentId) return '';
+    const enrollment = enrollments.find((e: any) => e.id === enrollmentId);
+    return formatEnrollmentLabel(enrollment) || enrollmentId;
+  };
+
   const { data: paymentPlans = [] } = useQuery({
     queryKey: ['paymentPlans'],
     queryFn: () => getPaymentPlans(),
@@ -315,6 +328,10 @@ export default function Invoices() {
     }).format(num);
   };
 
+  const convertedEnrollment = () => {
+
+  }
+
   const filteredInvoices = invoices.filter((invoice: InvoiceDto) => {
     return (
       searchTerm === '' ||
@@ -425,6 +442,9 @@ export default function Invoices() {
                       Student: {invoice.student_name || 'Unknown'}
                     </p>
                     <p className="text-sm text-muted-foreground">
+                      Enrollment: {getEnrollmentLabelById(invoice.enrollment) || 'Unknown'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
                       Cohort: {invoice.cohort_name || 'Unknown'}
                     </p>
                     <p className="text-sm font-medium mt-1">
@@ -509,12 +529,16 @@ export default function Invoices() {
                   onValueChange={(value) => setFormData({ ...formData, enrollment: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select enrollment" />
+                    {formData.enrollment ? (
+                      <span className="line-clamp-1">{getEnrollmentLabelById(formData.enrollment)}</span>
+                    ) : (
+                      <SelectValue placeholder="Select enrollment" />
+                    )}
                   </SelectTrigger>
                   <SelectContent>
                     {enrollments.map((enrollment: any) => (
                       <SelectItem key={enrollment.id} value={enrollment.id}>
-                        {enrollment.student_name} - {enrollment.cohort_name}
+                        {formatEnrollmentLabel(enrollment) || enrollment.id}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -530,7 +554,7 @@ export default function Invoices() {
                     <SelectValue placeholder="Select payment plan (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None (Optional)</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {paymentPlans.map((plan: any) => (
                       <SelectItem key={plan.id} value={plan.id}>
                         {plan.name} ({plan.type_display || plan.type})
@@ -698,12 +722,16 @@ export default function Invoices() {
                 onValueChange={(value) => setFormData({ ...formData, enrollment: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select enrollment" />
+                  {formData.enrollment ? (
+                    <span className="line-clamp-1">{getEnrollmentLabelById(formData.enrollment)}</span>
+                  ) : (
+                    <SelectValue placeholder="Select enrollment" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {enrollments.map((enrollment: any) => (
                     <SelectItem key={enrollment.id} value={enrollment.id}>
-                      {enrollment.student_name} - {enrollment.cohort_name}
+                      {formatEnrollmentLabel(enrollment) || enrollment.id}
                     </SelectItem>
                   ))}
                 </SelectContent>

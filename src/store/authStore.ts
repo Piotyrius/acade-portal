@@ -9,6 +9,9 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  // Optional fields that may exist on the backend user object and are used in UI.
+  mfa_enabled?: boolean;
+  profile_picture_url?: string;
 }
 
 interface AuthState {
