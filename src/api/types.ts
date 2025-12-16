@@ -143,13 +143,14 @@ export interface EnrollmentDto {
   id: UUID;
   student: UUID;
   cohort: UUID;
-  status: 'PENDING' | 'ACTIVE' | 'WITHDRAWN' | 'COMPLETED';
+  status: 'PENDING' | 'WAITLISTED' | 'ACTIVE' | 'WITHDRAWN' | 'COMPLETED';
   enrolled_at: string;
   activated_at: string | null;
   completed_at: string | null;
   // Computed fields from backend
   student_name?: string;
   cohort_name?: string;
+  status_display?: string;
 }
 
 // Attendance

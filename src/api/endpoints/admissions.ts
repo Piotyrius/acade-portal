@@ -2,6 +2,13 @@ import api from '@/api/client';
 import { ApplicationDto, EnrollmentDto } from '@/api/types';
 import { ensureArray } from '@/api/utils';
 
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 // Applications (Public - no auth required)
 export async function submitPublicApplication(payload: Partial<ApplicationDto>): Promise<ApplicationDto> {
   const { data } = await api.post('/api/v1/admissions/applications/', payload);
@@ -46,6 +53,34 @@ export async function getEnrollments(cohortId?: string, status?: string): Promis
   if (status) params.status = status;
   const { data } = await api.get('/api/v1/admissions/enrollments/', { params });
   return ensureArray(data);
+}
+
+export async function getEnrollmentsPaginated(params?: {
+  cohort?: string;
+  student?: string;
+  status?: string;
+  search?: string;
+  ordering?: string;
+  page?: number;
+}): Promise<PaginatedResponse<EnrollmentDto>> {
+  const { data } = await api.get('/api/v1/admissions/enrollments/', { params });
+
+  // Be defensive: some environments may return an array (no pagination).
+  if (Array.isArray(data)) {
+    return {
+      count: data.length,
+      next: null,
+      previous: null,
+      results: ensureArray(data),
+    };
+  }
+
+  return {
+    count: typeof data?.count === 'number' ? data.count : ensureArray(data?.results).length,
+    next: data?.next ?? null,
+    previous: data?.previous ?? null,
+    results: ensureArray(data?.results),
+  };
 }
 
 export async function getEnrollment(id: string): Promise<EnrollmentDto> {
