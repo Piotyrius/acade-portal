@@ -6,9 +6,9 @@ import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@
 import { Search, Users, CheckCircle, XCircle, UserX, List, CheckSquare, Eye } from 'lucide-react';
 import { exampleEnrollments } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  getEnrollments,
+  getEnrollmentsPaginated,
   activateEnrollment,
   withdrawEnrollment,
   completeEnrollment,
@@ -18,7 +18,7 @@ import {
 import { getCohorts } from '@/api/endpoints/catalog';
 import { EnrollmentDto } from '@/api/types';
 import { useAuthStore } from '@/store/authStore';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -37,8 +37,10 @@ export default function Enrollments() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [page, setPage] = useState(1);
   const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
 
@@ -49,10 +51,40 @@ export default function Enrollments() {
     setManualEnrolPopup(true)
   }
 
-  const { data: enrollments = [], isLoading } = useQuery({
-    queryKey: ['enrollments', selectedStatus],
-    queryFn: () => getEnrollments(undefined, selectedStatus || undefined),
+  // Debounce search so typing doesn't refetch every keystroke.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setSearchTerm(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  // Reset pagination (and selection) when filters change.
+  useEffect(() => {
+    setPage(1);
+    setSelectedEnrollments([]);
+  }, [selectedStatus, searchTerm]);
+
+  // Clear selection when paging.
+  useEffect(() => {
+    setSelectedEnrollments([]);
+  }, [page]);
+
+  const { data: enrollmentsPage, isLoading, isFetching } = useQuery({
+    queryKey: ['enrollments', selectedStatus || null, searchTerm || null, page],
+    queryFn: () =>
+      getEnrollmentsPaginated({
+        status: selectedStatus || undefined,
+        search: searchTerm || undefined,
+        page,
+      }),
+    placeholderData: keepPreviousData,
   });
+
+  const enrollments: EnrollmentDto[] = enrollmentsPage?.results ?? [];
+  const totalEnrollments = enrollmentsPage?.count ?? enrollments.length;
+  const canGoPrev = Boolean(enrollmentsPage?.previous) && !isFetching;
+  const canGoNext = Boolean(enrollmentsPage?.next) && !isFetching;
 
   const { data: waitlist = [] } = useQuery({
     queryKey: ['waitlist'],
@@ -144,31 +176,75 @@ export default function Enrollments() {
 
   const bulkActivateMutation = useMutation({
     mutationFn: bulkActivateEnrollments,
+    onMutate: async (ids: string[]) => {
+      await qc.cancelQueries({ queryKey: ['enrollments'] });
+
+      const previousEnrollments = qc.getQueriesData({ queryKey: ['enrollments'] });
+
+      const updateEnrollment = (enrollment: any) => {
+        if (!ids.includes(enrollment.id)) return enrollment;
+        return {
+          ...enrollment,
+          status: 'ACTIVE',
+          status_display: enrollment.status_display ?? 'Active',
+        };
+      };
+
+      qc.setQueriesData({ queryKey: ['enrollments'] }, (old: any) => {
+        if (!old) return old;
+
+        // Support both array and paginated shapes.
+        if (Array.isArray(old)) {
+          return old.map(updateEnrollment);
+        }
+
+        if (Array.isArray(old.results)) {
+          return {
+            ...old,
+            results: old.results.map(updateEnrollment),
+          };
+        }
+
+        return old;
+      });
+
+      return { previousEnrollments };
+    },
     onSuccess: (data) => {
       console.log('✅ Bulk activation successful:', data);
-      qc.invalidateQueries({ queryKey: ['enrollments'] });
       toast({
         title: 'Success',
-        description: `${data.activated} enrollment(s) activated successfully`
+        description: `${data.activated} enrollment(s) activated successfully`,
       });
       setIsBulkDialogOpen(false);
       setSelectedEnrollments([]);
     },
-    onError: (error: any) => {
+    onError: (error: any, _ids, context) => {
       console.error('❌ Bulk activation failed:', error);
       console.error('Error response:', error.response?.data);
 
-      const errorMsg = error.response?.data?.error
-        || error.response?.data?.detail
-        || error.response?.data?.message
-        || error.message
-        || 'Failed to activate enrollments';
+      if (context?.previousEnrollments) {
+        for (const [queryKey, data] of context.previousEnrollments) {
+          qc.setQueryData(queryKey, data);
+        }
+      }
+
+      const errorMsg =
+        error.response?.data?.error ||
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to activate enrollments';
 
       toast({
         title: 'Error',
         description: errorMsg,
-        variant: 'destructive'
+        variant: 'destructive',
       });
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['enrollments'] });
+      qc.invalidateQueries({ queryKey: ['waitlist'] });
     },
   });
 
@@ -242,6 +318,11 @@ export default function Enrollments() {
     );
   };
 
+  const isBulkActivatable = (status: string) => {
+    const normalized = (status || '').toUpperCase();
+    return normalized === 'PENDING' || normalized === 'WAITLISTED';
+  };
+
   const getStatusVariant = (status: string) => {
     switch (status) {
       case 'ACTIVE':
@@ -259,13 +340,14 @@ export default function Enrollments() {
     }
   };
 
-  const displayEnrollments = enrollments.length === 0 ? exampleEnrollments.slice(0, 1) : enrollments;
+  const showExample = totalEnrollments === 0 && !searchTerm && !selectedStatus;
+  const displayEnrollments = showExample ? exampleEnrollments.slice(0, 1) : enrollments;
   const filteredEnrollments = displayEnrollments.filter((enrollment: any) => {
     const cohort = cohorts?.find((c: any) => c.id === enrollment.cohort);
     return (
-      searchTerm === '' ||
-      enrollment.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cohort?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      searchInput === '' ||
+      enrollment.student_name?.toLowerCase().includes(searchInput.toLowerCase()) ||
+      cohort?.name?.toLowerCase().includes(searchInput.toLowerCase())
     );
   });
 
@@ -303,8 +385,8 @@ export default function Enrollments() {
           <Input
             placeholder="Search enrollments..."
             className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
         <Select value={selectedStatus} onValueChange={setSelectedStatus}>
@@ -321,7 +403,7 @@ export default function Enrollments() {
         </Select>
       </div>
 
-      {enrollments.length === 0 && <ExampleBanner />}
+      {showExample && <ExampleBanner />}
       <Card>
         <CardHeader>
           <CardTitle>Enrollments</CardTitle>
@@ -343,6 +425,7 @@ export default function Enrollments() {
                         <Checkbox
                           checked={selectedEnrollments.includes(enrollment.id)}
                           onCheckedChange={() => toggleEnrollmentSelection(enrollment.id)}
+                          disabled={!isBulkActivatable(enrollment.status)}
                         />
                       )}
                       <div>
@@ -405,6 +488,32 @@ export default function Enrollments() {
         </CardContent>
       </Card>
 
+      {!showExample && totalEnrollments > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Page {page} 
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={!canGoPrev}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!canGoNext}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
       {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && waitlist.length > 0 && (
         <Card>
           <CardHeader>
@@ -452,7 +561,7 @@ export default function Enrollments() {
           </DialogHeader>
           <div className="space-y-4 py-4 max-h-96 overflow-y-auto">
             {filteredEnrollments
-              .filter((e: any) => e.status === 'WAITLISTED')
+              .filter((e: any) => e.status === 'WAITLISTED' || e.status === 'PENDING')
               .map((enrollment: any) => {
                 const cohort = cohorts?.find((c: any) => c.id === enrollment.cohort);
                 return (
