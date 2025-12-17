@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Payments from '@/pages/payments/Payments';
 import { renderWithProviders, setupAuthStore, clearAuthStore, mockAdminUser } from '../../utils/testHelpers';
@@ -39,7 +39,7 @@ describe('Payments Component', () => {
       vi.mocked(paymentsApi.getInvoices).mockResolvedValue([]);
       vi.mocked(authApi.getUsers).mockResolvedValue([]);
       renderWithProviders(<Payments />);
-      expect(screen.getByText(/payments/i)).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: /^payments$/i })).toBeInTheDocument();
     });
 
     it('should render record payment button', async () => {
@@ -60,24 +60,47 @@ describe('Payments Component', () => {
       vi.mocked(paymentsApi.getInvoices).mockResolvedValue([]);
       vi.mocked(authApi.getUsers).mockResolvedValue([]);
       renderWithProviders(<Payments />);
-      await waitFor(() => {
-        const recordBtn = screen.getByRole('button', { name: /record payment/i });
-        user.click(recordBtn);
-      });
-      await waitFor(() => {
-        expect(screen.getByText(/record payment/i)).toBeInTheDocument();
-      });
+
+      const recordBtn = await screen.findByRole('button', { name: /record payment/i });
+      await user.click(recordBtn);
+
+      const dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByText(/record payment/i)).toBeInTheDocument();
     });
 
     it('should display payments list', async () => {
       const mockPayments = [
-        { id: '1', invoice: 'inv-1', amount: '1000.00', currency: 'USD', status: 'COMPLETED' },
-        { id: '2', invoice: 'inv-2', amount: '500.00', currency: 'USD', status: 'PENDING' },
+        {
+          id: '1',
+          invoice: 'inv-1',
+          student: 'stu-1',
+          payment_method: 'MANUAL',
+          amount: '1000.00',
+          currency: 'USD',
+          status: 'COMPLETED',
+          processed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: '2',
+          invoice: 'inv-2',
+          student: 'stu-2',
+          payment_method: 'MANUAL',
+          amount: '500.00',
+          currency: 'USD',
+          status: 'PENDING',
+          processed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
       ];
       vi.mocked(paymentsApi.getPayments).mockResolvedValue(mockPayments as any);
       vi.mocked(paymentsApi.getInvoices).mockResolvedValue([]);
       vi.mocked(authApi.getUsers).mockResolvedValue([]);
       renderWithProviders(<Payments />);
+
+      await screen.findByRole('heading', { name: /^payments$/i });
       await waitFor(() => {
         expect(screen.getByText('$1,000.00')).toBeInTheDocument();
       });
@@ -86,13 +109,26 @@ describe('Payments Component', () => {
     it('should process refund', async () => {
       const user = userEvent.setup();
       const mockPayments = [
-        { id: '1', invoice: 'inv-1', amount: '1000.00', currency: 'USD', status: 'COMPLETED' },
+        {
+          id: '1',
+          invoice: 'inv-1',
+          student: 'stu-1',
+          payment_method: 'MANUAL',
+          amount: '1000.00',
+          currency: 'USD',
+          status: 'COMPLETED',
+          processed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
       ];
       vi.mocked(paymentsApi.getPayments).mockResolvedValue(mockPayments as any);
       vi.mocked(paymentsApi.getInvoices).mockResolvedValue([]);
       vi.mocked(authApi.getUsers).mockResolvedValue([]);
       vi.mocked(paymentsApi.processRefund).mockResolvedValue({} as any);
       renderWithProviders(<Payments />);
+
+      await screen.findByRole('heading', { name: /^payments$/i });
       await waitFor(() => {
         expect(screen.getByText('$1,000.00')).toBeInTheDocument();
       });
@@ -103,13 +139,31 @@ describe('Payments Component', () => {
       });
     });
 
-    it('should create payment with organization and recorded_by in payload', async () => {
+    it('should record payment via recordPayment', async () => {
       const user = userEvent.setup();
-      const mockInvoice = { id: 'inv-1', organization: 'org-123', invoice_number: 'INV-001' };
+      const mockInvoice = {
+        id: 'inv-1',
+        organization: 'org-123',
+        invoice_number: 'INV-001',
+        total_amount: '1000.00',
+      };
       vi.mocked(paymentsApi.getPayments).mockResolvedValue([]);
       vi.mocked(paymentsApi.getInvoices).mockResolvedValue([mockInvoice] as any);
-      vi.mocked(authApi.getUsers).mockResolvedValue([]);
-      vi.mocked(paymentsApi.createPayment).mockResolvedValue({ id: '1' } as any);
+      vi.mocked(authApi.getUsers).mockResolvedValue([
+        { id: 'stu-1', first_name: 'Test', last_name: 'Student', email: 'test@example.com' },
+      ] as any);
+      vi.mocked(paymentsApi.recordPayment).mockResolvedValue({
+        id: 'pay-1',
+        invoice: 'inv-1',
+        student: 'stu-1',
+        payment_method: 'MANUAL',
+        amount: '123.45',
+        currency: 'USD',
+        status: 'COMPLETED',
+        processed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as any);
       
       renderWithProviders(<Payments />);
       
@@ -119,21 +173,26 @@ describe('Payments Component', () => {
       
       const recordBtn = screen.getByRole('button', { name: /record payment/i });
       await user.click(recordBtn);
-      
-      await waitFor(() => {
-        expect(screen.getByText(/record payment/i)).toBeInTheDocument();
-      });
-      
-      // Fill form and submit - the payload should include organization and recorded_by
-      // This test verifies the component uses the correct payload structure
-      const submitBtn = screen.getByRole('button', { name: /save/i });
+
+      const dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByText(/record payment/i)).toBeInTheDocument();
+
+      const [invoiceTrigger] = within(dialog).getAllByRole('combobox');
+      await user.click(invoiceTrigger);
+      const invoiceOption = await screen.findByRole('option', { name: /INV-001/i });
+      await user.click(invoiceOption);
+
+      const amountInput = within(dialog).getByLabelText(/amount/i);
+      await user.clear(amountInput);
+      await user.type(amountInput, '123.45');
+
+      const submitBtn = within(dialog).getByRole('button', { name: /^record$/i });
       await user.click(submitBtn);
-      
+
       await waitFor(() => {
-        expect(paymentsApi.createPayment).toHaveBeenCalled();
-        const callArgs = vi.mocked(paymentsApi.createPayment).mock.calls[0][0];
-        expect(callArgs).toHaveProperty('organization');
-        expect(callArgs).toHaveProperty('recorded_by');
+        expect(paymentsApi.recordPayment).toHaveBeenCalled();
+        const callArgs = vi.mocked(paymentsApi.recordPayment).mock.calls[0][0];
+        expect(callArgs).toMatchObject({ invoice: 'inv-1', amount: '123.45' });
       });
     });
   });

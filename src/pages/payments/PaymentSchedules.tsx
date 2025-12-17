@@ -73,7 +73,7 @@ export default function PaymentSchedules() {
     const num = parseFloat(amount || '0');
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GEL',
     }).format(num);
   };
 

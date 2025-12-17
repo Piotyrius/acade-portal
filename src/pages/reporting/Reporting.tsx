@@ -42,9 +42,29 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-// Helper function to format currency
-const formatCurrency = (amountMinor: number, currency: string = 'USD'): string => {
-  const amount = amountMinor / 100;
+const coerceNumber = (value: unknown): number | undefined => {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const toMinorAmount = (valueMajor: unknown): number | undefined => {
+  const major = coerceNumber(valueMajor);
+  if (major === undefined) return undefined;
+  return Math.round(major * 100);
+};
+
+// Helper function to format currency (handles minor-units numbers + safe fallbacks)
+const formatCurrency = (amountMinor: unknown, currency: string = 'USD'): string => {
+  const minor = coerceNumber(amountMinor);
+  if (minor === undefined) return '-';
+  const amount = minor / 100;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency,
@@ -130,6 +150,45 @@ function AnalyticsDashboard() {
     queryFn: () => getStudentFinancialReport(buildParams()),
     enabled: user?.role === 'ADMIN',
   });
+
+  const totalsFromStudentFinancial = (() => {
+    const rows = Array.isArray(studentFinancial) ? studentFinancial : [];
+    const currency = rows[0]?.currency;
+    const totalMinor = rows.reduce((sum, row) => sum + (coerceNumber((row as any).total_amount_minor) ?? 0), 0);
+    const paidMinor = rows.reduce((sum, row) => sum + (coerceNumber((row as any).paid_amount_minor) ?? 0), 0);
+    const outstandingMinor = rows.reduce(
+      (sum, row) => sum + (coerceNumber((row as any).outstanding_balance_minor) ?? 0),
+      0
+    );
+    return { currency, totalMinor, paidMinor, outstandingMinor };
+  })();
+
+  const currency =
+    (overview as any)?.currency ||
+    (financialAnalytics as any)?.currency ||
+    totalsFromStudentFinancial.currency ||
+    'USD';
+
+  const totalRevenueMinor =
+    coerceNumber((overview as any)?.total_revenue_minor) ??
+    coerceNumber((financialAnalytics as any)?.total_revenue_minor) ??
+    toMinorAmount((overview as any)?.total_revenue) ??
+    totalsFromStudentFinancial.totalMinor ??
+    0;
+
+  const totalPaidMinor =
+    coerceNumber((overview as any)?.total_paid_minor) ??
+    coerceNumber((financialAnalytics as any)?.total_paid_minor) ??
+    toMinorAmount((overview as any)?.total_paid) ??
+    totalsFromStudentFinancial.paidMinor ??
+    0;
+
+  const totalOutstandingMinor =
+    coerceNumber((overview as any)?.total_outstanding_minor) ??
+    coerceNumber((financialAnalytics as any)?.total_outstanding_minor) ??
+    toMinorAmount((overview as any)?.total_outstanding) ??
+    totalsFromStudentFinancial.outstandingMinor ??
+    Math.max(0, totalRevenueMinor - totalPaidMinor);
 
   // Supporting data queries
   const { data: programs = [] } = useQuery({
@@ -301,7 +360,7 @@ function AnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(overview.total_revenue_minor, overview.currency)}
+                {formatCurrency(totalRevenueMinor, currency)}
               </div>
             </CardContent>
           </Card>
@@ -312,7 +371,7 @@ function AnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(overview.total_paid_minor, overview.currency)}
+                {formatCurrency(totalPaidMinor, currency)}
               </div>
             </CardContent>
           </Card>
@@ -322,8 +381,8 @@ function AnalyticsDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${overview.total_outstanding_minor > 0 ? 'text-destructive' : ''}`}>
-                {formatCurrency(overview.total_outstanding_minor, overview.currency)}
+              <div className={`text-2xl font-bold ${totalOutstandingMinor > 0 ? 'text-destructive' : ''}`}>
+                {formatCurrency(totalOutstandingMinor, currency)}
               </div>
             </CardContent>
           </Card>
@@ -951,6 +1010,7 @@ function ReportsExports() {
             </div>
             <Button
               className="w-full"
+              aria-label="Export payroll"
               onClick={() => handleExport(exportPayroll, 'payroll', payrollDates, 'payroll')}
               disabled={loading === 'payroll'}
             >

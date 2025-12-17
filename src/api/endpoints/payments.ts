@@ -227,6 +227,8 @@ processed_at: string;
   export interface PricingDto {
     id: string;
     object_id: string;
+    // Backend may include the Django ContentType id for the priced object.
+    content_type?: number;
     amount: string;
     currency: string;
     effective_from: string;
@@ -422,7 +424,18 @@ processed_at: string;
   }
 
   export async function deletePaymentPlan(id: string): Promise<void> {
-    await api.delete(`/api/v1/payments/payment-plans/${id}/`);
+      const primaryUrl = `/api/v1/payments/payment-plans/${id}/`;
+      try {
+        await api.delete(primaryUrl);
+      } catch (error: any) {
+        const status = error?.response?.status;
+        // Some deployments expose DRF routes with underscores instead of hyphens.
+        if (status === 404) {
+          await api.delete(`/api/v1/payments/payment_plans/${id}/`);
+          return;
+        }
+        throw error;
+      }
   }
 
   // ============================================================================
@@ -549,6 +562,17 @@ processed_at: string;
   }
 
   export async function deletePricing(id: string): Promise<void> {
-    await api.delete(`/api/v1/payments/pricings/${id}/`);
+      const primaryUrl = `/api/v1/payments/pricings/${id}/`;
+      try {
+        await api.delete(primaryUrl);
+      } catch (error: any) {
+        const status = error?.response?.status;
+        // Some deployments expose singular route names (pricing) or underscore variants.
+        if (status === 404) {
+          await api.delete(`/api/v1/payments/pricing/${id}/`);
+          return;
+        }
+        throw error;
+      }
   }
 

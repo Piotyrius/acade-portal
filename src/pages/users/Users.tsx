@@ -29,7 +29,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { UserDto } from '@/api/types';
-import { getUsers, createUser, updateUser, deleteUser } from '@/api/endpoints/auth';
+import { getUsersPaginated, createUser, updateUser, deleteUser } from '@/api/endpoints/auth';
+import { getEnrollmentsPaginated } from '@/api/endpoints/admissions';
 import { Plus, Pencil, Trash2, Search, UserCheck, UserX } from 'lucide-react';
 import {
   AlertDialog,
@@ -51,7 +52,7 @@ export default function Users() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('STUDENT');
+  const [page, setPage] = useState(1);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -64,9 +65,15 @@ export default function Users() {
   });
 
   // Query
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['users', roleFilter === 'all' ? null : roleFilter],
-    queryFn: () => getUsers(roleFilter === 'all' ? '' : roleFilter),
+  const search = searchQuery.trim();
+  const { data: usersPage, isLoading } = useQuery({
+    queryKey: ['users', 'STUDENT', page, search],
+    queryFn: () =>
+      getUsersPaginated({
+        role: 'STUDENT',
+        page,
+        search: search || undefined,
+      }),
   });
 
   // Mutations
@@ -166,15 +173,35 @@ export default function Users() {
     setIsDeleteOpen(true);
   };
 
-  // Filter users by search
-  const filteredUsers = users?.filter((user) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      user.email.toLowerCase().includes(searchLower) ||
-      user.first_name.toLowerCase().includes(searchLower) ||
-      user.last_name.toLowerCase().includes(searchLower)
-    );
-  });
+  const users = usersPage?.results ?? [];
+  const canGoPrev = page > 1;
+  const canGoNext = Boolean(usersPage?.next);
+
+  const formatCohortNames = (names: string[], totalCount?: number) => {
+    const unique = Array.from(new Set(names.filter(Boolean)));
+    if (unique.length === 0) return '-';
+    const shown = unique.slice(0, 2);
+    const extra = Math.max(0, (totalCount ?? unique.length) - shown.length);
+    return `${shown.join(', ')}${extra > 0 ? ` +${extra}` : ''}`;
+  };
+
+  const UserCohortCell = ({ user }: { user: UserDto }) => {
+    if (user.role === 'STUDENT') {
+      const { data, isLoading } = useQuery({
+        queryKey: ['studentEnrollments', user.id],
+        queryFn: () => getEnrollmentsPaginated({ student: user.id, page: 1 }),
+        enabled: Boolean(user.id),
+      });
+
+      if (isLoading) return <span className="text-muted-foreground">Loading...</span>;
+
+      const results = data?.results ?? [];
+      const names = results.map((e: any) => e.cohort_name || e.cohort);
+      return <>{formatCohortNames(names, data?.count)}</>;
+    }
+
+    return <>-</>;
+  };
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
@@ -208,21 +235,13 @@ export default function Users() {
           <Input
             placeholder="Search by email or name..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
             className="pl-9"
           />
         </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-            <SelectItem value="LECTURER">Lecturer</SelectItem>
-            <SelectItem value="STUDENT">Student</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="rounded-md border">
@@ -231,6 +250,7 @@ export default function Users() {
             <TableRow>
               <TableHead>Email</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Cohort</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
@@ -240,16 +260,19 @@ export default function Users() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={7} className="text-center">
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : filteredUsers && filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
+            ) : users.length > 0 ? (
+              users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.email}</TableCell>
                   <TableCell>
                     {user.first_name} {user.last_name}
+                  </TableCell>
+                  <TableCell>
+                    <UserCohortCell user={user} />
                   </TableCell>
                   <TableCell>{user.phone || '-'}</TableCell>
                   <TableCell>
@@ -273,6 +296,8 @@ export default function Users() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Edit user"
+                        title="Edit"
                         onClick={() => openEditDialog(user)}
                       >
                         <Pencil className="h-4 w-4" />
@@ -280,6 +305,8 @@ export default function Users() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Delete user"
+                        title="Delete"
                         onClick={() => openDeleteDialog(user)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -290,13 +317,27 @@ export default function Users() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={7} className="text-center">
                   No users found
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={!canGoPrev}
+        >
+          Previous
+        </Button>
+        <div className="text-sm text-muted-foreground">Page {page}</div>
+        <Button variant="outline" onClick={() => setPage((p) => p + 1)} disabled={!canGoNext}>
+          Next
+        </Button>
       </div>
 
       {/* Create User Dialog */}

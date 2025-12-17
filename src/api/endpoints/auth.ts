@@ -20,6 +20,35 @@ export async function updateProfile(data: { first_name?: string; last_name?: str
   return responseData;
 }
 
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export async function getUsersPaginated(params?: {
+  page?: number;
+  search?: string;
+  role?: string;
+  ordering?: string;
+  is_active?: boolean;
+}): Promise<PaginatedResponse<UserDto>> {
+  const { data } = await api.get('/api/v1/users/', { params });
+
+  // Defensive: some environments may return a plain array instead of DRF pagination.
+  if (Array.isArray(data)) {
+    return {
+      count: data.length,
+      next: null,
+      previous: null,
+      results: data,
+    };
+  }
+
+  return data as PaginatedResponse<UserDto>;
+}
+
 export async function getUsers(role?: string): Promise<UserDto[]> {
   const params = role ? { role } : {};
   const { data } = await api.get('/api/v1/users/', { params });

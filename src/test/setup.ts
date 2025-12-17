@@ -58,3 +58,31 @@ const sessionStorageMock = {
     clear: vi.fn(),
 }
 global.sessionStorage = sessionStorageMock as any
+
+// Radix UI (Select/Popover) relies on Pointer Events APIs that JSDOM doesn't fully implement.
+// Provide minimal pointer-capture polyfills to avoid unhandled exceptions in tests.
+if (!('hasPointerCapture' in Element.prototype)) {
+    Object.defineProperty(Element.prototype, 'hasPointerCapture', {
+        configurable: true,
+        value: () => false,
+    })
+}
+if (!('setPointerCapture' in Element.prototype)) {
+    Object.defineProperty(Element.prototype, 'setPointerCapture', {
+        configurable: true,
+        value: () => {},
+    })
+}
+if (!('releasePointerCapture' in Element.prototype)) {
+    Object.defineProperty(Element.prototype, 'releasePointerCapture', {
+        configurable: true,
+        value: () => {},
+    })
+}
+
+if (!('scrollIntoView' in Element.prototype)) {
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+        configurable: true,
+        value: () => {},
+    })
+}

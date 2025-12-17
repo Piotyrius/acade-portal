@@ -281,24 +281,24 @@ export default function Cohorts() {
   };
 
   const getStatusColor = (status: CohortDto['status']): "default" | "destructive" | "outline" | "secondary" => {
-    const colors: Record<CohortDto['status'], "default" | "destructive" | "outline" | "secondary"> = {
+    const colors: Partial<Record<CohortDto['status'], "default" | "destructive" | "outline" | "secondary">> = {
       PLANNED: 'secondary',
       ENROLLING: 'default',
       ACTIVE: 'default',
       COMPLETED: 'outline',
       CANCELLED: 'destructive',
     };
-    return colors[status] || 'secondary';
+    return colors[status] ?? 'secondary';
   };
 
   const getEnrollmentStatusColor = (status: EnrollmentDto['status']): "default" | "destructive" | "outline" | "secondary" => {
-    const colors: Record<EnrollmentDto['status'], "default" | "destructive" | "outline" | "secondary"> = {
+    const colors: Partial<Record<EnrollmentDto['status'], "default" | "destructive" | "outline" | "secondary">> = {
       PENDING: 'secondary',
       ACTIVE: 'default',
       COMPLETED: 'outline',
       WITHDRAWN: 'destructive',
     };
-    return colors[status] || 'secondary';
+    return colors[status] ?? 'secondary';
   };
 
   const toggleStudentList = (cohortId: string) => {

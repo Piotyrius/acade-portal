@@ -177,7 +177,15 @@ export default function Invoices() {
       setIsCreateFromEnrollmentOpen(false);
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      const message = getErrorMessage(error);
+      const looksLikePricingMissing = /pricing/i.test(message) && (/not found/i.test(message) || /no pricing/i.test(message));
+      toast({
+        title: 'Error',
+        description: looksLikePricingMissing
+          ? `${message} (Go to Payments → Pricing and create an active pricing for this enrollment's cohort. If a pricing exists but this still happens, the Pricing Content Type ID may be wrong.)`
+          : message,
+        variant: 'destructive',
+      });
     },
   });
 
@@ -294,6 +302,32 @@ export default function Invoices() {
       });
       return;
     }
+
+    const enrollment = enrollments.find((e: any) => e.id === formData.enrollment);
+    const cohortId = enrollment?.cohort;
+    const cohortName = enrollment?.cohort_name;
+    const hasActiveCohortPricing = cohortId
+      ? pricings.some((p: any) => p?.object_id === cohortId && (p?.is_active ?? true))
+      : false;
+
+    if (!cohortId) {
+      toast({
+        title: 'Error',
+        description: 'Selected enrollment is missing a cohort reference; cannot determine pricing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!hasActiveCohortPricing) {
+      toast({
+        title: 'No pricing found',
+        description: `Create an active pricing for cohort ${cohortName ? `"${cohortName}"` : cohortId} in Payments → Pricing, then try again.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     createFromEnrollmentMutation.mutate({
       enrollmentId: formData.enrollment,
       paymentPlanId: formData.payment_plan,
@@ -324,13 +358,10 @@ export default function Invoices() {
     const num = parseFloat(amount || '0');
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GEL',
     }).format(num);
   };
 
-  const convertedEnrollment = () => {
-
-  }
 
   const filteredInvoices = invoices.filter((invoice: InvoiceDto) => {
     return (
@@ -528,7 +559,7 @@ export default function Invoices() {
                   value={formData.enrollment}
                   onValueChange={(value) => setFormData({ ...formData, enrollment: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="enrollment">
                     {formData.enrollment ? (
                       <span className="line-clamp-1">{getEnrollmentLabelById(formData.enrollment)}</span>
                     ) : (
@@ -550,7 +581,7 @@ export default function Invoices() {
                   value={formData.payment_plan || 'none'}
                   onValueChange={(value) => setFormData({ ...formData, payment_plan: value === 'none' ? '' : value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="payment_plan">
                     <SelectValue placeholder="Select payment plan (optional)" />
                   </SelectTrigger>
                   <SelectContent>
@@ -570,7 +601,7 @@ export default function Invoices() {
                   onValueChange={(value) => setFormData({ ...formData, pricing: value })}
                   disabled={pricings.length === 0}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="pricing">
                     <SelectValue placeholder={pricings.length === 0 ? "No active pricings available" : "Select pricing (required)"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -721,7 +752,7 @@ export default function Invoices() {
                 value={formData.enrollment}
                 onValueChange={(value) => setFormData({ ...formData, enrollment: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="enrollment-select">
                   {formData.enrollment ? (
                     <span className="line-clamp-1">{getEnrollmentLabelById(formData.enrollment)}</span>
                   ) : (
@@ -743,7 +774,7 @@ export default function Invoices() {
                 value={formData.payment_plan || ''}
                 onValueChange={(value) => setFormData({ ...formData, payment_plan: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="payment-plan-select">
                   <SelectValue placeholder="Select payment plan" />
                 </SelectTrigger>
                 <SelectContent>

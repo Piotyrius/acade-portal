@@ -8,13 +8,13 @@ import { Search, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getPayments,
-  createPayment,
   updatePayment,
   deletePayment,
   processRefund,
   recordPayment,
   PaymentDto,
   PaymentRequest,
+  RecordPaymentRequest,
 } from '@/api/endpoints/payments';
 import { getInvoices } from '@/api/endpoints/payments';
 import { getUsers } from '@/api/endpoints/auth';
@@ -38,6 +38,7 @@ export default function Payments() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const DEFAULT_CURRENCY = 'GEL';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedInvoice, setSelectedInvoice] = useState<string>('all');
@@ -50,7 +51,7 @@ export default function Payments() {
     student: '',
     payment_method: 'MANUAL' as PaymentRequest['payment_method'],
     amount: '',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
     transaction_id: '',
     notes: '',
     processed_at: new Date().toISOString().split('T')[0],
@@ -94,7 +95,13 @@ export default function Payments() {
     return payment.enrollment || '';
   };
 
-  console.log(invoices)
+  const invalidateReportingQueries = () => {
+    qc.invalidateQueries({ queryKey: ['analytics-overview'], exact: false });
+    qc.invalidateQueries({ queryKey: ['analytics-cohort'], exact: false });
+    qc.invalidateQueries({ queryKey: ['analytics-financial'], exact: false });
+    qc.invalidateQueries({ queryKey: ['analytics-timeseries'], exact: false });
+    qc.invalidateQueries({ queryKey: ['analytics-student-financial'], exact: false });
+  };
 
 
   const { data: students = [] } = useQuery({
@@ -104,10 +111,11 @@ export default function Payments() {
   });
 
   const createMutation = useMutation({
-    mutationFn: createPayment,
+    mutationFn: recordPayment,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
+      invalidateReportingQueries();
       toast({ title: 'Success', description: 'Payment recorded successfully' });
       setIsDialogOpen(false);
       resetForm();
@@ -122,6 +130,8 @@ export default function Payments() {
       updatePayment(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
+      qc.invalidateQueries({ queryKey: ['invoices'] });
+      invalidateReportingQueries();
       toast({ title: 'Success', description: 'Payment updated successfully' });
       setIsDialogOpen(false);
       setEditingPayment(null);
@@ -136,6 +146,8 @@ export default function Payments() {
     mutationFn: deletePayment,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
+      qc.invalidateQueries({ queryKey: ['invoices'] });
+      invalidateReportingQueries();
       toast({ title: 'Success', description: 'Payment deleted successfully' });
     },
     onError: (error) => {
@@ -149,6 +161,7 @@ export default function Payments() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
+      invalidateReportingQueries();
       toast({ title: 'Success', description: 'Refund processed successfully' });
       setIsRefundDialogOpen(false);
       setSelectedPaymentForRefund(null);
@@ -165,7 +178,7 @@ export default function Payments() {
       student: '',
       payment_method: 'MANUAL',
       amount: '',
-      currency: 'USD',
+      currency: DEFAULT_CURRENCY,
       transaction_id: '',
       notes: '',
       processed_at: new Date().toISOString().split('T')[0],
@@ -173,19 +186,36 @@ export default function Payments() {
     });
   };
 
+  const toDateInputValue = (raw?: unknown) => {
+    const fallback = new Date().toISOString().split('T')[0];
+    if (typeof raw !== 'string' || raw.trim() === '') return fallback;
+    // Accept either full ISO or yyyy-mm-dd
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return fallback;
+    return date.toISOString().split('T')[0];
+  };
+
+  const normalizeId = (value: unknown): string => {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return String(value);
+    if (value && typeof value === 'object' && 'id' in (value as any)) return String((value as any).id);
+    return '';
+  };
+
   const handleOpenDialog = (payment?: PaymentDto) => {
     if (payment) {
       setEditingPayment(payment);
+      const processedAt = toDateInputValue((payment as any).processed_at ?? (payment as any).processedAt ?? payment.created_at);
       setFormData({
-        invoice: payment.invoice,
-        student: payment.student,
+        invoice: normalizeId((payment as any).invoice),
+        student: normalizeId((payment as any).student),
         payment_method: payment.payment_method,
         amount: payment.amount,
-        currency: payment.currency,
+        currency: payment.currency || DEFAULT_CURRENCY,
         transaction_id: payment.transaction_id || '',
         notes: payment.notes || '',
-        processed_at: payment.processed_at.split('T')[0],
-        payment_date: formData.payment_date,
+        processed_at: processedAt,
+        payment_date: toDateInputValue((payment as any).payment_date ?? (payment as any).paymentDate ?? processedAt),
       });
     } else {
       setEditingPayment(null);
@@ -196,48 +226,35 @@ export default function Payments() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.invoice || !formData.student || !formData.amount) {
+    if (!formData.invoice || !formData.amount) {
       toast({
         title: 'Error',
-        description: 'Invoice, student, and amount are required',
+        description: 'Invoice and amount are required',
         variant: 'destructive',
       });
       return;
     }
 
-const selectedInvoiceObj = invoices.find(i => i.id === formData.invoice);
-
-
-const payload: PaymentRequest = {
-  amount: formData.amount,
-  currency: formData.currency || "USD",
-  payment_method: formData.payment_method,
-  payment_gateway: "MANUAL",
-
-  gateway_transaction_id: formData.transaction_id || "",
-  gateway_response: "", 
-
-
-  status: "PENDING",
-
-  payment_date: new Date(formData.payment_date).toISOString(),
-  processed_at: new Date().toISOString(),
-  notes: formData.notes || "",
-
-  organization: selectedInvoiceObj.organization,
-  invoice: formData.invoice,
-  student: formData.student,
-
-  recorded_by: user.id
-};
-
-
-
-
     if (editingPayment) {
-      updateMutation.mutate({ id: editingPayment.id, data: payload });
+      const updatePayload: Partial<PaymentRequest> = {
+        amount: formData.amount,
+        currency: formData.currency || DEFAULT_CURRENCY,
+        payment_method: formData.payment_method,
+        gateway_transaction_id: formData.transaction_id || undefined,
+        notes: formData.notes || undefined,
+        payment_date: formData.payment_date ? new Date(formData.payment_date).toISOString() : undefined,
+        processed_at: formData.processed_at ? new Date(formData.processed_at).toISOString() : undefined,
+      };
+      updateMutation.mutate({ id: editingPayment.id, data: updatePayload });
     } else {
-      createMutation.mutate(payload);
+      const recordPayload: RecordPaymentRequest = {
+        invoice: formData.invoice,
+        amount: formData.amount,
+        payment_method: formData.payment_method,
+        notes: formData.notes || undefined,
+        payment_date: formData.payment_date ? new Date(formData.payment_date).toISOString() : undefined,
+      };
+      createMutation.mutate(recordPayload);
     }
   };
 
@@ -286,11 +303,11 @@ const payload: PaymentRequest = {
     }
   };
 
-  const formatCurrency = (amount: string) => {
+  const formatCurrency = (amount: string, currency?: string) => {
     const num = parseFloat(amount || '0');
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: currency || DEFAULT_CURRENCY,
     }).format(num);
   };
 
@@ -402,7 +419,7 @@ const payload: PaymentRequest = {
                       </Badge>
                       <Badge variant="secondary">{payment.payment_method}</Badge>
                     </div>
-                    <p className="text-sm font-medium">Amount: {formatCurrency(payment.amount)}</p>
+                    <p className="text-sm font-medium">Amount: {formatCurrency(payment.amount, payment.currency)}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Processed: {new Date(payment.processed_at).toLocaleDateString()}
                     </p>
@@ -502,7 +519,7 @@ const payload: PaymentRequest = {
                     id="currency"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    placeholder="USD"
+                    placeholder="GEL"
                   />
                 </div>
                 <div className="space-y-2">
