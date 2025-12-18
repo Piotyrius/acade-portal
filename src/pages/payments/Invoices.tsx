@@ -37,6 +37,7 @@ import { CardListSkeleton } from '@/components/ui/table-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrencyString, formatEnrollmentLabel } from '@/utils/paymentsFormatting';
 import { usePaymentsAdmin } from '@/hooks/usePaymentsAdmin';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Invoices() {
   const { user } = useAuthStore();
@@ -51,6 +52,7 @@ export default function Invoices() {
   const [selectedInvoiceForDiscounts, setSelectedInvoiceForDiscounts] = useState<InvoiceDto | null>(null);
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState<InvoiceDto | null>(null);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
@@ -362,6 +364,9 @@ export default function Invoices() {
     );
   });
 
+  const selectedInvoice =
+    filteredInvoices.find((inv) => inv.id === selectedInvoiceId) ?? filteredInvoices[0] ?? null;
+
   if (user?.role !== 'ADMIN') {
     return (
       <div className="space-y-6">
@@ -396,149 +401,277 @@ export default function Invoices() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Invoices</h2>
-          <p className="text-muted-foreground">Manage student invoices and payments</p>
+          <p className="text-muted-foreground">
+            See each student’s bill, track what’s outstanding, and mark invoices as paid.
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsCreateFromEnrollmentOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Create from Enrollment
+            Bill student from enrollment
           </Button>
           <Button onClick={() => handleOpenDialog()}>
             <Plus className="mr-2 h-4 w-4" />
-            Create Invoice
+            New manual invoice
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search invoices..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="DRAFT">Draft</SelectItem>
-            <SelectItem value="ISSUED">Issued</SelectItem>
-            <SelectItem value="PARTIAL">Partially Paid</SelectItem>
-            <SelectItem value="PAID">Paid</SelectItem>
-            <SelectItem value="OVERDUE">Overdue</SelectItem>
-            <SelectItem value="CANCELLED">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Tabs defaultValue="list" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="list">All invoices</TabsTrigger>
+          <TabsTrigger value="detail" disabled={!selectedInvoice}>
+            Invoice details
+          </TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
+        <TabsContent value="list" className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by invoice number, student, or cohort..."
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="DRAFT">Draft</SelectItem>
+                <SelectItem value="ISSUED">Issued</SelectItem>
+                <SelectItem value="PARTIAL">Partially paid</SelectItem>
+                <SelectItem value="PAID">Paid</SelectItem>
+                <SelectItem value="OVERDUE">Overdue</SelectItem>
+                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Card>
+            <CardHeader>
           <CardTitle>Invoices</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {filteredInvoices.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No invoices found</p>
-            ) : (
-              filteredInvoices.map((invoice: InvoiceDto) => (
-                <div
-                  key={invoice.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <p className="font-medium">
-                        {invoice.invoice_number || `Invoice #${invoice.id.slice(0, 8)}`}
-                      </p>
-                      <Badge variant={getStatusVariant(invoice.status)}>
-                        {invoice.status_display || invoice.status}
-                      </Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {filteredInvoices.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No invoices found</p>
+                ) : (
+                  filteredInvoices.map((invoice: InvoiceDto) => (
+                    <div
+                      key={invoice.id}
+                      className="flex items-center justify-between p-4 border border-border rounded-lg cursor-pointer hover:bg-muted/40"
+                      onClick={() => setSelectedInvoiceId(invoice.id)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="font-medium">
+                            {invoice.invoice_number || `Invoice #${invoice.id.slice(0, 8)}`}
+                          </p>
+                          <Badge variant={getStatusVariant(invoice.status)}>
+                            {invoice.status_display || invoice.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Student: {invoice.student_name || 'Unknown'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Enrollment: {getEnrollmentLabelById(invoice.enrollment) || 'Unknown'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Cohort: {invoice.cohort_name || 'Unknown'}
+                        </p>
+                        <p className="text-sm font-medium mt-1">
+                          Total: {formatCurrencyString(invoice.total_amount, 'USD')}
+                        </p>
+                        {invoice.outstanding_amount && parseFloat(invoice.outstanding_amount) > 0 && (
+                          <p className="text-sm text-destructive">
+                            Outstanding: {formatCurrencyString(invoice.outstanding_amount, 'USD')}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Due: {new Date(invoice.due_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {invoice.status === 'DRAFT' && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenDialog(invoice);
+                              }}
+                              title="Edit invoice"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(invoice.id);
+                              }}
+                              title="Delete invoice"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        {invoice.status === 'DRAFT' && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleIssue(invoice.id);
+                            }}
+                            title="Issue invoice"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Issue
+                          </Button>
+                        )}
+                        {invoice.status === 'ISSUED' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenDiscountDialog(invoice);
+                            }}
+                            title="Apply discounts"
+                          >
+                            <FileText className="h-4 w-4 mr-1" />
+                            Discounts
+                          </Button>
+                        )}
+                        {(invoice.status === 'ISSUED' ||
+                          invoice.status === 'PARTIAL' ||
+                          invoice.status === 'OVERDUE') && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenRecordPayment(invoice);
+                            }}
+                            title="Record payment"
+                          >
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            Mark as paid
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Student: {invoice.student_name || 'Unknown'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Enrollment: {getEnrollmentLabelById(invoice.enrollment) || 'Unknown'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Cohort: {invoice.cohort_name || 'Unknown'}
-                    </p>
-                    <p className="text-sm font-medium mt-1">
-                      Amount: {formatCurrencyString(invoice.total_amount, 'USD')}
-                    </p>
-                    {invoice.outstanding_amount && parseFloat(invoice.outstanding_amount) > 0 && (
-                      <p className="text-sm text-destructive">
-                        Outstanding: {formatCurrencyString(invoice.outstanding_amount, 'USD')}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Due: {new Date(invoice.due_date).toLocaleDateString()}
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="detail">
+          {selectedInvoice ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {selectedInvoice.invoice_number || `Invoice #${selectedInvoice.id.slice(0, 8)}`}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {selectedInvoice.student_name || 'Unknown student'} •{' '}
+                  {selectedInvoice.cohort_name || 'Unknown cohort'}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-4">
+                  <div>
+                    <p className="text-xs uppercase text-muted-foreground">Status</p>
+                    <Badge variant={getStatusVariant(selectedInvoice.status)}>
+                      {selectedInvoice.status_display || selectedInvoice.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase text-muted-foreground">Total</p>
+                    <p className="font-medium">
+                      {formatCurrencyString(selectedInvoice.total_amount, 'USD')}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {invoice.status === 'DRAFT' && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenDialog(invoice)}
-                          title="Edit Invoice"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(invoice.id)}
-                          title="Delete Invoice"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                    {invoice.status === 'DRAFT' && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => handleIssue(invoice.id)}
-                        title="Issue Invoice"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Issue
-                      </Button>
-                    )}
-                    {invoice.status === 'ISSUED' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenDiscountDialog(invoice)}
-                        title="Apply Discounts"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {(invoice.status === 'ISSUED' || invoice.status === 'PARTIAL') && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenRecordPayment(invoice)}
-                        title="Record Payment"
-                      >
-                        <DollarSign className="h-4 w-4" />
-                      </Button>
-                    )}
+                  <div>
+                    <p className="text-xs uppercase text-muted-foreground">Outstanding</p>
+                    <p className="font-medium">
+                      {formatCurrencyString(selectedInvoice.outstanding_amount || '0', 'USD')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase text-muted-foreground">Due date</p>
+                    <p className="font-medium">
+                      {new Date(selectedInvoice.due_date).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+
+                <details className="mt-2 rounded-md border bg-muted/40 p-3">
+                  <summary className="cursor-pointer text-sm font-medium">
+                    Advanced billing details
+                  </summary>
+                  <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                    <p>Pricing ID: {selectedInvoice.pricing || 'N/A'}</p>
+                    <p>Payment plan: {selectedInvoice.payment_plan_name || 'N/A'}</p>
+                    <p>Subtotal: {formatCurrencyString(selectedInvoice.subtotal, 'USD')}</p>
+                    {selectedInvoice.discount_amount && (
+                      <p>
+                        Discounts:{' '}
+                        {formatCurrencyString(selectedInvoice.discount_amount, 'USD')}
+                      </p>
+                    )}
+                    <p>Created at: {new Date(selectedInvoice.created_at).toLocaleString()}</p>
+                    <p>Updated at: {new Date(selectedInvoice.updated_at).toLocaleString()}</p>
+                    <p>Raw ID: {selectedInvoice.id}</p>
+                  </div>
+                </details>
+
+                <div className="flex gap-2 mt-4">
+                  {(selectedInvoice.status === 'ISSUED' ||
+                    selectedInvoice.status === 'PARTIAL' ||
+                    selectedInvoice.status === 'OVERDUE') && (
+                    <Button onClick={() => handleOpenRecordPayment(selectedInvoice)} size="sm">
+                      <DollarSign className="mr-2 h-4 w-4" />
+                      Mark a payment
+                    </Button>
+                  )}
+                  {selectedInvoice.status === 'DRAFT' && (
+                    <Button onClick={() => handleIssue(selectedInvoice.id)} size="sm">
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Issue invoice
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenDiscountDialog(selectedInvoice)}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Apply discounts
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                Select an invoice from the list to see its full details.
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Create/Edit Invoice Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -739,12 +872,15 @@ export default function Invoices() {
         </DialogContent>
       </Dialog>
 
-      {/* Create from Enrollment Dialog */}
+      {/* Bill student from enrollment dialog */}
       <Dialog open={isCreateFromEnrollmentOpen} onOpenChange={setIsCreateFromEnrollmentOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Invoice from Enrollment</DialogTitle>
-            <DialogDescription>Select an enrollment and payment plan to automatically create an invoice</DialogDescription>
+            <DialogTitle>Bill student from enrollment</DialogTitle>
+            <DialogDescription>
+              Select the student’s enrollment, choose a payment plan, and optionally apply discounts.
+              The system will calculate tuition automatically from your pricing.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

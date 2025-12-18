@@ -235,11 +235,13 @@ export default function Payments() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Payments</h2>
-          <p className="text-muted-foreground">Record and manage student payments</p>
+          <p className="text-muted-foreground">
+            See payment history and refunds. Use invoices to mark new payments.
+          </p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          Record Payment
+          Record payment
         </Button>
       </div>
 
@@ -351,8 +353,8 @@ export default function Payments() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>Record a new payment against an invoice.</DialogDescription>
+            <DialogTitle>Record payment</DialogTitle>
+            <DialogDescription>Mark a payment received against a student invoice.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
