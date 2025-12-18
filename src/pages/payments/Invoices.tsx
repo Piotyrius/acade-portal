@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash2, Eye, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, FileText, CheckCircle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getInvoices,
@@ -12,9 +12,7 @@ import {
   updateInvoice,
   deleteInvoice,
   issueInvoice,
-  applyDiscountsToInvoice,
   getInvoiceOutstandingBalance,
-  createInvoiceForEnrollment,
   InvoiceDto,
   InvoiceRequest,
   getPricings,
@@ -37,6 +35,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { getDiscounts, DiscountDto } from '@/api/endpoints/payments';
 import { CardListSkeleton } from '@/components/ui/table-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatCurrencyString, formatEnrollmentLabel } from '@/utils/paymentsFormatting';
+import { usePaymentsAdmin } from '@/hooks/usePaymentsAdmin';
 
 export default function Invoices() {
   const { user } = useAuthStore();
@@ -73,13 +73,6 @@ export default function Invoices() {
     enabled: user?.role === 'ADMIN',
   });
 
-  const formatEnrollmentLabel = (enrollment: any): string => {
-    if (!enrollment) return '';
-    const student = enrollment.student_name || enrollment.student_email || enrollment.student || 'Unknown Student';
-    const cohort = enrollment.cohort_name || enrollment.cohort || 'Unknown Cohort';
-    return `${student} - ${cohort}`;
-  };
-
   const getEnrollmentLabelById = (enrollmentId?: string | null): string => {
     if (!enrollmentId) return '';
     const enrollment = enrollments.find((e: any) => e.id === enrollmentId);
@@ -103,6 +96,8 @@ export default function Invoices() {
     queryFn: () => getDiscounts({ is_active: true }),
     enabled: user?.role === 'ADMIN' && isDiscountDialogOpen,
   });
+
+  const { createInvoiceFromEnrollment, applyDiscountsMutation } = usePaymentsAdmin();
 
   const createMutation = useMutation({
     mutationFn: createInvoice,
@@ -153,76 +148,15 @@ export default function Invoices() {
     },
   });
 
-  const applyDiscountsMutation = useMutation({
-    mutationFn: ({ id, discountIds }: { id: string; discountIds: string[] }) =>
-      applyDiscountsToInvoice(id, discountIds),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Discounts applied successfully' });
-      setIsDiscountDialogOpen(false);
-      setSelectedInvoiceForDiscounts(null);
-      setSelectedDiscounts([]);
-    },
-    onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
-    },
-  });
-
-  const createFromEnrollmentMutation = useMutation({
-    mutationFn: ({ enrollmentId, paymentPlanId, discountIds }: { enrollmentId: string; paymentPlanId: string; discountIds?: string[] }) =>
-      createInvoiceForEnrollment(enrollmentId, paymentPlanId, discountIds),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Invoice created from enrollment successfully' });
-      setIsCreateFromEnrollmentOpen(false);
-      setSelectedDiscounts([]);
-      resetForm();
-    },
-    onError: (error) => {
-      const message = getErrorMessage(error);
-      const enrollment = enrollments.find((e: any) => e.id === formData.enrollment);
-      const cohortId = enrollment?.cohort;
-      const cohortName = enrollment?.cohort_name || 'Unknown';
-      
-      const looksLikePricingMissing = /pricing/i.test(message) && (/not found/i.test(message) || /no pricing/i.test(message));
-      
-      if (looksLikePricingMissing && cohortId) {
-        const cohortPricings = pricings.filter((p: any) => p?.object_id === cohortId);
-        const contentTypes = [...new Set(cohortPricings.map((p: any) => p?.content_type).filter(Boolean))];
-        
-        console.error('❌ Backend pricing error:', {
-          errorMessage: message,
-          cohortId,
-          cohortName,
-          frontendFoundPricings: cohortPricings.length,
-          contentTypesUsed: contentTypes,
-        });
-        
-        let enhancedMessage = `${message}\n\n`;
-        if (cohortPricings.length > 0) {
-          enhancedMessage += `Frontend found ${cohortPricings.length} pricing(s) for cohort "${cohortName}" but backend couldn't find it. This usually means:\n`;
-          enhancedMessage += `• The Pricing Content Type ID is wrong (Frontend sees: ${contentTypes.join(', ')})\n`;
-          enhancedMessage += `• Ask your backend admin to check the Cohort ContentType ID in Django admin\n`;
-          enhancedMessage += `• Then update the pricing's content_type field to match`;
-        } else {
-          enhancedMessage += `Create an active pricing for cohort "${cohortName}" in Payments → Pricing`;
-        }
-        
-        toast({
-          title: 'Pricing Error',
-          description: enhancedMessage,
-          variant: 'destructive',
-          duration: 10000,
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: message,
-          variant: 'destructive',
-        });
-      }
-    },
-  });
+  // Close dialogs when shared mutations succeed
+  if (createInvoiceFromEnrollment.isSuccess && isCreateFromEnrollmentOpen) {
+    setIsCreateFromEnrollmentOpen(false);
+  }
+  if (applyDiscountsMutation.isSuccess && isDiscountDialogOpen) {
+    setIsDiscountDialogOpen(false);
+    setSelectedInvoiceForDiscounts(null);
+    setSelectedDiscounts([]);
+  }
 
   const resetForm = () => {
     setFormData({
@@ -337,65 +271,7 @@ export default function Invoices() {
       });
       return;
     }
-
-    const enrollment = enrollments.find((e: any) => e.id === formData.enrollment);
-    const cohortId = enrollment?.cohort;
-    const cohortName = enrollment?.cohort_name || 'Unknown';
-    const studentName = enrollment?.student_name || 'Unknown';
-
-    if (!cohortId) {
-      toast({
-        title: 'Error',
-        description: 'Selected enrollment is missing a cohort reference; cannot determine pricing.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Find all pricings for this cohort
-    const cohortPricings = pricings.filter((p: any) => p?.object_id === cohortId);
-    const activeCohortPricings = cohortPricings.filter((p: any) => p?.is_active ?? true);
-
-    console.log('🔍 Pricing validation:', {
-      enrollmentId: formData.enrollment,
-      cohortId,
-      cohortName,
-      studentName,
-      allPricingsCount: pricings.length,
-      cohortPricings: cohortPricings.map((p: any) => ({
-        id: p.id,
-        object_id: p.object_id,
-        content_type: p.content_type,
-        amount: p.amount,
-        is_active: p.is_active,
-      })),
-      activeCohortPricings: activeCohortPricings.length,
-    });
-
-    if (cohortPricings.length === 0) {
-      toast({
-        title: 'No pricing found',
-        description: `No pricing exists for cohort "${cohortName}" (ID: ${cohortId.slice(0, 8)}...). Go to Payments → Pricing and create a pricing for this cohort.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (activeCohortPricings.length === 0) {
-      toast({
-        title: 'No active pricing',
-        description: `Pricing exists for cohort "${cohortName}" but it's inactive. Go to Payments → Pricing and activate it, or create a new active pricing.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Additional warning if multiple active pricings exist
-    if (activeCohortPricings.length > 1) {
-      console.warn('⚠️ Multiple active pricings found for cohort:', cohortId, activeCohortPricings);
-    }
-
-    createFromEnrollmentMutation.mutate({
+    createInvoiceFromEnrollment.mutate({
       enrollmentId: formData.enrollment,
       paymentPlanId: formData.payment_plan,
       discountIds: selectedDiscounts.length > 0 ? selectedDiscounts : undefined,
@@ -546,11 +422,11 @@ export default function Invoices() {
                       Cohort: {invoice.cohort_name || 'Unknown'}
                     </p>
                     <p className="text-sm font-medium mt-1">
-                      Amount: {formatCurrency(invoice.total_amount)}
+                      Amount: {formatCurrencyString(invoice.total_amount, 'USD')}
                     </p>
                     {invoice.outstanding_amount && parseFloat(invoice.outstanding_amount) > 0 && (
                       <p className="text-sm text-destructive">
-                        Outstanding: {formatCurrency(invoice.outstanding_amount)}
+                        Outstanding: {formatCurrencyString(invoice.outstanding_amount, 'USD')}
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
@@ -674,7 +550,8 @@ export default function Invoices() {
                   <SelectContent>
                     {pricings.map((pricing: any) => (
                       <SelectItem key={pricing.id} value={pricing.id}>
-                        {pricing.pricing_object_name || `Pricing ${pricing.id.slice(0, 8)}`} - {formatCurrency(pricing.amount)} {pricing.currency}
+                        {pricing.pricing_object_name || `Pricing ${pricing.id.slice(0, 8)}`} -{' '}
+                        {formatCurrencyString(pricing.amount, pricing.currency)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -781,7 +658,7 @@ export default function Invoices() {
                     <div>
                       <p className="font-medium">{discount.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {discount.type === 'PERCENTAGE' ? `${discount.value}%` : formatCurrency(discount.value)} -{' '}
+                        {discount.type === 'PERCENTAGE' ? `${discount.value}%` : formatCurrencyString(discount.value, 'USD')} -{' '}
                         {discount.applicable_to_display || discount.applicable_to}
                       </p>
                     </div>
@@ -900,7 +777,8 @@ export default function Invoices() {
                         }}
                       />
                       <Label htmlFor={`discount-${discount.id}`} className="flex-1 cursor-pointer text-sm">
-                        {discount.name} - {discount.type === 'PERCENTAGE' ? `${discount.value}%` : formatCurrency(discount.value)}
+                        {discount.name} -{' '}
+                        {discount.type === 'PERCENTAGE' ? `${discount.value}%` : formatCurrencyString(discount.value, 'USD')}
                       </Label>
                     </div>
                   ))
@@ -915,7 +793,7 @@ export default function Invoices() {
             <Button
               type="button"
               onClick={handleCreateFromEnrollment}
-              disabled={createFromEnrollmentMutation.isPending || !formData.enrollment || !formData.payment_plan}
+              disabled={createInvoiceFromEnrollment.isPending || !formData.enrollment || !formData.payment_plan}
             >
               Create Invoice
             </Button>

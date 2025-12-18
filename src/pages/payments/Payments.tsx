@@ -4,20 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
+import { Search, Plus, Trash2, RefreshCw } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getPayments,
-  updatePayment,
   deletePayment,
   processRefund,
   recordPayment,
   PaymentDto,
-  PaymentRequest,
   RecordPaymentRequest,
 } from '@/api/endpoints/payments';
 import { getInvoices } from '@/api/endpoints/payments';
-import { getUsers } from '@/api/endpoints/auth';
 import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +30,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { CardListSkeleton } from '@/components/ui/table-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatCurrencyString } from '@/utils/paymentsFormatting';
 
 export default function Payments() {
   const { user } = useAuthStore();
@@ -44,17 +42,12 @@ export default function Payments() {
   const [selectedInvoice, setSelectedInvoice] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<PaymentDto | null>(null);
   const [selectedPaymentForRefund, setSelectedPaymentForRefund] = useState<PaymentDto | null>(null);
   const [formData, setFormData] = useState({
     invoice: '',
-    student: '',
-    payment_method: 'MANUAL' as PaymentRequest['payment_method'],
     amount: '',
-    currency: DEFAULT_CURRENCY,
-    transaction_id: '',
+    payment_method: 'MANUAL' as RecordPaymentRequest['payment_method'],
     notes: '',
-    processed_at: new Date().toISOString().split('T')[0],
     payment_date: new Date().toISOString().split('T')[0],
   });
   const [refundData, setRefundData] = useState({
@@ -78,63 +71,13 @@ export default function Payments() {
     enabled: user?.role === 'ADMIN',
   });
 
-  const getEnrollmentLabelForPayment = (payment: PaymentDto): string => {
-    if (payment.student_name || payment.cohort_name) {
-      const student = payment.student_name || payment.student || 'Unknown Student';
-      const cohort = payment.cohort_name || 'Unknown Cohort';
-      return `${student} - ${cohort}`;
-    }
-
-    const invoice = invoices.find((i: any) => i.id === payment.invoice);
-    if (invoice) {
-      const student = invoice.student_name || payment.student || 'Unknown Student';
-      const cohort = invoice.cohort_name || invoice.enrollment || 'Unknown Cohort';
-      return `${student} - ${cohort}`;
-    }
-
-    return payment.enrollment || '';
-  };
-
-  const invalidateReportingQueries = () => {
-    qc.invalidateQueries({ queryKey: ['analytics-overview'], exact: false });
-    qc.invalidateQueries({ queryKey: ['analytics-cohort'], exact: false });
-    qc.invalidateQueries({ queryKey: ['analytics-financial'], exact: false });
-    qc.invalidateQueries({ queryKey: ['analytics-timeseries'], exact: false });
-    qc.invalidateQueries({ queryKey: ['analytics-student-financial'], exact: false });
-  };
-
-
-  const { data: students = [] } = useQuery({
-    queryKey: ['students'],
-    queryFn: () => getUsers('STUDENT'),
-    enabled: user?.role === 'ADMIN',
-  });
-
-  const createMutation = useMutation({
-    mutationFn: recordPayment,
+  const recordPaymentMutation = useMutation({
+    mutationFn: (data: RecordPaymentRequest) => recordPayment(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      invalidateReportingQueries();
       toast({ title: 'Success', description: 'Payment recorded successfully' });
       setIsDialogOpen(false);
-      resetForm();
-    },
-    onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<PaymentRequest> }) =>
-      updatePayment(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['payments'] });
-      qc.invalidateQueries({ queryKey: ['invoices'] });
-      invalidateReportingQueries();
-      toast({ title: 'Success', description: 'Payment updated successfully' });
-      setIsDialogOpen(false);
-      setEditingPayment(null);
       resetForm();
     },
     onError: (error) => {
@@ -147,7 +90,6 @@ export default function Payments() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      invalidateReportingQueries();
       toast({ title: 'Success', description: 'Payment deleted successfully' });
     },
     onError: (error) => {
@@ -161,7 +103,6 @@ export default function Payments() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      invalidateReportingQueries();
       toast({ title: 'Success', description: 'Refund processed successfully' });
       setIsRefundDialogOpen(false);
       setSelectedPaymentForRefund(null);
@@ -175,52 +116,15 @@ export default function Payments() {
   const resetForm = () => {
     setFormData({
       invoice: '',
-      student: '',
       payment_method: 'MANUAL',
       amount: '',
-      currency: DEFAULT_CURRENCY,
-      transaction_id: '',
       notes: '',
-      processed_at: new Date().toISOString().split('T')[0],
-      payment_date: formData.payment_date,
+      payment_date: new Date().toISOString().split('T')[0],
     });
   };
 
-  const toDateInputValue = (raw?: unknown) => {
-    const fallback = new Date().toISOString().split('T')[0];
-    if (typeof raw !== 'string' || raw.trim() === '') return fallback;
-    // Accept either full ISO or yyyy-mm-dd
-    const date = new Date(raw);
-    if (Number.isNaN(date.getTime())) return fallback;
-    return date.toISOString().split('T')[0];
-  };
-
-  const normalizeId = (value: unknown): string => {
-    if (typeof value === 'string') return value;
-    if (typeof value === 'number') return String(value);
-    if (value && typeof value === 'object' && 'id' in (value as any)) return String((value as any).id);
-    return '';
-  };
-
-  const handleOpenDialog = (payment?: PaymentDto) => {
-    if (payment) {
-      setEditingPayment(payment);
-      const processedAt = toDateInputValue((payment as any).processed_at ?? (payment as any).processedAt ?? payment.created_at);
-      setFormData({
-        invoice: normalizeId((payment as any).invoice),
-        student: normalizeId((payment as any).student),
-        payment_method: payment.payment_method,
-        amount: payment.amount,
-        currency: payment.currency || DEFAULT_CURRENCY,
-        transaction_id: payment.transaction_id || '',
-        notes: payment.notes || '',
-        processed_at: processedAt,
-        payment_date: toDateInputValue((payment as any).payment_date ?? (payment as any).paymentDate ?? processedAt),
-      });
-    } else {
-      setEditingPayment(null);
-      resetForm();
-    }
+  const handleOpenDialog = () => {
+    resetForm();
     setIsDialogOpen(true);
   };
 
@@ -235,27 +139,17 @@ export default function Payments() {
       return;
     }
 
-    if (editingPayment) {
-      const updatePayload: Partial<PaymentRequest> = {
-        amount: formData.amount,
-        currency: formData.currency || DEFAULT_CURRENCY,
-        payment_method: formData.payment_method,
-        gateway_transaction_id: formData.transaction_id || undefined,
-        notes: formData.notes || undefined,
-        payment_date: formData.payment_date ? new Date(formData.payment_date).toISOString() : undefined,
-        processed_at: formData.processed_at ? new Date(formData.processed_at).toISOString() : undefined,
-      };
-      updateMutation.mutate({ id: editingPayment.id, data: updatePayload });
-    } else {
-      const recordPayload: RecordPaymentRequest = {
-        invoice: formData.invoice,
-        amount: formData.amount,
-        payment_method: formData.payment_method,
-        notes: formData.notes || undefined,
-        payment_date: formData.payment_date ? new Date(formData.payment_date).toISOString() : undefined,
-      };
-      createMutation.mutate(recordPayload);
-    }
+    const payload: RecordPaymentRequest = {
+      invoice: formData.invoice,
+      amount: formData.amount,
+      payment_method: formData.payment_method,
+      notes: formData.notes || undefined,
+      payment_date: new Date(formData.payment_date).toISOString(),
+    };
+
+    // Backend record_payment always creates a new completed payment;
+    // we only support "record new payment" from this UI.
+    recordPaymentMutation.mutate(payload);
   };
 
   const handleDelete = (id: string) => {
@@ -303,18 +197,15 @@ export default function Payments() {
     }
   };
 
-  const formatCurrency = (amount: string, currency?: string) => {
-    const num = parseFloat(amount || '0');
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || DEFAULT_CURRENCY,
-    }).format(num);
+  const formatCurrency = (amount: string, currency: string = DEFAULT_CURRENCY) => {
+    return formatCurrencyString(amount, currency);
   };
 
   const filteredPayments = payments.filter((payment: PaymentDto) => {
     return (
       searchTerm === '' ||
-      payment.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.gateway_transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.invoice?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
@@ -412,7 +303,10 @@ export default function Payments() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <p className="font-medium">
-                        {payment.transaction_id || `Payment #${payment.id.slice(0, 8)}`}
+                        {payment.gateway_transaction_id ||
+                          payment.payment_number ||
+                          payment.invoice_number ||
+                          `Payment #${payment.id.slice(0, 8)}`}
                       </p>
                       <Badge variant={getStatusVariant(payment.status)}>
                         {payment.status}
@@ -421,10 +315,12 @@ export default function Payments() {
                     </div>
                     <p className="text-sm font-medium">Amount: {formatCurrency(payment.amount, payment.currency)}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Processed: {new Date(payment.processed_at).toLocaleDateString()}
+                      Payment date: {new Date(payment.payment_date).toLocaleDateString()}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {getEnrollmentLabelForPayment(payment) || 'Enrollment: Unknown'}
+                      {payment.student_name && payment.cohort_name
+                        ? `${payment.student_name} - ${payment.cohort_name}`
+                        : 'Enrollment: Unknown'}
                     </p>
                     {payment.notes && (
                       <p className="text-xs text-muted-foreground mt-1">Notes: {payment.notes}</p>
@@ -441,14 +337,6 @@ export default function Payments() {
                         <RefreshCw className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenDialog(payment)}
-                      title="Edit Payment"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -469,10 +357,8 @@ export default function Payments() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingPayment ? 'Edit Payment' : 'Record Payment'}</DialogTitle>
-            <DialogDescription>
-              {editingPayment ? 'Update payment details' : 'Record a new payment'}
-            </DialogDescription>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>Record a new payment against an invoice.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
@@ -488,40 +374,14 @@ export default function Payments() {
                   <SelectContent>
                     {invoices.map((invoice: any) => (
                       <SelectItem key={invoice.id} value={invoice.id}>
-                        {invoice.invoice_number || invoice.id.slice(0, 8)} - {formatCurrency(invoice.total_amount)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="student">Student *</Label>
-                <Select
-                  value={formData.student}
-                  onValueChange={(value) => setFormData({ ...formData, student: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select student" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student: any) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.first_name} {student.last_name} ({student.email})
+                        {invoice.invoice_number || invoice.id.slice(0, 8)} -{' '}
+                        {formatCurrencyString(invoice.total_amount, invoice.currency || 'USD')}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
-                  <Input
-                    id="currency"
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    placeholder="GEL"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="amount">Amount *</Label>
                   <Input
@@ -542,7 +402,7 @@ export default function Payments() {
                   <Label htmlFor="payment_method">Payment Method *</Label>
                   <Select
                     value={formData.payment_method}
-                    onValueChange={(value: PaymentRequest['payment_method']) =>
+                    onValueChange={(value: RecordPaymentRequest['payment_method']) =>
                       setFormData({ ...formData, payment_method: value })
                     }
                   >
@@ -561,15 +421,6 @@ export default function Payments() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="transaction_id">Transaction ID</Label>
-                  <Input
-                    id="transaction_id"
-                    value={formData.transaction_id}
-                    onChange={(e) => setFormData({ ...formData, transaction_id: e.target.value })}
-                    placeholder="Optional transaction reference"
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -580,16 +431,6 @@ export default function Payments() {
                     type="date"
                     value={formData.payment_date}
                     onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="processed_at">Processed Date *</Label>
-                  <Input
-                    id="processed_at"
-                    type="date"
-                    value={formData.processed_at}
-                    onChange={(e) => setFormData({ ...formData, processed_at: e.target.value })}
                     required
                   />
                 </div>
@@ -609,8 +450,8 @@ export default function Payments() {
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingPayment ? 'Update' : 'Record'}
+              <Button type="submit" disabled={recordPaymentMutation.isPending}>
+                Record
               </Button>
             </DialogFooter>
           </form>
