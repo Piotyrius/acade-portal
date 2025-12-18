@@ -769,7 +769,7 @@ export default function Invoices() {
             <Button
               type="button"
               onClick={handleCreateFromEnrollment}
-              disabled={createFromEnrollmentMutation.isPending || !formData.enrollment || !formData.payment_plan}
+              disabled={createInvoiceFromEnrollment.isPending || !formData.enrollment || !formData.payment_plan}
             >
               Create Invoice
             </Button>
