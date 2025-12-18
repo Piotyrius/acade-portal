@@ -23,7 +23,8 @@ export default function Recruiting() {
   const qc = useQueryClient();
 
   const [form, setForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phones: [{ name: '', phone: '' }] as PhoneEntry[],
     program: '',
@@ -51,7 +52,8 @@ export default function Recruiting() {
     onSuccess: () => {
       toast({ title: 'Success', description: 'Student recruited successfully' });
       setForm({
-        name: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phones: [{ name: '', phone: '' }],
         program: '',
@@ -85,8 +87,11 @@ export default function Recruiting() {
       return;
     }
 
+    const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
+
     const payload = {
       ...form,
+      name: fullName,
       phones: cleanedPhones,
       phone: cleanedPhones[0].phone, // backend "phone": main phone
     };
@@ -115,15 +120,27 @@ export default function Recruiting() {
 
           <CardContent>
             <form className="recruiting_form" onSubmit={handleSubmit}>
-              <div>
-                <label> Full Name * </label>
-                <Input
-                  className="recruiting_input"
-                  placeholder="Enter full name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  required
-                />
+              <div className="name-fields-wrapper">
+                <div className="name-field">
+                  <label> First Name * </label>
+                  <Input
+                    className="recruiting_input_name__lastname"
+                    placeholder="Enter first name"
+                    value={form.firstName}
+                    onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="name-field">
+                  <label> Last Name * </label>
+                  <Input
+                    className="recruiting_input_name__lastname"
+                    placeholder="Enter last name"
+                    value={form.lastName}
+                    onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
