@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash2, FileText, CheckCircle } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, FileText, CheckCircle, DollarSign } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getInvoices,
@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { getDiscounts, DiscountDto } from '@/api/endpoints/payments';
+import { getDiscounts, DiscountDto, RecordPaymentRequest } from '@/api/endpoints/payments';
 import { CardListSkeleton } from '@/components/ui/table-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrencyString, formatEnrollmentLabel } from '@/utils/paymentsFormatting';
@@ -50,6 +50,14 @@ export default function Invoices() {
   const [editingInvoice, setEditingInvoice] = useState<InvoiceDto | null>(null);
   const [selectedInvoiceForDiscounts, setSelectedInvoiceForDiscounts] = useState<InvoiceDto | null>(null);
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
+  const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
+  const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState<InvoiceDto | null>(null);
+  const [paymentForm, setPaymentForm] = useState({
+    amount: '',
+    payment_method: 'MANUAL' as RecordPaymentRequest['payment_method'],
+    payment_date: new Date().toISOString().split('T')[0],
+    notes: '',
+  });
   const [formData, setFormData] = useState({
     enrollment: '',
     payment_plan: '',
@@ -97,7 +105,7 @@ export default function Invoices() {
     enabled: user?.role === 'ADMIN' && isDiscountDialogOpen,
   });
 
-  const { createInvoiceFromEnrollment, applyDiscountsMutation } = usePaymentsAdmin();
+  const { createInvoiceFromEnrollment, applyDiscountsMutation, recordPaymentMutation } = usePaymentsAdmin();
 
   const createMutation = useMutation({
     mutationFn: createInvoice,
@@ -237,6 +245,42 @@ export default function Invoices() {
     setSelectedInvoiceForDiscounts(invoice);
     setSelectedDiscounts([]);
     setIsDiscountDialogOpen(true);
+  };
+
+  const handleOpenRecordPayment = (invoice: InvoiceDto) => {
+    setSelectedInvoiceForPayment(invoice);
+    setPaymentForm({
+      amount: invoice.outstanding_amount || invoice.total_amount,
+      payment_method: 'MANUAL',
+      payment_date: new Date().toISOString().split('T')[0],
+      notes: '',
+    });
+    setIsRecordPaymentOpen(true);
+  };
+
+  const handleRecordPaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedInvoiceForPayment || !paymentForm.amount) {
+      toast({
+        title: 'Error',
+        description: 'Amount is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const payload: RecordPaymentRequest = {
+      invoice: selectedInvoiceForPayment.id,
+      amount: paymentForm.amount,
+      payment_method: paymentForm.payment_method,
+      payment_date: new Date(paymentForm.payment_date).toISOString(),
+      notes: paymentForm.notes || undefined,
+    };
+    recordPaymentMutation.mutate(payload, {
+      onSuccess: () => {
+        setIsRecordPaymentOpen(false);
+        setSelectedInvoiceForPayment(null);
+      },
+    });
   };
 
   const handleApplyDiscounts = () => {
@@ -476,6 +520,16 @@ export default function Invoices() {
                         title="Apply Discounts"
                       >
                         <FileText className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {(invoice.status === 'ISSUED' || invoice.status === 'PARTIAL') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenRecordPayment(invoice)}
+                        title="Record Payment"
+                      >
+                        <DollarSign className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
@@ -774,6 +828,120 @@ export default function Invoices() {
               Create Invoice
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Record Payment Dialog (invoice-driven) */}
+      <Dialog open={isRecordPaymentOpen} onOpenChange={setIsRecordPaymentOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>
+              Record a payment for{' '}
+              {selectedInvoiceForPayment?.invoice_number ||
+                (selectedInvoiceForPayment && selectedInvoiceForPayment.id.slice(0, 8)) ||
+                'this invoice'}
+              .
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleRecordPaymentSubmit}>
+            <div className="space-y-4 py-4">
+              {selectedInvoiceForPayment && (
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>
+                    Student: {selectedInvoiceForPayment.student_name || 'Unknown'}
+                  </p>
+                  <p>
+                    Cohort: {selectedInvoiceForPayment.cohort_name || 'Unknown'}
+                  </p>
+                  <p>
+                    Total: {formatCurrencyString(selectedInvoiceForPayment.total_amount, 'USD')}
+                  </p>
+                  {selectedInvoiceForPayment.outstanding_amount && (
+                    <p>
+                      Outstanding:{' '}
+                      {formatCurrencyString(selectedInvoiceForPayment.outstanding_amount, 'USD')}
+                    </p>
+                  )}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="payment-amount">Amount *</Label>
+                  <Input
+                    id="payment-amount"
+                    type="number"
+                    step="0.01"
+                    value={paymentForm.amount}
+                    onChange={(e) =>
+                      setPaymentForm((prev) => ({ ...prev, amount: e.target.value }))
+                    }
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="payment-method">Payment Method *</Label>
+                  <Select
+                    value={paymentForm.payment_method}
+                    onValueChange={(value: RecordPaymentRequest['payment_method']) =>
+                      setPaymentForm((prev) => ({ ...prev, payment_method: value }))
+                    }
+                  >
+                    <SelectTrigger id="payment-method">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MANUAL">Manual Entry</SelectItem>
+                      <SelectItem value="CASH">Cash</SelectItem>
+                      <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                      <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                      <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
+                      <SelectItem value="CHECK">Check</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="payment-date">Payment Date *</Label>
+                  <Input
+                    id="payment-date"
+                    type="date"
+                    value={paymentForm.payment_date}
+                    onChange={(e) =>
+                      setPaymentForm((prev) => ({ ...prev, payment_date: e.target.value }))
+                    }
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment-notes">Notes</Label>
+                <Input
+                  id="payment-notes"
+                  value={paymentForm.notes}
+                  onChange={(e) =>
+                    setPaymentForm((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder="Additional notes..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsRecordPaymentOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={recordPaymentMutation.isPending}>
+                Record Payment
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

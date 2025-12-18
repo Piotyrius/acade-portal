@@ -2,10 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, UserPlus, Check, X } from 'lucide-react';
+import { Search, Check, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getApplications, updateApplication, acceptApplication } from '@/api/endpoints/admissions';
 import { getPrograms, getCohorts, getCourses } from '@/api/endpoints/catalog';
+import { getDiscounts, getPaymentPlans } from '@/api/endpoints/payments';
 import { ApplicationDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Applications() {
   const { toast } = useToast();
@@ -27,8 +29,12 @@ export default function Applications() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
+  const [acceptStep, setAcceptStep] = useState<1 | 2>(1);
   const [selectedApp, setSelectedApp] = useState<ApplicationDto | null>(null);
   const [selectedCohort, setSelectedCohort] = useState('');
+  const [selectedPaymentPlan, setSelectedPaymentPlan] = useState('');
+  const [selectedDiscountIds, setSelectedDiscountIds] = useState<string[]>([]);
+  const [isSubmittingFlow, setIsSubmittingFlow] = useState(false);
 
   /* ===================== QUERIES ===================== */
 
@@ -52,6 +58,19 @@ export default function Applications() {
     queryKey: ['courses', selectedApp?.program],
     queryFn: () => (selectedApp?.program ? getCourses(selectedApp.program) : Promise.resolve([])),
     enabled: acceptDialogOpen && !!selectedApp?.program,
+  });
+
+  // Payment plans & discounts for the billing step
+  const { data: paymentPlans = [] } = useQuery({
+    queryKey: ['paymentPlans', { is_active: true }],
+    queryFn: () => getPaymentPlans({ is_active: true }),
+    enabled: acceptDialogOpen,
+  });
+
+  const { data: discounts = [] } = useQuery({
+    queryKey: ['discounts', { is_active: true }],
+    queryFn: () => getDiscounts({ is_active: true }),
+    enabled: acceptDialogOpen,
   });
 
   const allowedCourseIds = new Set(coursesForProgram.map((c) => c.id));
@@ -95,12 +114,51 @@ export default function Applications() {
 
   const handleOpenAccept = (app: ApplicationDto) => {
     setSelectedApp(app);
+    setAcceptStep(1);
     setAcceptDialogOpen(true);
   };
 
-  const handleAcceptSubmit = () => {
-    if (!selectedApp || !selectedCohort) return;
-    acceptMutation.mutate({ id: selectedApp.id, cohortId: selectedCohort });
+  const handleToggleDiscount = (id: string) => {
+    setSelectedDiscountIds((prev) =>
+      prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
+    );
+  };
+
+  const handleAcceptAndBill = async () => {
+    if (!selectedApp || !selectedCohort || !selectedPaymentPlan) return;
+
+    setIsSubmittingFlow(true);
+    try {
+      // 1) Accept application and create enrollment
+      const enrollment = await acceptApplication(selectedApp.id, selectedCohort);
+
+      // 2) Create invoice for the new enrollment
+      await createInvoiceForEnrollment(enrollment.id, selectedPaymentPlan, selectedDiscountIds);
+
+      qc.invalidateQueries({ queryKey: ['applications'] });
+      qc.invalidateQueries({ queryKey: ['enrollments'] });
+      qc.invalidateQueries({ queryKey: ['invoices'] });
+
+      toast({
+        title: 'Enrollment billed',
+        description: 'Enrollment created and invoice generated successfully.',
+      });
+
+      setAcceptDialogOpen(false);
+      setSelectedApp(null);
+      setSelectedCohort('');
+      setSelectedPaymentPlan('');
+      setSelectedDiscountIds([]);
+      setAcceptStep(1);
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmittingFlow(false);
+    }
   };
 
   const handleReject = (id: string) => {
@@ -242,41 +300,130 @@ export default function Applications() {
 
       {/* ================= ACCEPT DIALOG ================= */}
 
-      <Dialog open={acceptDialogOpen} onOpenChange={setAcceptDialogOpen}>
+      <Dialog
+        open={acceptDialogOpen}
+        onOpenChange={(open) => {
+          setAcceptDialogOpen(open);
+          if (!open) {
+            setAcceptStep(1);
+            setSelectedCohort('');
+            setSelectedPaymentPlan('');
+            setSelectedDiscountIds([]);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Enrollment</DialogTitle>
+            <DialogTitle>
+              {acceptStep === 1 ? 'Create Enrollment' : 'Enrollment Billing Options'}
+            </DialogTitle>
             <DialogDescription>
-              Select a cohort for {selectedApp?.name}
+              {acceptStep === 1
+                ? `Step 1 of 2 – Choose a cohort for ${selectedApp?.name}`
+                : 'Step 2 of 2 – Choose how this enrollment will be billed.'}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2 py-4">
-            <Label>Cohort *</Label>
-            <Select value={selectedCohort} onValueChange={setSelectedCohort}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select cohort" />
-              </SelectTrigger>
-              <SelectContent>
-                {cohortsForSelectedProgram.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {acceptStep === 1 && (
+            <div className="space-y-2 py-4">
+              <Label>Cohort *</Label>
+              <Select value={selectedCohort} onValueChange={setSelectedCohort}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select cohort" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cohortsForSelectedProgram.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {acceptStep === 2 && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Payment plan *</Label>
+                <Select value={selectedPaymentPlan} onValueChange={setSelectedPaymentPlan}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentPlans.map((plan) => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        {plan.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Optional discounts</Label>
+                <div className="max-h-40 space-y-2 overflow-auto rounded-md border p-2">
+                  {discounts.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      No active discounts configured.
+                    </p>
+                  )}
+                  {discounts.map((d) => (
+                    <label
+                      key={d.id}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={selectedDiscountIds.includes(d.id)}
+                        onCheckedChange={() => handleToggleDiscount(d.id)}
+                      />
+                      <span>
+                        {d.name}{' '}
+                        <span className="text-xs text-muted-foreground">({d.type_display})</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                The exact tuition, discounts, and payment schedule will be calculated automatically
+                when the invoice is created for this enrollment.
+              </p>
+            </div>
+          )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAcceptDialogOpen(false)}>
-              Cancel
-            </Button>
             <Button
-              onClick={handleAcceptSubmit}
-              disabled={!selectedCohort || acceptMutation.isPending}
+              variant="outline"
+              onClick={() => {
+                if (acceptStep === 1) {
+                  setAcceptDialogOpen(false);
+                } else {
+                  setAcceptStep(1);
+                }
+              }}
             >
-              Create Enrollment
+              {acceptStep === 1 ? 'Cancel' : 'Back'}
             </Button>
+
+            {acceptStep === 1 && (
+              <Button
+                onClick={() => setAcceptStep(2)}
+                disabled={!selectedCohort}
+              >
+                Next: Billing options
+              </Button>
+            )}
+
+            {acceptStep === 2 && (
+              <Button
+                onClick={handleAcceptAndBill}
+                disabled={!selectedPaymentPlan || isSubmittingFlow}
+              >
+                {isSubmittingFlow ? 'Creating...' : 'Create enrollment & invoice'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

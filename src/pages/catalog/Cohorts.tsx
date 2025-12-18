@@ -2,7 +2,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Users, Edit, Trash2, Calendar, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Users,
+  Edit,
+  Trash2,
+  Calendar,
+  Eye,
+  ChevronDown,
+  ChevronUp,
+  ClipboardCheck,
+  FileCheck,
+} from 'lucide-react';
 import { exampleCohorts } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,6 +36,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { getInvoices, getPayments, PaymentDto } from '@/api/endpoints/payments';
+import { useNavigate } from 'react-router-dom';
 
 function isPaidThisMonth(payments: PaymentDto[] | undefined): boolean {
   if (!payments || payments.length === 0) return false;
@@ -94,6 +107,7 @@ function EnrollmentRow({
 export default function Cohorts() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCohortId, setExpandedCohortId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -400,6 +414,22 @@ export default function Cohorts() {
                     title="View Students"
                   >
                     {expandedCohortId === cohort.id ? <ChevronUp className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/attendance/list?cohort=${cohort.id}`)}
+                    title="Take attendance"
+                  >
+                    <ClipboardCheck className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/assessment?tab=grades&cohort=${cohort.id}`)}
+                    title="Enter grades"
+                  >
+                    <FileCheck className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"

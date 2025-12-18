@@ -23,6 +23,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { IoIosArrowDown } from "react-icons/io";
 import { getEnrollments } from '@/api/endpoints/admissions';
@@ -90,7 +91,30 @@ export default function Programs() {
   const [isStudentsPopupOpen, setIsStudentsPopupOpen] = useState(false);
   const [studentsPopupCohort, setStudentsPopupCohort] = useState<CohortDto | null>(null);
 
-  
+  // Recruitment planning wizard state
+  const [isRecruitmentDialogOpen, setIsRecruitmentDialogOpen] = useState(false);
+  const [recruitmentStep, setRecruitmentStep] = useState<1 | 2 | 3>(1);
+  const [recruitmentPrograms, setRecruitmentPrograms] = useState<string[]>([]);
+  const [recruitmentRange, setRecruitmentRange] = useState<{ start: string; end: string }>({
+    start: '',
+    end: '',
+  });
+  const [recruitmentGoals, setRecruitmentGoals] = useState<{
+    applications: string;
+    enrollmentsPerCohort: string;
+  }>({
+    applications: '',
+    enrollmentsPerCohort: '',
+  });
+  const [recruitmentSummary, setRecruitmentSummary] = useState<{
+    programIds: string[];
+    start: string;
+    end: string;
+    totalApplications: number;
+    applicationsPerMonth: number;
+    enrollmentsPerCohort: number;
+    months: { label: string; applications: number }[];
+  } | null>(null);
 
   const handleOpenView = (program: ProgramDto) => {
     if (expandedProgramId === program.id) {
@@ -208,6 +232,61 @@ export default function Programs() {
     if (confirm('Are you sure you want to delete this program?')) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const toggleRecruitmentProgram = (id: string) => {
+    setRecruitmentPrograms((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+    );
+  };
+
+  const handleConfirmRecruitmentPlan = () => {
+    if (!recruitmentPrograms.length || !recruitmentRange.start || !recruitmentRange.end) {
+      toast({
+        title: 'Missing information',
+        description: 'Choose at least one program and a date range.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const totalApplications = parseInt(recruitmentGoals.applications || '0', 10) || 0;
+    const enrollmentsPerCohort = parseInt(recruitmentGoals.enrollmentsPerCohort || '0', 10) || 0;
+
+    const startDate = new Date(recruitmentRange.start);
+    const endDate = new Date(recruitmentRange.end);
+    const diffMonths =
+      (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+      (endDate.getMonth() - startDate.getMonth()) +
+      1;
+    const monthsCount = Math.max(1, diffMonths);
+    const applicationsPerMonth = monthsCount > 0 ? Math.round(totalApplications / monthsCount) : 0;
+
+    const months: { label: string; applications: number }[] = [];
+    for (let i = 0; i < monthsCount; i++) {
+      const d = new Date(startDate);
+      d.setMonth(startDate.getMonth() + i);
+      const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      months.push({ label, applications: applicationsPerMonth });
+    }
+
+    setRecruitmentSummary({
+      programIds: recruitmentPrograms,
+      start: recruitmentRange.start,
+      end: recruitmentRange.end,
+      totalApplications,
+      applicationsPerMonth,
+      enrollmentsPerCohort,
+      months,
+    });
+
+    setIsRecruitmentDialogOpen(false);
+    setRecruitmentStep(1);
+
+    toast({
+      title: 'Recruitment plan created',
+      description: 'Targets have been calculated for the selected date range.',
+    });
   };
 
   const displayPrograms = programList || [];
@@ -458,12 +537,26 @@ export default function Programs() {
       <div className="flex items-center justify-between programs_header_wrapper">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Programs</h2>
-          <p className="text-muted-foreground">Manage your educational programs</p>
+          <p className="text-muted-foreground">
+            Manage programs and plan upcoming cohorts and recruitment goals.
+          </p>
         </div>
-        <Button onClick={handleOpenCreate} className='programs_plus_btn'>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Program
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setIsRecruitmentDialogOpen(true);
+              setRecruitmentStep(1);
+            }}
+          >
+            <Calendar className="mr-2 h-4 w-4" />
+            Plan recruitment
+          </Button>
+          <Button onClick={handleOpenCreate} className="programs_plus_btn">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Program
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
@@ -574,6 +667,58 @@ export default function Programs() {
         })}
       </div>
 
+      {recruitmentSummary && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recruitment plan summary</CardTitle>
+            <CardDescription>
+              Simple targets for applications and enrollments across your selected programs.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm">
+              <span className="font-medium">Date range:</span>{' '}
+              {recruitmentSummary.start} – {recruitmentSummary.end}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Programs:</span>{' '}
+              {recruitmentSummary.programIds
+                .map((id) => programList.find((p) => p.id === id)?.name || id)
+                .join(', ')}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Total applications target:</span>{' '}
+              {recruitmentSummary.totalApplications}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Approx. applications per month:</span>{' '}
+              {recruitmentSummary.applicationsPerMonth}
+            </p>
+            {recruitmentSummary.enrollmentsPerCohort > 0 && (
+              <p className="text-sm">
+                <span className="font-medium">Target enrollments per cohort:</span>{' '}
+                {recruitmentSummary.enrollmentsPerCohort}
+              </p>
+            )}
+            <div className="mt-2">
+              <p className="text-xs font-medium text-muted-foreground mb-1">
+                Monthly breakdown
+              </p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {recruitmentSummary.months.map((m) => (
+                  <span
+                    key={m.label}
+                    className="rounded-full border px-2 py-1 bg-muted text-muted-foreground"
+                  >
+                    {m.label}: {m.applications} apps
+                  </span>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {filteredPrograms.length === 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
@@ -587,6 +732,155 @@ export default function Programs() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={isRecruitmentDialogOpen} onOpenChange={setIsRecruitmentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Plan recruitment</DialogTitle>
+            <DialogDescription>
+              Choose programs, a date range, and simple goals to generate a lightweight recruitment
+              plan.
+            </DialogDescription>
+          </DialogHeader>
+
+          {recruitmentStep === 1 && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Programs</Label>
+                <div className="max-h-48 overflow-auto rounded-md border p-2 space-y-2">
+                  {programList.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      No programs yet. Create a program first.
+                    </p>
+                  )}
+                  {programList.map((program) => (
+                    <label
+                      key={program.id}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={recruitmentPrograms.includes(program.id)}
+                        onCheckedChange={() => toggleRecruitmentProgram(program.id)}
+                      />
+                      <span>{program.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Target start (month)</Label>
+                  <Input
+                    type="month"
+                    value={recruitmentRange.start}
+                    onChange={(e) =>
+                      setRecruitmentRange((prev) => ({ ...prev, start: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Target end (month)</Label>
+                  <Input
+                    type="month"
+                    value={recruitmentRange.end}
+                    onChange={(e) =>
+                      setRecruitmentRange((prev) => ({ ...prev, end: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsRecruitmentDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => setRecruitmentStep(2)}
+                  disabled={!recruitmentPrograms.length || !recruitmentRange.start || !recruitmentRange.end}
+                >
+                  Next: Set goals
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+
+          {recruitmentStep === 2 && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Total applications target</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={recruitmentGoals.applications}
+                  onChange={(e) =>
+                    setRecruitmentGoals((prev) => ({ ...prev, applications: e.target.value }))
+                  }
+                  placeholder="e.g. 30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Target enrollments per cohort (optional)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={recruitmentGoals.enrollmentsPerCohort}
+                  onChange={(e) =>
+                    setRecruitmentGoals((prev) => ({
+                      ...prev,
+                      enrollmentsPerCohort: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. 15"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                We&apos;ll calculate an approximate applications-per-month target for this period.
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setRecruitmentStep(1)}>
+                  Back
+                </Button>
+                <Button onClick={() => setRecruitmentStep(3)} disabled={!recruitmentGoals.applications}>
+                  Review plan
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+
+          {recruitmentStep === 3 && (
+            <div className="space-y-4 py-4">
+              <p className="text-sm">
+                You&apos;re planning recruitment for{' '}
+                <span className="font-medium">{recruitmentPrograms.length}</span> program
+                {recruitmentPrograms.length === 1 ? '' : 's'} between{' '}
+                <span className="font-medium">{recruitmentRange.start}</span> and{' '}
+                <span className="font-medium">{recruitmentRange.end}</span>.
+              </p>
+              <p className="text-sm">
+                Total applications target:{' '}
+                <span className="font-medium">{recruitmentGoals.applications || 0}</span>
+              </p>
+              {recruitmentGoals.enrollmentsPerCohort && (
+                <p className="text-sm">
+                  Target enrollments per cohort:{' '}
+                  <span className="font-medium">
+                    {parseInt(recruitmentGoals.enrollmentsPerCohort || '0', 10)}
+                  </span>
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                When you confirm, we&apos;ll generate a simple monthly breakdown you can refer to on
+                this page. This doesn&apos;t change any backend data yet.
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setRecruitmentStep(2)}>
+                  Back
+                </Button>
+                <Button onClick={handleConfirmRecruitmentPlan}>Confirm plan</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>

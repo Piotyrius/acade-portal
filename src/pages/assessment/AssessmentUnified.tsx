@@ -1,17 +1,58 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { ClipboardCheck, FileCheck } from 'lucide-react';
 import Assessments from './Assessments';
 import Submissions from './Submissions';
 import Grades from './Grades';
 
 export default function AssessmentUnified() {
+  const [tab, setTab] = useState<'assessments' | 'submissions' | 'grades'>('assessments');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Initialize tab from URL (?tab=grades) for deep links from Cohorts/Teaching
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'assessments' || tabParam === 'submissions' || tabParam === 'grades') {
+      setTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleGoToAttendance = () => {
+    navigate('/attendance/list');
+  };
+
+  const handleGoToGrades = () => {
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', 'grades');
+    navigate({ pathname: '/assessment', search: params.toString() });
+    setTab('grades');
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Assessment</h2>
-        <p className="text-muted-foreground">Manage assessments, submissions, and grades</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Teaching</h2>
+          <p className="text-muted-foreground">
+            Take attendance and manage assessments, submissions, and grades.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleGoToAttendance}>
+            <ClipboardCheck className="mr-2 h-4 w-4" />
+            Take attendance today
+          </Button>
+          <Button onClick={handleGoToGrades}>
+            <FileCheck className="mr-2 h-4 w-4" />
+            Enter grades
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="assessments" className="w-full">
+      <Tabs value={tab} onValueChange={(value) => setTab(value as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
           <TabsTrigger value="submissions">Submissions</TabsTrigger>

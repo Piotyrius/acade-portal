@@ -13,7 +13,7 @@ import { getSessions } from '@/api/endpoints/catalog';
 import { getEnrollments } from '@/api/endpoints/admissions';
 import { getUsers } from '@/api/endpoints/auth';
 import { useAuthStore } from '@/store/authStore';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -26,11 +26,13 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useSearchParams } from 'react-router-dom';
 
 export default function AttendanceList() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
@@ -45,6 +47,14 @@ export default function AttendanceList() {
     session: '',
     records: [] as Array<{ student_id: string; status: string; note?: string }>,
   });
+
+  // Initialize cohort search from URL (?cohort=ID) when coming from Cohorts/Teaching flows
+  useEffect(() => {
+    const cohortId = searchParams.get('cohort');
+    if (cohortId) {
+      setSearchTerm(cohortId);
+    }
+  }, [searchParams]);
 
   // Mock data for preview
   const mockRecords = [
