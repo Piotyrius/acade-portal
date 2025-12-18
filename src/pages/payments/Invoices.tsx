@@ -343,18 +343,6 @@ export default function Invoices() {
     }
   };
 
-  const formatCurrency = (amount: string) => {
-    const num = parseFloat(amount || '0');
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(num);
-  };
-
-  const convertedEnrollment = () => {
-
-  }
-
   const filteredInvoices = invoices.filter((invoice: InvoiceDto) => {
     return (
       searchTerm === '' ||

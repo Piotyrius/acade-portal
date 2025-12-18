@@ -38,26 +38,12 @@ export default function CertificatesList() {
   const [eligibilityResult, setEligibilityResult] = useState<{ eligible: boolean; reason?: string } | null>(null);
   const [verifyResult, setVerifyResult] = useState<any>(null);
 
-  // Mock data for preview
-  const mockCertificates = [
-    { id: '1', student: 'student-101', cohort: '1', serial: 'CERT-2024-001', qr_token: 'QR-001', issued_at: '2024-03-15T00:00:00Z', revoked_at: null, revocation_reason: null, status: 'ISSUED' as const },
-    { id: '2', student: 'student-102', cohort: '1', serial: 'CERT-2024-002', qr_token: 'QR-002', issued_at: '2024-03-15T00:00:00Z', revoked_at: null, revocation_reason: null, status: 'ISSUED' as const },
-    { id: '3', student: 'student-103', cohort: '4', serial: 'CERT-2023-089', qr_token: 'QR-089', issued_at: '2023-12-20T00:00:00Z', revoked_at: null, revocation_reason: null, status: 'ISSUED' as const },
-    { id: '4', student: 'student-104', cohort: '4', serial: 'CERT-2023-090', qr_token: 'QR-090', issued_at: '2023-12-20T00:00:00Z', revoked_at: '2024-01-10T00:00:00Z', revocation_reason: 'Plagiarism discovered', status: 'REVOKED' as const },
-  ];
-
-  const mockCohorts = [
-    { id: '1', course: '1', name: 'Network Security - Spring 2024', lecturer: 'lect-1', capacity: 30, start_date: '2024-03-01', end_date: '2024-05-30', status: 'ACTIVE' as const, created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
-    { id: '2', course: '2', name: 'Ethical Hacking - Evening Batch', lecturer: 'lect-2', capacity: 25, start_date: '2024-02-15', end_date: '2024-06-15', status: 'ENROLLING' as const, created_at: '2024-01-16T00:00:00Z', updated_at: '2024-01-16T00:00:00Z' },
-    { id: '4', course: '1', name: 'Network Security - Fall 2023', lecturer: 'lect-1', capacity: 30, start_date: '2023-09-01', end_date: '2023-12-15', status: 'COMPLETED' as const, created_at: '2023-08-15T00:00:00Z', updated_at: '2023-12-15T00:00:00Z' },
-  ];
-
-  const { data: certificates = mockCertificates, isLoading } = useQuery({
+  const { data: certificates = [], isLoading } = useQuery({
     queryKey: ['certificates'],
     queryFn: () => getCertificates(),
   });
 
-  const { data: cohorts = mockCohorts } = useQuery({
+  const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
     queryFn: () => getCohorts(),
   });
