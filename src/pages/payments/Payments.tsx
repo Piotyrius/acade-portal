@@ -36,6 +36,7 @@ export default function Payments() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const DEFAULT_CURRENCY = 'GEL';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedInvoice, setSelectedInvoice] = useState<string>('all');
@@ -88,6 +89,7 @@ export default function Payments() {
     mutationFn: deletePayment,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
+      qc.invalidateQueries({ queryKey: ['invoices'] });
       toast({ title: 'Success', description: 'Payment deleted successfully' });
     },
     onError: (error) => {
@@ -193,6 +195,10 @@ export default function Payments() {
       default:
         return 'outline';
     }
+  };
+
+  const formatCurrency = (amount: string, currency: string = DEFAULT_CURRENCY) => {
+    return formatCurrencyString(amount, currency);
   };
 
   const filteredPayments = payments.filter((payment: PaymentDto) => {
@@ -309,7 +315,7 @@ export default function Payments() {
                       </Badge>
                       <Badge variant="secondary">{payment.payment_method}</Badge>
                     </div>
-                    <p className="text-sm font-medium">Amount: {formatCurrency(payment.amount)}</p>
+                    <p className="text-sm font-medium">Amount: {formatCurrency(payment.amount, payment.currency)}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Payment date: {new Date(payment.payment_date).toLocaleDateString()}
                     </p>

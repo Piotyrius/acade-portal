@@ -40,7 +40,7 @@ export default function Pricings() {
     object_type: '' as 'program' | 'course' | 'cohort' | '',
     content_type: 0,
     amount: '',
-    currency: 'USD',
+    currency: 'GEL',
     effective_from: '',
     effective_to: '',
     is_active: true,
@@ -69,6 +69,52 @@ export default function Pricings() {
     queryFn: () => getCohorts(),
     enabled: user?.role === 'ADMIN',
   });
+
+  const getContentTypeIdFromObject = (obj: any): number => {
+    const raw = obj?.content_type ?? obj?.content_type_id ?? obj?.contentType ?? obj?.contentTypeId;
+    if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+    if (typeof raw === 'string' && raw.trim() !== '') {
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
+  };
+
+  const findSelectedObject = (objectType: string, objectId: string) => {
+    if (!objectType || !objectId) return null;
+    if (objectType === 'program') return programs.find((p: any) => p.id === objectId) ?? null;
+    if (objectType === 'course') return courses.find((c: any) => c.id === objectId) ?? null;
+    if (objectType === 'cohort') return cohorts.find((ch: any) => ch.id === objectId) ?? null;
+    return null;
+  };
+
+  const inferContentTypeIdForObjectType = (objectType: 'program' | 'course' | 'cohort' | ''): number => {
+    if (!objectType) return 0;
+
+    const ids = new Set<string>();
+    if (objectType === 'program') programs.forEach((p: any) => ids.add(String(p.id)));
+    if (objectType === 'course') courses.forEach((c: any) => ids.add(String(c.id)));
+    if (objectType === 'cohort') cohorts.forEach((ch: any) => ids.add(String(ch.id)));
+
+    const counts = new Map<number, number>();
+    for (const pricing of pricings as any[]) {
+      const ct = pricing?.content_type;
+      if (typeof ct !== 'number' || !Number.isFinite(ct)) continue;
+      const objectId = pricing?.object_id != null ? String(pricing.object_id) : '';
+      if (!objectId || !ids.has(objectId)) continue;
+      counts.set(ct, (counts.get(ct) ?? 0) + 1);
+    }
+
+    let bestCt = 0;
+    let bestCount = 0;
+    for (const [ct, count] of counts.entries()) {
+      if (count > bestCount) {
+        bestCt = ct;
+        bestCount = count;
+      }
+    }
+    return bestCt;
+  };
 
   const createMutation = useMutation({
     mutationFn: createPricing,
@@ -114,7 +160,7 @@ export default function Pricings() {
       object_type: '',
       content_type: 0,
       amount: '',
-      currency: 'USD',
+      currency: 'GEL',
       effective_from: '',
       effective_to: '',
       is_active: true,
@@ -133,14 +179,14 @@ export default function Pricings() {
       
       if (isProgram) {
         objectType = 'program';
-        contentType = 1; // Adjust based on your backend
       } else if (isCourse) {
         objectType = 'course';
-        contentType = 2; // Adjust based on your backend
       } else if (isCohort) {
         objectType = 'cohort';
-        contentType = 3; // Adjust based on your backend
       }
+
+      const selectedObj = findSelectedObject(objectType, pricing.object_id);
+      contentType = pricing.content_type ?? getContentTypeIdFromObject(selectedObj);
       
       setEditingPricing(pricing);
       setFormData({
@@ -198,7 +244,7 @@ export default function Pricings() {
     const num = parseFloat(amount || '0');
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GEL',
     }).format(num);
   };
 
@@ -306,14 +352,15 @@ export default function Pricings() {
                 <Select
                   value={formData.object_type || undefined}
                   onValueChange={(value: 'program' | 'course' | 'cohort') => {
+                    const inferredCt = inferContentTypeIdForObjectType(value);
                     // Reset object_id when type changes
                     setFormData({ 
                       ...formData, 
                       object_type: value,
                       object_id: '',
-                      // Map object type to content_type (these are typical Django ContentType IDs)
-                      // You may need to adjust these based on your backend
-                      content_type: value === 'program' ? 1 : value === 'course' ? 2 : 3
+                      // Prefer inference from existing pricings (same DB) over hard-coded guesses.
+                      // If unavailable, leave 0 and require manual input.
+                      content_type: inferredCt || 0,
                     });
                   }}
                 >
@@ -331,7 +378,16 @@ export default function Pricings() {
                 <Label htmlFor="object_id">Object *</Label>
                 <Select
                   value={formData.object_id || undefined}
-                  onValueChange={(value) => setFormData({ ...formData, object_id: value })}
+                  onValueChange={(value) => {
+                    const selectedObj = findSelectedObject(formData.object_type, value);
+                    const inferredCt = getContentTypeIdFromObject(selectedObj);
+                    const inferredFromExisting = inferContentTypeIdForObjectType(formData.object_type);
+                    setFormData({
+                      ...formData,
+                      object_id: value,
+                      content_type: inferredCt || formData.content_type || inferredFromExisting || 0,
+                    });
+                  }}
                   disabled={!formData.object_type}
                 >
                   <SelectTrigger>
@@ -401,7 +457,7 @@ export default function Pricings() {
                     id="currency"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    placeholder="USD"
+                    placeholder="GEL"
                   />
                 </div>
               </div>

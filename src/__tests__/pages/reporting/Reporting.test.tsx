@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import Reporting from '@/pages/reporting/Reporting';
 import { renderWithProviders, setupAuthStore, clearAuthStore, mockAdminUser } from '../../utils/testHelpers';
 import * as reportingApi from '@/api/endpoints/reporting';
@@ -29,17 +30,29 @@ describe('Reporting Component', () => {
     setupAuthStore(mockAdminUser);
   });
 
+  const mockOverview = {
+    total_enrollments: 100,
+    active_enrollments: 80,
+    completed_enrollments: 20,
+    total_revenue_minor: 100000,
+    total_paid_minor: 80000,
+    total_outstanding_minor: 20000,
+    currency: 'USD',
+  };
+
   describe('Rendering', () => {
     it('should render reporting page', async () => {
-      vi.mocked(reportingApi.getAnalyticsOverview).mockResolvedValue({
-        total_enrollments: 100,
-        total_revenue_minor: 100000,
-        total_paid_minor: 80000,
-        total_outstanding_minor: 20000,
-        currency: 'USD',
-      } as any);
+      vi.mocked(reportingApi.getAnalyticsOverview).mockResolvedValue(mockOverview as any);
       vi.mocked(reportingApi.getCohortAnalytics).mockResolvedValue([]);
-      vi.mocked(reportingApi.getFinancialAnalytics).mockResolvedValue([]);
+      vi.mocked(reportingApi.getFinancialAnalytics).mockResolvedValue({
+        total_revenue_minor: 100000,
+        total_outstanding_minor: 20000,
+        total_paid_minor: 80000,
+        currency: 'USD',
+        breakdown_by_program: [],
+        breakdown_by_cohort: [],
+        breakdown_by_status: [],
+      } as any);
       vi.mocked(reportingApi.getStudentFinancialReport).mockResolvedValue([]);
       vi.mocked(reportingApi.getTimeseriesAnalytics).mockResolvedValue([]);
       renderWithProviders(<Reporting />);
@@ -47,15 +60,17 @@ describe('Reporting Component', () => {
     });
 
     it('should render analytics tabs', async () => {
-      vi.mocked(reportingApi.getAnalyticsOverview).mockResolvedValue({
-        total_enrollments: 100,
-        total_revenue_minor: 100000,
-        total_paid_minor: 80000,
-        total_outstanding_minor: 20000,
-        currency: 'USD',
-      } as any);
+      vi.mocked(reportingApi.getAnalyticsOverview).mockResolvedValue(mockOverview as any);
       vi.mocked(reportingApi.getCohortAnalytics).mockResolvedValue([]);
-      vi.mocked(reportingApi.getFinancialAnalytics).mockResolvedValue([]);
+      vi.mocked(reportingApi.getFinancialAnalytics).mockResolvedValue({
+        total_revenue_minor: 100000,
+        total_outstanding_minor: 20000,
+        total_paid_minor: 80000,
+        currency: 'USD',
+        breakdown_by_program: [],
+        breakdown_by_cohort: [],
+        breakdown_by_status: [],
+      } as any);
       vi.mocked(reportingApi.getStudentFinancialReport).mockResolvedValue([]);
       vi.mocked(reportingApi.getTimeseriesAnalytics).mockResolvedValue([]);
       renderWithProviders(<Reporting />);
@@ -68,20 +83,24 @@ describe('Reporting Component', () => {
 
   describe('Analytics Display', () => {
     it('should display overview metrics', async () => {
-      vi.mocked(reportingApi.getAnalyticsOverview).mockResolvedValue({
-        total_enrollments: 100,
-        total_revenue_minor: 100000,
-        total_paid_minor: 80000,
-        total_outstanding_minor: 20000,
-        currency: 'USD',
-      } as any);
+      vi.mocked(reportingApi.getAnalyticsOverview).mockResolvedValue(mockOverview as any);
       vi.mocked(reportingApi.getCohortAnalytics).mockResolvedValue([]);
-      vi.mocked(reportingApi.getFinancialAnalytics).mockResolvedValue([]);
+      vi.mocked(reportingApi.getFinancialAnalytics).mockResolvedValue({
+        total_revenue_minor: 100000,
+        total_outstanding_minor: 20000,
+        total_paid_minor: 80000,
+        currency: 'USD',
+        breakdown_by_program: [],
+        breakdown_by_cohort: [],
+        breakdown_by_status: [],
+      } as any);
       vi.mocked(reportingApi.getStudentFinancialReport).mockResolvedValue([]);
       vi.mocked(reportingApi.getTimeseriesAnalytics).mockResolvedValue([]);
       renderWithProviders(<Reporting />);
       await waitFor(() => {
         expect(screen.getByText('100')).toBeInTheDocument(); // Total enrollments
+        expect(screen.getByText('$800.00')).toBeInTheDocument();
+        expect(screen.getByText('$200.00')).toBeInTheDocument();
       });
     });
   });
@@ -90,15 +109,17 @@ describe('Reporting Component', () => {
     it('should call exportPayroll with date parameters', async () => {
       const user = userEvent.setup();
       const mockBlob = new Blob(['csv,data'], { type: 'text/csv' });
-      vi.mocked(reportingApi.getAnalyticsOverview).mockResolvedValue({
-        total_enrollments: 100,
-        total_revenue_minor: 100000,
-        total_paid_minor: 80000,
-        total_outstanding_minor: 20000,
-        currency: 'USD',
-      } as any);
+      vi.mocked(reportingApi.getAnalyticsOverview).mockResolvedValue(mockOverview as any);
       vi.mocked(reportingApi.getCohortAnalytics).mockResolvedValue([]);
-      vi.mocked(reportingApi.getFinancialAnalytics).mockResolvedValue([]);
+      vi.mocked(reportingApi.getFinancialAnalytics).mockResolvedValue({
+        total_revenue_minor: 100000,
+        total_outstanding_minor: 20000,
+        total_paid_minor: 80000,
+        currency: 'USD',
+        breakdown_by_program: [],
+        breakdown_by_cohort: [],
+        breakdown_by_status: [],
+      } as any);
       vi.mocked(reportingApi.getStudentFinancialReport).mockResolvedValue([]);
       vi.mocked(reportingApi.getTimeseriesAnalytics).mockResolvedValue([]);
       vi.mocked(reportingApi.exportPayroll).mockResolvedValue(mockBlob);
@@ -114,12 +135,12 @@ describe('Reporting Component', () => {
       await user.click(reportsTab);
 
       await waitFor(() => {
-        expect(screen.getByText(/payroll/i)).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /payroll/i })).toBeInTheDocument();
       });
 
       // Fill date inputs and click export
-      const fromInput = screen.getByLabelText(/from/i);
-      const toInput = screen.getByLabelText(/to/i);
+      const fromInput = screen.getByLabelText(/from date/i, { selector: '#pay-from' });
+      const toInput = screen.getByLabelText(/to date/i, { selector: '#pay-to' });
       await user.type(fromInput, '2024-01-01');
       await user.type(toInput, '2024-01-31');
 

@@ -11,13 +11,13 @@ const PaymentWrapper = () => {
     <div>
       <div className="mb-[2rem] w-full inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
         
+        <NavLink to="pricings"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>   Pricing</NavLink>
+        <NavLink to="payment-plans"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Payment Plans</NavLink>
         <NavLink to="invoices"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Invoices</NavLink>
+        <NavLink to="payment-schedules"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Payment Schedules</NavLink>
+        <NavLink to="payment-methods"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Payment Methods</NavLink>
         <NavLink to="payments"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Payments</NavLink>
         <NavLink to="discounts"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Discounts</NavLink>
-        <NavLink to="payment-plans"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Payment Plans</NavLink>
-        <NavLink to="payment-methods"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Payment Methods</NavLink>
-        <NavLink to="payment-schedules"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>  Payment Schedules</NavLink>
-        <NavLink to="pricings"  className={({ isActive }) => `${base} ${isActive ? active : ""}`}>   Pricing</NavLink>
 
       </div>
 

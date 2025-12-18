@@ -39,7 +39,9 @@ describe('Pricings Component', () => {
       vi.mocked(catalogApi.getCourses).mockResolvedValue([]);
       vi.mocked(catalogApi.getCohorts).mockResolvedValue([]);
       renderWithProviders(<Pricings />);
-      expect(screen.getByText(/pricings/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /pricings/i, level: 2 })).toBeInTheDocument();
+      });
     });
 
     it('should render create button', async () => {
@@ -82,7 +84,7 @@ describe('Pricings Component', () => {
       vi.mocked(catalogApi.getCohorts).mockResolvedValue([]);
       renderWithProviders(<Pricings />);
       await waitFor(() => {
-        expect(screen.getByText('$1,000.00')).toBeInTheDocument();
+        expect(screen.getByText(/\$1,000\.00/)).toBeInTheDocument();
       });
     });
 
@@ -96,7 +98,7 @@ describe('Pricings Component', () => {
       vi.mocked(paymentsApi.deletePricing).mockResolvedValue(undefined);
       renderWithProviders(<Pricings />);
       await waitFor(() => {
-        expect(screen.getByText('$1,000.00')).toBeInTheDocument();
+        expect(screen.getByText(/\$1,000\.00/)).toBeInTheDocument();
       });
       const deleteBtn = screen.getByTitle(/delete/i);
       await user.click(deleteBtn);
@@ -119,7 +121,7 @@ describe('Pricings Component', () => {
         user.click(createBtn);
       });
       await waitFor(() => {
-        expect(screen.getByText(/object type/i)).toBeInTheDocument();
+        expect(screen.getByText(/^Object Type \*$/i)).toBeInTheDocument();
       });
     });
   });

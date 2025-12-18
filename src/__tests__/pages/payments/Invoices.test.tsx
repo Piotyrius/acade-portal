@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Invoices from '@/pages/payments/Invoices';
 import { renderWithProviders, setupAuthStore, clearAuthStore, mockAdminUser } from '../../utils/testHelpers';
@@ -50,7 +50,7 @@ describe('Invoices Component', () => {
 
       renderWithProviders(<Invoices />);
 
-      expect(screen.getByText('Invoices')).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: /^invoices$/i, level: 2 })).toBeInTheDocument();
       expect(screen.getByText(/manage student invoices/i)).toBeInTheDocument();
     });
 
@@ -126,17 +126,11 @@ describe('Invoices Component', () => {
 
       renderWithProviders(<Invoices />);
 
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /create invoice/i })).toBeInTheDocument();
-      });
-
-      const createButton = screen.getByRole('button', { name: /create invoice/i });
+      const createButton = await screen.findByRole('button', { name: /^create invoice$/i });
       await user.click(createButton);
 
-      await waitFor(() => {
-        expect(screen.getByText(/create invoice/i)).toBeInTheDocument();
-        expect(screen.getByText(/create a new invoice/i)).toBeInTheDocument();
-      });
+      expect(await screen.findByRole('heading', { name: /^create invoice$/i })).toBeInTheDocument();
+      expect(screen.getByText(/create a new invoice/i)).toBeInTheDocument();
     });
 
     it('should open create from enrollment dialog when button is clicked', async () => {
@@ -146,16 +140,10 @@ describe('Invoices Component', () => {
 
       renderWithProviders(<Invoices />);
 
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /create from enrollment/i })).toBeInTheDocument();
-      });
-
-      const createFromEnrollmentButton = screen.getByRole('button', { name: /create from enrollment/i });
+      const createFromEnrollmentButton = await screen.findByRole('button', { name: /create from enrollment/i });
       await user.click(createFromEnrollmentButton);
 
-      await waitFor(() => {
-        expect(screen.getByText(/create invoice from enrollment/i)).toBeInTheDocument();
-      });
+      expect(await screen.findByRole('heading', { name: /create invoice from enrollment/i })).toBeInTheDocument();
     });
   });
 
@@ -179,10 +167,8 @@ describe('Invoices Component', () => {
 
       renderWithProviders(<Invoices />);
 
-      await waitFor(() => {
-        expect(screen.getByText('INV-001')).toBeInTheDocument();
-        expect(screen.getByText('John Doe')).toBeInTheDocument();
-      });
+      expect(await screen.findByText('INV-001')).toBeInTheDocument();
+      expect(screen.getByText((content) => content.includes('John Doe'))).toBeInTheDocument();
     });
 
     it('should show empty state when no invoices', async () => {
@@ -215,24 +201,16 @@ describe('Invoices Component', () => {
 
       renderWithProviders(<Invoices />);
 
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /create invoice/i })).toBeInTheDocument();
-      });
-
-      const createButton = screen.getByRole('button', { name: /create invoice/i });
+      const createButton = await screen.findByRole('button', { name: /^create invoice$/i });
       await user.click(createButton);
 
-      await waitFor(() => {
-        expect(screen.getByLabelText(/enrollment/i)).toBeInTheDocument();
-      });
+      const dialog = await screen.findByRole('dialog', { name: /^create invoice$/i });
 
       // Fill form
-      const enrollmentSelect = screen.getByLabelText(/enrollment/i);
+      const enrollmentSelect = within(dialog).getByRole('combobox', { name: /^enrollment \*/i });
       await user.click(enrollmentSelect);
-      await waitFor(() => {
-        const option = screen.getByText(/john doe/i);
-        await user.click(option);
-      });
+      const listbox = await screen.findByRole('listbox');
+      await user.click(within(listbox).getByRole('option', { name: /john doe/i }));
 
       // This is a simplified test - in reality, we'd fill all required fields
       // For now, we're testing that the dialog opens and form is rendered
@@ -432,7 +410,7 @@ describe('Invoices Component', () => {
       await user.click(discountButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/apply discounts/i)).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /apply discounts/i })).toBeInTheDocument();
       });
     });
   });
@@ -444,7 +422,7 @@ describe('Invoices Component', () => {
       vi.mocked(paymentsApi.getInvoices).mockResolvedValue([]);
       vi.mocked(paymentsApi.createInvoiceForEnrollment).mockResolvedValue(mockInvoice as any);
       vi.mocked(admissionsApi.getEnrollments).mockResolvedValue([
-        { id: 'enroll-1', student_name: 'John Doe', cohort_name: 'Cohort 1' },
+        { id: 'enroll-1', student_name: 'John Doe', cohort_name: 'Cohort 1', cohort: 'cohort-1' },
       ] as any);
       vi.mocked(paymentsApi.getPaymentPlans).mockResolvedValue([
         { id: 'plan-1', name: 'Monthly Plan', type: 'MONTHLY' },
@@ -452,43 +430,29 @@ describe('Invoices Component', () => {
       vi.mocked(paymentsApi.getDiscounts).mockResolvedValue([
         { id: 'disc-1', name: 'Discount 1' },
       ] as any);
-      vi.mocked(paymentsApi.getPricings).mockResolvedValue([]);
+      vi.mocked(paymentsApi.getPricings).mockResolvedValue([
+        { id: 'pricing-1', object_id: 'cohort-1', amount: '1000.00', currency: 'USD', is_active: true },
+      ] as any);
 
       renderWithProviders(<Invoices />);
 
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /create from enrollment/i })).toBeInTheDocument();
-      });
-
-      const createFromEnrollmentButton = screen.getByRole('button', { name: /create from enrollment/i });
+      const createFromEnrollmentButton = await screen.findByRole('button', { name: /create from enrollment/i });
       await user.click(createFromEnrollmentButton);
 
-      await waitFor(() => {
-        expect(screen.getByText(/create invoice from enrollment/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/enrollment/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/payment plan/i)).toBeInTheDocument();
-      });
+      const dialog = await screen.findByRole('dialog', { name: /create invoice from enrollment/i });
+      expect(within(dialog).getByRole('heading', { name: /create invoice from enrollment/i })).toBeInTheDocument();
 
       // Select enrollment
-      const enrollmentSelect = screen.getByLabelText(/enrollment/i);
+      const enrollmentSelect = within(dialog).getByRole('combobox', { name: /^enrollment \*/i });
       await user.click(enrollmentSelect);
-      await waitFor(async () => {
-        const option = screen.getByText(/john doe/i);
-        await user.click(option);
-      });
+      const option = await screen.findByText(/john doe/i);
+      await user.click(option);
 
       // Select payment plan
-      await waitFor(() => {
-        const planSelect = screen.getByLabelText(/payment plan/i);
-        expect(planSelect).toBeInTheDocument();
-      });
-
-      const planSelect = screen.getByLabelText(/payment plan/i);
+      const planSelect = within(dialog).getByRole('combobox', { name: /^payment plan \*/i });
       await user.click(planSelect);
-      await waitFor(async () => {
-        const planOption = screen.getByText(/monthly plan/i);
-        await user.click(planOption);
-      });
+      const planOption = await screen.findByText(/monthly plan/i);
+      await user.click(planOption);
 
       // Submit form
       const submitButton = screen.getByRole('button', { name: /create invoice/i });
