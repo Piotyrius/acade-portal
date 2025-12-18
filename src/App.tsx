@@ -50,10 +50,7 @@ const PaymentSchedules = lazy(() => import("./pages/payments/PaymentSchedules"))
 const Payments = lazy(() => import("./pages/payments/Payments"));
 const Pricings = lazy(() => import("./pages/payments/Pricings"));
 const ArchiveBrowser = lazy(() => import("./pages/archive/ArchiveBrowser"));
-const Organizations = lazy(() => import("./pages/subscriptions/Organizations"));
-const SubscriptionPlans = lazy(() => import("./pages/subscriptions/SubscriptionPlans"));
-const Subscriptions = lazy(() => import("./pages/subscriptions/Subscriptions"));
-const MySubscription = lazy(() => import("./pages/subscriptions/MySubscription"));
+// Subscriptions feature removed
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const PageSkeleton = () => (
@@ -64,7 +61,6 @@ const PageSkeleton = () => (
 );
 
 import PaymentWrapper from "./components/PaymentWrapper";
-import SubscriptionWrapper from "./components/SubscriptionWrapper";
 import AdmissionsWrapper from "./components/AdmissionsWrapper";
 import ProgramsWrapper from "./components/ProgramsWrapper";
 
@@ -251,15 +247,6 @@ const App = () => (
               <Route path="payment-methods" element={<PaymentMethods />} />
               <Route path="payment-schedules" element={<PaymentSchedules />} />
               <Route path="pricings" element={<Pricings />} />
-            </Route>
-
-            <Route path="/subscriptions" element={ <SubscriptionWrapper /> } >
-
-              <Route path="organizations" element={<Organizations />} />
-              <Route path="plans" element={<SubscriptionPlans />} />
-              <Route path="subscriptions" element={<Subscriptions />} />
-              <Route path="my-subscription" element={<MySubscription />} />
-            
             </Route>
 
             <Route path="/catalog" element={ <ProgramsWrapper /> } >

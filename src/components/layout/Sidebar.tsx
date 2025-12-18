@@ -54,7 +54,6 @@ const navigation: NavItem[] = [
   { name: 'Certificates', href: '/certificates/list', icon: Award },
   { name: 'Gallery', href: '/gallery/mine', icon: Image },
   { name: 'Archive', href: '/archive', icon: Archive, roles: ['ADMIN'] },
-  { name: 'Subscriptions', href: '/subscriptions/subscriptions', icon: CreditCard, roles: ['ADMIN'] },
   { name: 'Users', href: '/users', icon: UserCog, roles: ['ADMIN'] },
   { name: 'Lecturer Portal', href: '/lecturer/dashboard', icon: GraduationCap, roles: ['LECTURER'] },
   { name: 'My Sessions', href: '/lecturer/sessions', icon: Calendar, roles: ['LECTURER'] },

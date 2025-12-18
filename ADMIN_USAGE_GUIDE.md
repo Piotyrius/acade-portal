@@ -36,8 +36,8 @@ The left sidebar is organized by tasks:
 - **Attendance**
   - Dedicated screen to view and mark attendance, including bulk marking.
 
-- **Reports / Timekeeping / Documents / Certificates / Gallery / Users / Subscriptions**
-  - Supporting admin areas for reporting, HR/time, documents, certificates, media, user admin, and subscriptions.
+- **Reports / Timekeeping / Documents / Certificates / Gallery / Users**
+  - Supporting admin areas for reporting, HR/time, documents, certificates, media, and user admin.
 
 - **Lecturer Portal**
   - Lecturer‑specific dashboard and sessions view.

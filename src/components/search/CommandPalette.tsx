@@ -52,7 +52,6 @@ const commands: CommandAction[] = [
   { id: 'payments', label: 'Payments', icon: CreditCard, href: '/payments', keywords: ['invoice', 'payment', 'billing'], roles: ['ADMIN'] },
   { id: 'users', label: 'Users', icon: Users, href: '/users', keywords: ['people', 'students', 'lecturers'], roles: ['ADMIN'] },
   { id: 'archive', label: 'Archive', icon: Archive, href: '/archive', keywords: ['old', 'deleted'], roles: ['ADMIN'] },
-  { id: 'subscriptions', label: 'Subscriptions', icon: Building2, href: '/subscriptions/subscriptions', keywords: ['subscription', 'plan'], roles: ['ADMIN'] },
 ];
 
 interface CommandPaletteProps {
