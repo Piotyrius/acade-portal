@@ -13,7 +13,7 @@ import { getAssessments } from '@/api/endpoints/assessment';
 import { getUsers } from '@/api/endpoints/auth';
 import { getEnrollments } from '@/api/endpoints/admissions';
 import { useAuthStore } from '@/store/authStore';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -56,18 +56,22 @@ export default function Grades() {
     queryFn: () => getAssessments(),
   });
 
-  // Get the cohort from the selected assessment
-  const selectedAssessmentObj = assessments.find((a: any) => a.id === formData.assessment);
+  // Get the cohort from the selected assessment in the form
+  const selectedAssessmentObj = useMemo(() => 
+    assessments.find((a: any) => a.id === formData.assessment),
+    [assessments, formData.assessment]
+  );
   const cohortId = selectedAssessmentObj?.cohort;
 
   // Get enrollments for the selected assessment's cohort
-  const { data: enrollments = [] } = useQuery({
+  // Only fetch ACTIVE enrollments since backend requires students to be actively enrolled
+  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery({
     queryKey: ['enrollments', cohortId],
     queryFn: () => getEnrollments(cohortId, 'ACTIVE'),
     enabled: !!(user?.role === 'ADMIN' || user?.role === 'LECTURER') && !!cohortId,
   });
 
-  // Get all students (we'll filter by enrollments)
+  // Get all students
   const { data: allStudents = [] } = useQuery({
     queryKey: ['students'],
     queryFn: () => getUsers('STUDENT'),
@@ -75,11 +79,25 @@ export default function Grades() {
   });
 
   // Filter students to only show enrolled students when an assessment is selected
-  const students = cohortId && enrollments.length > 0
-    ? allStudents.filter((student: any) => 
-        enrollments.some((enrollment: any) => enrollment.student === student.id)
-      )
-    : allStudents;
+  const availableStudents = useMemo(() => {
+    if (!cohortId) {
+      return []; // No students until assessment is selected
+    }
+    
+    if (enrollments.length === 0) {
+      return []; // No enrolled students
+    }
+
+    // Get the student IDs from enrollments
+    const enrolledStudentIds = new Set(
+      enrollments.map((enrollment: any) => enrollment.student)
+    );
+
+    // Filter students to only those enrolled in the cohort
+    return allStudents.filter((student: any) => 
+      enrolledStudentIds.has(student.id)
+    );
+  }, [cohortId, enrollments, allStudents]);
 
   const createMutation = useMutation({
     mutationFn: createGrade,
@@ -321,7 +339,7 @@ export default function Grades() {
             ) : (
               filteredGrades.map((grade: any) => {
                 const assessment = assessments.find((a: any) => a.id === grade.assessment);
-                const student = students.find((s: any) => s.id === grade.student);
+                const student = allStudents.find((s: any) => s.id === grade.student);
                 const percentage = parseFloat(grade.percentage);
                 return (
                   <div key={grade.id} className="flex items-center justify-between p-4 border border-border rounded-lg grades_item">
@@ -437,7 +455,11 @@ export default function Grades() {
                   <div className="text-sm text-muted-foreground p-2 border rounded-md">
                     Please select an assessment first to see enrolled students
                   </div>
-                ) : students.length === 0 ? (
+                ) : enrollmentsLoading ? (
+                  <div className="text-sm text-muted-foreground p-2 border rounded-md">
+                    Loading enrolled students...
+                  </div>
+                ) : availableStudents.length === 0 ? (
                   <div className="text-sm text-muted-foreground p-2 border rounded-md">
                     No enrolled students found for this assessment's cohort
                   </div>
@@ -451,7 +473,7 @@ export default function Grades() {
                       <SelectValue placeholder="Select student" />
                     </SelectTrigger>
                     <SelectContent>
-                      {students.map((student: any) => (
+                      {availableStudents.map((student: any) => (
                         <SelectItem key={student.id} value={student.id}>
                           {student.first_name} {student.last_name} ({student.email})
                         </SelectItem>
@@ -529,8 +551,8 @@ export default function Grades() {
                   Assessment: {assessments.find((a: any) => a.id === selectedGradeForModeration.assessment)?.title || 'Unknown'}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Student: {students.find((s: any) => s.id === selectedGradeForModeration.student) 
-                    ? `${students.find((s: any) => s.id === selectedGradeForModeration.student)?.first_name} ${students.find((s: any) => s.id === selectedGradeForModeration.student)?.last_name}`
+                  Student: {allStudents.find((s: any) => s.id === selectedGradeForModeration.student) 
+                    ? `${allStudents.find((s: any) => s.id === selectedGradeForModeration.student)?.first_name} ${allStudents.find((s: any) => s.id === selectedGradeForModeration.student)?.last_name}`
                     : selectedGradeForModeration.student_name || selectedGradeForModeration.student}
                 </p>
                 <p className="text-sm text-muted-foreground">

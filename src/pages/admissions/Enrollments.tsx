@@ -464,6 +464,7 @@ export default function Enrollments() {
                                 size="sm"
                                 onClick={() => handleComplete(enrollment)}
                                 disabled={completeMutation.isPending}
+                                title="Complete Enrollment"
                               >
                                 <CheckCircle className="h-4 w-4" />
                               </Button>
@@ -472,10 +473,22 @@ export default function Enrollments() {
                                 size="sm"
                                 onClick={() => handleWithdraw(enrollment)}
                                 disabled={withdrawMutation.isPending}
+                                title="Withdraw Enrollment"
                               >
                                 <XCircle className="h-4 w-4" />
                               </Button>
                             </>
+                          )}
+                          {(enrollment.status === 'COMPLETED' || enrollment.status === 'WITHDRAWN') && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleActivate(enrollment)}
+                              disabled={activateMutation.isPending}
+                              title="Reactivate Enrollment"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
                           )}
                         </div>
                       )}

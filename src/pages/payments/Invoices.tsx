@@ -175,17 +175,52 @@ export default function Invoices() {
       qc.invalidateQueries({ queryKey: ['invoices'] });
       toast({ title: 'Success', description: 'Invoice created from enrollment successfully' });
       setIsCreateFromEnrollmentOpen(false);
+      setSelectedDiscounts([]);
+      resetForm();
     },
     onError: (error) => {
       const message = getErrorMessage(error);
+      const enrollment = enrollments.find((e: any) => e.id === formData.enrollment);
+      const cohortId = enrollment?.cohort;
+      const cohortName = enrollment?.cohort_name || 'Unknown';
+      
       const looksLikePricingMissing = /pricing/i.test(message) && (/not found/i.test(message) || /no pricing/i.test(message));
-      toast({
-        title: 'Error',
-        description: looksLikePricingMissing
-          ? `${message} (Go to Payments → Pricing and create an active pricing for this enrollment's cohort. If a pricing exists but this still happens, the Pricing Content Type ID may be wrong.)`
-          : message,
-        variant: 'destructive',
-      });
+      
+      if (looksLikePricingMissing && cohortId) {
+        const cohortPricings = pricings.filter((p: any) => p?.object_id === cohortId);
+        const contentTypes = [...new Set(cohortPricings.map((p: any) => p?.content_type).filter(Boolean))];
+        
+        console.error('❌ Backend pricing error:', {
+          errorMessage: message,
+          cohortId,
+          cohortName,
+          frontendFoundPricings: cohortPricings.length,
+          contentTypesUsed: contentTypes,
+        });
+        
+        let enhancedMessage = `${message}\n\n`;
+        if (cohortPricings.length > 0) {
+          enhancedMessage += `Frontend found ${cohortPricings.length} pricing(s) for cohort "${cohortName}" but backend couldn't find it. This usually means:\n`;
+          enhancedMessage += `• The Pricing Content Type ID is wrong (Frontend sees: ${contentTypes.join(', ')})\n`;
+          enhancedMessage += `• Ask your backend admin to check the Cohort ContentType ID in Django admin\n`;
+          enhancedMessage += `• Then update the pricing's content_type field to match`;
+        } else {
+          enhancedMessage += `Create an active pricing for cohort "${cohortName}" in Payments → Pricing`;
+        }
+        
+        toast({
+          title: 'Pricing Error',
+          description: enhancedMessage,
+          variant: 'destructive',
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: message,
+          variant: 'destructive',
+        });
+      }
     },
   });
 
@@ -305,10 +340,8 @@ export default function Invoices() {
 
     const enrollment = enrollments.find((e: any) => e.id === formData.enrollment);
     const cohortId = enrollment?.cohort;
-    const cohortName = enrollment?.cohort_name;
-    const hasActiveCohortPricing = cohortId
-      ? pricings.some((p: any) => p?.object_id === cohortId && (p?.is_active ?? true))
-      : false;
+    const cohortName = enrollment?.cohort_name || 'Unknown';
+    const studentName = enrollment?.student_name || 'Unknown';
 
     if (!cohortId) {
       toast({
@@ -319,13 +352,47 @@ export default function Invoices() {
       return;
     }
 
-    if (!hasActiveCohortPricing) {
+    // Find all pricings for this cohort
+    const cohortPricings = pricings.filter((p: any) => p?.object_id === cohortId);
+    const activeCohortPricings = cohortPricings.filter((p: any) => p?.is_active ?? true);
+
+    console.log('🔍 Pricing validation:', {
+      enrollmentId: formData.enrollment,
+      cohortId,
+      cohortName,
+      studentName,
+      allPricingsCount: pricings.length,
+      cohortPricings: cohortPricings.map((p: any) => ({
+        id: p.id,
+        object_id: p.object_id,
+        content_type: p.content_type,
+        amount: p.amount,
+        is_active: p.is_active,
+      })),
+      activeCohortPricings: activeCohortPricings.length,
+    });
+
+    if (cohortPricings.length === 0) {
       toast({
         title: 'No pricing found',
-        description: `Create an active pricing for cohort ${cohortName ? `"${cohortName}"` : cohortId} in Payments → Pricing, then try again.`,
+        description: `No pricing exists for cohort "${cohortName}" (ID: ${cohortId.slice(0, 8)}...). Go to Payments → Pricing and create a pricing for this cohort.`,
         variant: 'destructive',
       });
       return;
+    }
+
+    if (activeCohortPricings.length === 0) {
+      toast({
+        title: 'No active pricing',
+        description: `Pricing exists for cohort "${cohortName}" but it's inactive. Go to Payments → Pricing and activate it, or create a new active pricing.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Additional warning if multiple active pricings exist
+    if (activeCohortPricings.length > 1) {
+      console.warn('⚠️ Multiple active pricings found for cohort:', cohortId, activeCohortPricings);
     }
 
     createFromEnrollmentMutation.mutate({
@@ -760,13 +827,40 @@ export default function Invoices() {
                   )}
                 </SelectTrigger>
                 <SelectContent>
-                  {enrollments.map((enrollment: any) => (
-                    <SelectItem key={enrollment.id} value={enrollment.id}>
-                      {formatEnrollmentLabel(enrollment) || enrollment.id}
-                    </SelectItem>
-                  ))}
+                  {enrollments.map((enrollment: any) => {
+                    const cohortId = enrollment?.cohort;
+                    const hasPricing = cohortId && pricings.some((p: any) => p?.object_id === cohortId && (p?.is_active ?? true));
+                    return (
+                      <SelectItem key={enrollment.id} value={enrollment.id}>
+                        <span className="flex items-center gap-2">
+                          {formatEnrollmentLabel(enrollment) || enrollment.id}
+                          {hasPricing ? (
+                            <span className="text-green-600 text-xs">✓ Priced</span>
+                          ) : (
+                            <span className="text-red-600 text-xs">⚠ No pricing</span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
+              {formData.enrollment && (() => {
+                const enrollment = enrollments.find((e: any) => e.id === formData.enrollment);
+                const cohortId = enrollment?.cohort;
+                const cohortName = enrollment?.cohort_name;
+                const cohortPricings = cohortId ? pricings.filter((p: any) => p?.object_id === cohortId && (p?.is_active ?? true)) : [];
+                
+                return cohortPricings.length > 0 ? (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ {cohortPricings.length} active pricing{cohortPricings.length > 1 ? 's' : ''} found for cohort "{cohortName}"
+                  </p>
+                ) : (
+                  <p className="text-xs text-red-600 mt-1">
+                    ⚠ No active pricing for cohort "{cohortName}". Create one in Payments → Pricing first.
+                  </p>
+                );
+              })()}
             </div>
             <div className="space-y-2">
               <Label htmlFor="payment-plan-select">Payment Plan *</Label>
