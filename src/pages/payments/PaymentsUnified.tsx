@@ -1,74 +1,92 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Payments from './Payments';
-import Invoices from './Invoices';
-import Discounts from './Discounts';
-import PaymentPlans from './PaymentPlans';
-import PaymentMethods from './PaymentMethods';
-import PaymentSchedules from './PaymentSchedules';
-import Pricings from './Pricings';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { DollarSign, FileText, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getInvoices, getPayments } from '@/api/endpoints/payments';
 
 export default function PaymentsUnified() {
+  const navigate = useNavigate();
+
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['invoices-dashboard'],
+    queryFn: () => getInvoices(),
+  });
+
+  const { data: payments = [] } = useQuery({
+    queryKey: ['payments-dashboard'],
+    queryFn: () => getPayments(),
+  });
+
+  const outstandingCount = invoices.filter(
+    (i: any) => i.status === 'ISSUED' || i.status === 'OVERDUE',
+  ).length;
+
+  const totalReceived = payments
+    .filter((p: any) => p.status === 'COMPLETED')
+    .reduce((sum: number, p: any) => sum + parseFloat(p.amount || '0'), 0);
+
   return (
     <div className="space-y-6">
-      {/* <div>
-        <h2 className="text-3xl font-bold tracking-tight">Payments</h2>
-        <p className="text-muted-foreground">Manage all payment-related operations</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Billing & Payments</h2>
+          <p className="text-muted-foreground">
+            See your outstanding invoices, recent payments, and manage billing settings.
+          </p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => navigate('/payments/invoices')}>
+            <FileText className="mr-2 h-4 w-4" />
+            View Invoices
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/payments/payments')}>
+            <DollarSign className="mr-2 h-4 w-4" />
+            Record Payment
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="payments-invoices" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="payments-invoices">Payments & Invoices</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-          <TabsTrigger value="discounts">Discounts</TabsTrigger>
-          <TabsTrigger value="schedules">Schedules</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="payments-invoices" className="space-y-6 mt-6">
-          <Tabs defaultValue="invoices" className="w-full">
-            <TabsList>
-              <TabsTrigger value="invoices">Invoices</TabsTrigger>
-              <TabsTrigger value="payments">Payments</TabsTrigger>
-            </TabsList>
-            <TabsContent value="invoices" className="mt-4">
-              <div className="space-y-6">
-                <Invoices />
-              </div>
-            </TabsContent>
-            <TabsContent value="payments" className="mt-4">
-              <div className="space-y-6">
-                <Payments />
-              </div>
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6 mt-6">
-          <Tabs defaultValue="payment-plans" className="w-full">
-            <TabsList>
-              <TabsTrigger value="payment-plans">Payment Plans</TabsTrigger>
-              <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
-              <TabsTrigger value="pricings">Pricings</TabsTrigger>
-            </TabsList>
-            <TabsContent value="payment-plans" className="mt-4">
-              <PaymentPlans />
-            </TabsContent>
-            <TabsContent value="payment-methods" className="mt-4">
-              <PaymentMethods />
-            </TabsContent>
-            <TabsContent value="pricings" className="mt-4">
-              <Pricings />
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-
-        <TabsContent value="discounts" className="mt-6">
-          <Discounts />
-        </TabsContent>
-
-        <TabsContent value="schedules" className="mt-6">
-          <PaymentSchedules />
-        </TabsContent>
-      </Tabs> */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Outstanding Invoices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{outstandingCount}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Invoices that are issued or overdue.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Invoices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{invoices.length}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Total invoices in the system.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Payments Received</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {totalReceived.toLocaleString(undefined, {
+                style: 'currency',
+                currency: 'USD',
+              })}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Total value of completed payments.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

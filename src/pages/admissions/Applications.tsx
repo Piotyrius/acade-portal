@@ -124,8 +124,51 @@ export default function Applications() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Applications</h2>
-        <p className="text-muted-foreground">Review and accept students</p>
+        <h2 className="text-3xl font-bold tracking-tight">Admissions</h2>
+        <p className="text-muted-foreground">
+          Manage leads, applications, and enrollments for your academy.
+        </p>
+      </div>
+
+      {/* Admissions overview / quick actions */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Applications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{applications.length}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Total applications received.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending Review</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {applications.filter((a) => a.status === 'NEW' || a.status === 'IN_REVIEW').length}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Applications waiting for a decision.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Accepted</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {applications.filter((a) => a.status === 'ACCEPTED').length}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Students ready to enroll into cohorts.
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="relative max-w-sm">

@@ -394,19 +394,19 @@ export default function Dashboard() {
         <div className="flex gap-2 flex-wrap">
           <Button onClick={() => navigate('/admissions/applications')} variant="outline">
             <Plus className="mr-2 h-4 w-4" />
-            New Application
+            Review Applications
           </Button>
           <Button onClick={() => navigate('/admissions/enrollments')} variant="outline">
             <Plus className="mr-2 h-4 w-4" />
-            New Enrollment
+            Manage Enrollments
           </Button>
           <Button onClick={() => navigate('/payments/invoices')} variant="outline">
             <Plus className="mr-2 h-4 w-4" />
-            Create Invoice
+            View Invoices
           </Button>
-          <Button onClick={() => navigate('/reporting')} variant="outline">
-            <FileText className="mr-2 h-4 w-4" />
-            View Reports
+          <Button onClick={() => navigate('/payments')} variant="outline">
+            <DollarSign className="mr-2 h-4 w-4" />
+            Billing & Payments
           </Button>
         </div>
       )}

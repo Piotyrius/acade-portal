@@ -15,18 +15,10 @@ import {
   Calendar,
   FileText,
   DollarSign,
-  Upload,
   FileSpreadsheet,
   UserCog,
   CreditCard,
-  Receipt,
-  Tag,
-  Calendar as CalendarIcon,
-  Wallet,
   Archive,
-  Building2,
-  Package,
-  UserCheck,
 } from 'lucide-react';
 
 interface NavItem {
@@ -37,25 +29,32 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Programs', href: '/catalog/programs', icon: BookOpen, roles: ['ADMIN'] },
-  // { name: 'Courses', href: '/catalog/courses', icon: GraduationCap, roles: ['ADMIN', 'LECTURER'] },
-  // { name: 'Cohorts', href: '/catalog/cohorts', icon: Users, roles: ['ADMIN', 'LECTURER'] },
-  { name: 'Sessions', href: '/catalog/sessions', icon: Calendar, roles: ['ADMIN', 'LECTURER'] },
-  // { name: 'Recruit Students', href: '/admissions/recruiting', icon: UserPlus, roles: ['ADMIN'] },
+  // Home
+  { name: 'Home', href: '/dashboard', icon: LayoutDashboard },
+
+  // Admissions
   { name: 'Admissions', href: '/admissions/applications', icon: UserPlus, roles: ['ADMIN'] },
-  // { name: 'Enrollments', href: '/admissions/enrollments', icon: Users, roles: ['ADMIN', 'LECTURER'] },
+
+  // Enrollments & Cohorts
+  { name: 'Programs & Cohorts', href: '/catalog/programs', icon: BookOpen, roles: ['ADMIN', 'LECTURER'] },
+
+  // Billing & Payments
+  { name: 'Billing & Payments', href: '/payments', icon: CreditCard, roles: ['ADMIN'] },
+
+  // Teaching
+  { name: 'Teaching', href: '/assessment', icon: FileCheck },
   { name: 'Attendance', href: '/attendance/list', icon: ClipboardCheck, roles: ['ADMIN', 'LECTURER'] },
-  { name: 'Assessment', href: '/assessment', icon: FileCheck },
-  { name: 'Certificates', href: '/certificates/list', icon: Award },
+
+  // Reports
+  { name: 'Reports', href: '/reporting', icon: FileSpreadsheet, roles: ['ADMIN'] },
+
+  // Other resources / Settings
   { name: 'Timekeeping', href: '/timekeeping', icon: Clock, roles: ['ADMIN', 'LECTURER'] },
-  { name: 'Gallery', href: '/gallery/mine', icon: Image },
   { name: 'Documents', href: '/documents', icon: FileText },
-  { name: 'Reporting', href: '/reporting', icon: FileSpreadsheet, roles: ['ADMIN'] },
-  { name: 'Payments', href: '/payments', icon: CreditCard, roles: ['ADMIN'] },
+  { name: 'Certificates', href: '/certificates/list', icon: Award },
+  { name: 'Gallery', href: '/gallery/mine', icon: Image },
   { name: 'Archive', href: '/archive', icon: Archive, roles: ['ADMIN'] },
   { name: 'Subscriptions', href: '/subscriptions/subscriptions', icon: CreditCard, roles: ['ADMIN'] },
-  // { name: 'My Subscription', href: '/subscriptions/my-subscription', icon: UserCheck },
   { name: 'Users', href: '/users', icon: UserCog, roles: ['ADMIN'] },
   { name: 'Lecturer Portal', href: '/lecturer/dashboard', icon: GraduationCap, roles: ['LECTURER'] },
   { name: 'My Sessions', href: '/lecturer/sessions', icon: Calendar, roles: ['LECTURER'] },
