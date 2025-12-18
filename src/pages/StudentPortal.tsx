@@ -16,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Loader2 } from 'lucide-react';
+import { formatCurrencyMinor, formatCurrencyString } from '@/utils/paymentsFormatting';
 
 export default function StudentPortal() {
   const { data: enrollments = [] } = useQuery({
@@ -73,24 +74,6 @@ export default function StudentPortal() {
       default:
         return 'outline';
     }
-  };
-
-  // Format currency from minor units (cents) to major units
-  const formatCurrency = (amountMinor: number, currency: string = 'USD'): string => {
-    const amount = amountMinor / 100;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
-
-  // Format currency from string (for payments that might already be in major units)
-  const formatCurrencyString = (amount: string, currency: string = 'USD'): string => {
-    const num = parseFloat(amount || '0');
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(num);
   };
 
   // Sort payments by date (newest first)

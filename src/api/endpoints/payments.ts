@@ -178,45 +178,62 @@
     id: string;
     invoice: string;
     student: string;
-    // Optional computed fields (backend may include these)
+    // Optional denormalized link (if backend ever includes it)
     enrollment?: string;
+
+    // Core payment fields from backend
+    amount: string;
+    currency: string;
+    payment_method: 'MANUAL' | 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'CHECK' | 'OTHER';
+    status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+    payment_date: string;
+    notes?: string;
+
+    // Gateway / receipt data
+    payment_gateway?: 'MANUAL' | 'STRIPE' | 'PAYPAL' | 'SQUARE' | 'OTHER' | null;
+    gateway_transaction_id?: string | null;
+    gateway_response?: any | null;
+    payment_number?: string | null;
+    receipt_number?: string | null;
+    refund_amount?: string;
+    refund_reason?: string;
+
+    // Read‑only/computed fields the serializer adds
     invoice_number?: string;
     student_name?: string;
     cohort_name?: string;
-    payment_method: 'MANUAL' | 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'CHECK' | 'OTHER';
-    amount: string;
-    currency: string;
-    status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-    transaction_id?: string;
-    notes?: string;
-    processed_at: string;
+    status_display?: string;
+    payment_method_display?: string;
+    recorded_by_name?: string | null;
+
+    // Metadata
+    organization?: string;
+    recorded_by?: string | null;
     created_at: string;
     updated_at: string;
   }
 
+  /**
+   * Low-level PaymentRequest matching the Payment model.
+   * In most cases the app should use RecordPaymentRequest instead of this.
+   */
   export interface PaymentRequest {
     amount: string;
     currency: string;
     payment_method: 'MANUAL' | 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'CHECK' | 'OTHER';
-
-    payment_gateway: 'MANUAL'; // probably always MANUAL
+    payment_gateway?: 'MANUAL' | 'STRIPE' | 'PAYPAL' | 'SQUARE' | 'OTHER';
     gateway_transaction_id?: string;
-    gateway_response?: string;
-
-    status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-
-    payment_date: string; // FULL ISO: "2025-12-11T13:17:00Z"
+    gateway_response?: any;
+    status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+    payment_date: string; // full ISO
     notes?: string;
-
     refund_amount?: string;
     refund_reason?: string;
-processed_at: string;
-  organization: string;
-  recorded_by: string;
+    organization?: string;
+    recorded_by?: string;
     invoice: string;
     student: string;
   }
-
 
   export interface PatchedPaymentRequest extends Partial<PaymentRequest> {}
 
@@ -485,6 +502,8 @@ processed_at: string;
     const { data } = await api.get(`/api/v1/payments/payments/${id}/`);
     return data;
   }
+
+  // NOTE: For manual/admin payments, prefer recordPayment instead of these low-level CRUD helpers.
 
   export async function createPayment(payload: PaymentRequest): Promise<PaymentDto> {
     const { data } = await api.post('/api/v1/payments/payments/', payload);

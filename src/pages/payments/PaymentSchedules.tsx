@@ -15,6 +15,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
+import { formatCurrencyString } from '@/utils/paymentsFormatting';
 
 export default function PaymentSchedules() {
   const { user } = useAuthStore();
@@ -67,14 +68,6 @@ export default function PaymentSchedules() {
       default:
         return 'outline';
     }
-  };
-
-  const formatCurrency = (amount: string) => {
-    const num = parseFloat(amount || '0');
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(num);
   };
 
   const filteredSchedules = paymentSchedules.filter((schedule: PaymentScheduleDto) => {
@@ -195,7 +188,7 @@ export default function PaymentSchedules() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm font-medium">Amount: {formatCurrency(schedule.amount)}</p>
+                      <p className="text-sm font-medium">Amount: {formatCurrencyString(schedule.amount, 'USD')}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Scheduled: {new Date(schedule.scheduled_date).toLocaleDateString()}
                       </p>
