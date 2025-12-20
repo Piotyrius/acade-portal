@@ -26,11 +26,11 @@ export async function getUnreadNotifications(): Promise<NotificationDto[]> {
 }
 
 export async function markNotificationAsRead(id: string): Promise<NotificationDto> {
-  const { data } = await api.post(`/api/v1/notifications/${id}/mark_read/`);
+  const { data } = await api.post(`/api/v1/notifications/${id}/mark_as_read/`);
   return data;
 }
 
 export async function markAllNotificationsAsRead(): Promise<{ detail: string }> {
-  const { data } = await api.post('/api/v1/notifications/mark_all_as_read/');
+  const { data } = await api.post('/api/v1/notifications/mark_all_read/');
   return data;
 }
