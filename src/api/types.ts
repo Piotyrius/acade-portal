@@ -79,16 +79,22 @@ export interface CohortDto {
   name: string;
   lecturer: UUID | null;
   capacity: number;
+  min_enrollment?: number;
   start_date: string;
   end_date: string;
   status: 'PLANNED' | 'ENROLLING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   created_at: string;
   updated_at: string;
   // Computed fields from backend
-  course_name?: string;
+  course_title?: string;
+  course_code?: string;
   lecturer_name?: string;
-  enrollment_count?: number;
-  is_active?: boolean;
+  lecturer_email?: string;
+  current_enrollment_count?: number;
+  is_full?: boolean;
+  is_ready_to_start?: boolean;
+  can_accept_enrollment?: boolean;
+  status_display?: string;
 }
 
 export interface SessionDto {
@@ -143,6 +149,7 @@ export interface EnrollmentDto {
   id: UUID;
   student: UUID;
   cohort: UUID;
+  preferred_course?: UUID | null;
   status: 'PENDING' | 'WAITLISTED' | 'ACTIVE' | 'WITHDRAWN' | 'COMPLETED';
   enrolled_at: string;
   activated_at: string | null;
@@ -150,6 +157,7 @@ export interface EnrollmentDto {
   // Computed fields from backend
   student_name?: string;
   cohort_name?: string;
+  cohort_course?: string;
   status_display?: string;
 }
 

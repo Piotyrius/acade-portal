@@ -67,15 +67,21 @@
     status: 'DRAFT' | 'ISSUED' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
     due_date: string;
     issued_at?: string;
+    email_sent?: boolean;
+    email_sent_at?: string | null;
     notes?: string;
     created_at: string;
     updated_at: string;
     organization?: string;
     invoice_number?: string;
     student_name?: string;
+    student_email?: string;
     cohort_name?: string;
     payment_plan_name?: string;
     status_display?: string;
+    payment_status_display?: 'PAID' | 'PARTIAL' | 'UNPAID' | 'OVERDUE';
+    days_until_due?: number;
+    is_overdue?: boolean;
   }
 
   export interface InvoiceRequest {
@@ -375,6 +381,33 @@
     }
     const { data } = await api.post('/api/v1/payments/invoices/create_for_enrollment/', payload);
     return data;
+  }
+
+  export async function getCohortPaymentSummary(cohortId: string): Promise<{
+    cohort_name: string;
+    cohort_id: string;
+    total_expected: number;
+    total_paid: number;
+    outstanding: number;
+    students: Array<{
+      student_name: string;
+      student_email: string;
+      invoice_number: string | null;
+      total_amount: number;
+      paid_amount: number;
+      outstanding_amount: number;
+      status: string;
+    }>;
+  }> {
+    const { data } = await api.get('/api/v1/payments/invoices/cohort_payment_summary/', {
+      params: { cohort_id: cohortId },
+    });
+    return data;
+  }
+
+  export async function getMyPayments(): Promise<InvoiceDto[]> {
+    const { data } = await api.get('/api/v1/payments/invoices/my_payments/');
+    return Array.isArray(data) ? data : [];
   }
 
   // ============================================================================

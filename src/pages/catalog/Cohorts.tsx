@@ -18,7 +18,7 @@ import {
 import { exampleCohorts } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCohorts, createCohort, updateCohort, deleteCohort, generateSessions, getCourses } from '@/api/endpoints/catalog';
+import { getCohorts, createCohort, updateCohort, deleteCohort, generateSessions, getCourses, getCohortsReadyToStart, startCohort } from '@/api/endpoints/catalog';
 import { getEnrollments } from '@/api/endpoints/admissions';
 import { CohortDto, EnrollmentDto } from '@/api/types';
 import { useState } from 'react';
@@ -380,6 +380,14 @@ export default function Cohorts() {
                         <Badge variant="outline">
                           {cohort.current_enrollment_count || 0} / {cohort.capacity} students
                         </Badge>
+                        {cohort.is_ready_to_start && cohort.status !== 'ACTIVE' && (
+                          <Badge className="bg-green-600 text-white">
+                            Ready to Start ({cohort.min_enrollment || 8} min)
+                          </Badge>
+                        )}
+                        {!cohort.can_accept_enrollment && cohort.status !== 'ACTIVE' && (
+                          <Badge variant="destructive">Full</Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -397,6 +405,24 @@ export default function Cohorts() {
 
 
                 <div className="flex gap-2 ml-2 cohort_action_btns">
+                  {cohort.is_ready_to_start && cohort.status !== 'ACTIVE' && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await startCohort(cohort.id);
+                          qc.invalidateQueries({ queryKey: ['cohorts'] });
+                          toast({ title: 'Success', description: 'Cohort started successfully' });
+                        } catch (error) {
+                          toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+                        }
+                      }}
+                      title="Start Cohort"
+                    >
+                      Start Cohort
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"

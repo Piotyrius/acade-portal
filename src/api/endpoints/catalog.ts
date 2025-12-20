@@ -145,6 +145,17 @@ export async function getMySessions(params?: { date_from?: string; date_to?: str
   return ensureArray(data);
 }
 
+// Cohort readiness endpoints
+export async function getCohortsReadyToStart(): Promise<CohortDto[]> {
+  const { data } = await api.get('/api/v1/catalog/cohorts/ready_to_start/');
+  return ensureArray(data);
+}
+
+export async function startCohort(id: string, status: 'ENROLLING' | 'ACTIVE' = 'ENROLLING'): Promise<CohortDto> {
+  const { data } = await api.post(`/api/v1/catalog/cohorts/${id}/start_cohort/`, { status });
+  return data;
+}
+
 
 
 

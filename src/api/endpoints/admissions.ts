@@ -39,9 +39,18 @@ export async function updateApplication(id: string, payload: Partial<Application
   return data;
 }
 
-export async function acceptApplication(id: string, cohortId: string): Promise<EnrollmentDto> {
-  const { data } = await api.post(`/api/v1/admissions/applications/${id}/accept/`, {
-    cohort_id: cohortId,
+export async function acceptApplication(id: string, courseId?: string): Promise<EnrollmentDto> {
+  const payload: { course_id?: string } = {};
+  if (courseId) {
+    payload.course_id = courseId;
+  }
+  const { data } = await api.post(`/api/v1/admissions/applications/${id}/accept/`, payload);
+  return data;
+}
+
+export async function changeEnrollmentCourse(id: string, courseId: string): Promise<EnrollmentDto> {
+  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/change_course/`, {
+    course_id: courseId,
   });
   return data;
 }
