@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/store/authStore';
+import { NavLink } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   BookOpen,
@@ -22,7 +23,7 @@ import {
 } from 'lucide-react';
 
 interface NavItem {
-  name: string;
+  labelKey: string;
   href: string;
   icon: any;
   roles?: string[]; // If undefined, visible to all roles
@@ -30,37 +31,87 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   // Home
-  { name: 'Home', href: '/dashboard', icon: LayoutDashboard },
+  { labelKey: "layout.home", href: "/dashboard", icon: LayoutDashboard },
 
   // Admissions
-  { name: 'Admissions', href: '/admissions/applications', icon: UserPlus, roles: ['ADMIN'] },
+  {
+    labelKey: "layout.admissions",
+    href: "/admissions/applications",
+    icon: UserPlus,
+    roles: ["ADMIN"],
+  },
 
   // Enrollments & Cohorts
-  { name: 'Programs & Cohorts', href: '/catalog/programs', icon: BookOpen, roles: ['ADMIN', 'LECTURER'] },
+  {
+    labelKey: "layout.programsAndCohorts",
+    href: "/catalog/programs",
+    icon: BookOpen,
+    roles: ["ADMIN", "LECTURER"],
+  },
 
   // Billing & Payments
-  { name: 'Billing & Payments', href: '/payments', icon: CreditCard, roles: ['ADMIN'] },
+  {
+    labelKey: "layout.payments",
+    href: "/payments",
+    icon: CreditCard,
+    roles: ["ADMIN"],
+  },
 
   // Teaching
-  { name: 'Teaching', href: '/assessment', icon: FileCheck },
-  { name: 'Attendance', href: '/attendance/list', icon: ClipboardCheck, roles: ['ADMIN', 'LECTURER'] },
+  { labelKey: "layout.teaching", href: "/assessment", icon: FileCheck },
+  {
+    labelKey: "layout.attendance",
+    href: "/attendance/list",
+    icon: ClipboardCheck,
+    roles: ["ADMIN", "LECTURER"],
+  },
 
   // Reports
-  { name: 'Reports', href: '/reporting', icon: FileSpreadsheet, roles: ['ADMIN'] },
+  {
+    labelKey: "layout.reports",
+    href: "/reporting",
+    icon: FileSpreadsheet,
+    roles: ["ADMIN"],
+  },
 
   // Other resources / Settings
-  { name: 'Timekeeping', href: '/timekeeping', icon: Clock, roles: ['ADMIN', 'LECTURER'] },
-  { name: 'Documents', href: '/documents', icon: FileText },
-  { name: 'Certificates', href: '/certificates/list', icon: Award },
-  { name: 'Gallery', href: '/gallery/mine', icon: Image },
-  { name: 'Archive', href: '/archive', icon: Archive, roles: ['ADMIN'] },
-  { name: 'Users', href: '/users', icon: UserCog, roles: ['ADMIN'] },
-  { name: 'Lecturer Portal', href: '/lecturer/dashboard', icon: GraduationCap, roles: ['LECTURER'] },
-  { name: 'My Sessions', href: '/lecturer/sessions', icon: Calendar, roles: ['LECTURER'] },
+  {
+    labelKey: "layout.timekeeping",
+    href: "/timekeeping",
+    icon: Clock,
+    roles: ["ADMIN", "LECTURER"],
+  },
+  { labelKey: "layout.documents", href: "/documents", icon: FileText },
+  {
+    labelKey: "layout.certificates",
+    href: "/certificates/list",
+    icon: Award,
+  },
+  { labelKey: "layout.gallery", href: "/gallery/mine", icon: Image },
+  {
+    labelKey: "layout.archive",
+    href: "/archive",
+    icon: Archive,
+    roles: ["ADMIN"],
+  },
+  { labelKey: "layout.users", href: "/users", icon: UserCog, roles: ["ADMIN"] },
+  {
+    labelKey: "layout.lecturerPortal",
+    href: "/lecturer/dashboard",
+    icon: GraduationCap,
+    roles: ["LECTURER"],
+  },
+  {
+    labelKey: "layout.mySessions",
+    href: "/lecturer/sessions",
+    icon: Calendar,
+    roles: ["LECTURER"],
+  },
 ];
-import './Layout.css'
+import "./Layout.css";
 
 export function Sidebar() {
+  const { t } = useTranslation("common");
   const { user } = useAuthStore();
 
   // Filter navigation items based on user role
@@ -73,12 +124,14 @@ export function Sidebar() {
     <div className="sidebar_wrapper">
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
         <img src="/logo.svg" alt="Cyber Academy" className="h-9 w-auto" />
-        <span className="text-sm font-semibold text-sidebar-foreground">Cyber Academy</span>
+        <span className="text-sm font-semibold text-sidebar-foreground">
+          {t("app.name")}
+        </span>
       </div>
       <nav className="sidebar_link_wrapper">
         {(visibleNavigation || []).map((item) => (
           <NavLink
-            key={item.name}
+            key={item.href}
             to={item.href}
             className={({ isActive }) =>
               cn(
@@ -90,7 +143,7 @@ export function Sidebar() {
             }
           >
             <item.icon className="h-5 w-5" />
-            {item.name}
+            {t(item.labelKey)}
           </NavLink>
         ))}
       </nav>

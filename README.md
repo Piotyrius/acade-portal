@@ -4,6 +4,39 @@
 
 **URL**: https://lovable.dev/projects/b4285722-fa77-4da5-a105-d3d291a84970
 
+## Internationalization (i18n)
+
+- **Default language**: Georgian (`ka`)
+- **Additional language**: Russian (`ru`)
+- **Library**: `react-i18next` / `i18next`
+
+- **Core setup**:
+  - Initialization in `src/i18n.ts`
+  - Resources in `src/locales/ka/common.json` and `src/locales/ru/common.json`
+  - Loaded once from `src/main.tsx` via `import "./i18n"`
+
+- **Usage in components**:
+  - Import the hook:
+    - `import { useTranslation } from "react-i18next";`
+  - Use in component:
+    - `const { t } = useTranslation("common");`
+    - Replace hard-coded strings with translation keys, e.g.:
+      - `t("auth.loginTitle")`
+      - `t("layout.profileLabel")`
+
+- **Adding new strings**:
+  - Add the same key to both `common.json` files (`ka` and `ru`).
+  - Use a dot-separated namespace, e.g.:
+    - Auth-related: `auth.*`
+    - Layout/sidebar/topbar: `layout.*`
+    - Dashboard: `dashboard.*`
+
+- **Language switching**:
+  - The global switcher is implemented in `src/components/LanguageSwitcher.tsx`.
+  - Rendered in the top bar (`Topbar` component).
+  - Calls `i18n.changeLanguage("ka" | "ru")` and stores the choice in `localStorage`.
+  - On first load, the app falls back to Georgian if nothing is stored.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.

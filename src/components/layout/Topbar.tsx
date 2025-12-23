@@ -1,7 +1,7 @@
-import { useAuthStore } from '@/store/authStore';
-import { logout, fetchMe } from '@/api/endpoints/auth';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
+import { useAuthStore } from "@/store/authStore";
+import { logout, fetchMe } from "@/api/endpoints/auth";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,36 +9,46 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Moon, Sun, Search, Bell } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { useEffect, useState } from 'react';
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { LogOut, User, Moon, Sun, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
 import { LuMenu } from "react-icons/lu";
-import { CommandPalette, useCommandPalette } from '@/components/search/CommandPalette';
-import { GlobalSearch } from '@/components/search/GlobalSearch';
-import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import {
+  CommandPalette,
+  useCommandPalette,
+} from "@/components/search/CommandPalette";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "../LanguageSwitcher";
 
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { user, refreshToken, clearAuth } = useAuthStore();
   const navigate = useNavigate();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const { open: commandOpen, setOpen: setCommandOpen } = useCommandPalette();
   const [avatarBuster, setAvatarBuster] = useState(() => Date.now());
+  const { t } = useTranslation("common");
 
   // Fetch full user data to get profile picture
   const { data: fullUserData } = useQuery({
-    queryKey: ['me'],
+    queryKey: ["me"],
     queryFn: fetchMe,
     enabled: !!user, // Only fetch if user is logged in
   });
 
   const displayUser = fullUserData || user;
 
-  const displayFirstName = (displayUser as any)?.firstName || (displayUser as any)?.first_name || '';
-  const displayLastName = (displayUser as any)?.lastName || (displayUser as any)?.last_name || '';
+  const displayFirstName =
+    (displayUser as any)?.firstName ||
+    (displayUser as any)?.first_name ||
+    "";
+  const displayLastName =
+    (displayUser as any)?.lastName || (displayUser as any)?.last_name || "";
 
   // When /me refetches (e.g., after uploading a new picture), bump the cache buster.
   useEffect(() => {
@@ -54,32 +64,34 @@ const handleLogout = async () => {
       await logout(refreshToken);
     }
   } catch (err) {
-    console.log('Error')
+    console.log("Error");
   }
 
   clearAuth();
-  navigate('/login');
+  navigate("/login");
 };
 
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+    const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     document.documentElement.classList.toggle('dark');
   };
 
   const initials = user
-    ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}` || 'U'
-    : 'U';
+    ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}` || "U"
+    : "U";
 
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
       <div className="flex items-center gap-4">
         <h1 className="text-xl font-semibold text-card-foreground topbar_welcome">
-          Welcome back, {user?.firstName}!
+          {t("layout.welcomeBack", { name: user?.firstName ?? "" })}
         </h1>
-        <Badge variant="secondary" className='topbar_user_role'>{user?.role}</Badge>
+        <Badge variant="secondary" className="topbar_user_role">
+          {user?.role}
+        </Badge>
       </div>
 
       <div className="flex items-center gap-2 flex-1 justify-end max-w-md">
@@ -94,14 +106,15 @@ const handleLogout = async () => {
           <Search className="h-5 w-5" />
         </Button>
         <NotificationCenter />
+        <LanguageSwitcher />
         <Button variant="ghost" size="icon" onClick={toggleTheme}>
-          {theme === 'light' ? (
+          {theme === "light" ? (
             <Moon className="h-5 w-5" />
           ) : (
             <Sun className="h-5 w-5" />
           )}
         </Button>
-        <LuMenu className='menu_icon' onClick={onMenuClick} />
+        <LuMenu className="menu_icon" onClick={onMenuClick} />
 
 
         <DropdownMenu>
@@ -123,19 +136,21 @@ const handleLogout = async () => {
           <DropdownMenuContent className="w-56 bg-popover" align="end">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+                <p className="text-sm font-medium">
+                  {user?.firstName} {user?.lastName}
+                </p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/profile')}>
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
               <User className="mr-2 h-4 w-4" />
-              Profile
+              {t("layout.profileLabel")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              Log out
+              {t("layout.logoutLabel")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

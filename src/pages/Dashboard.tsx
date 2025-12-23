@@ -1,23 +1,51 @@
-import { useAuthStore } from '@/store/authStore';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Users, BookOpen, ClipboardCheck, Award, TrendingUp, Calendar, DollarSign, FileText, Plus, ArrowRight, Clock, GraduationCap, FileCheck, Upload } from 'lucide-react';
-import { getCohorts } from '@/api/endpoints/catalog';
-import { getEnrollments, getApplications } from '@/api/endpoints/admissions';
-import { getCertificates } from '@/api/endpoints/certificates';
-import { getMySessions } from '@/api/endpoints/catalog';
-import { format, isToday, isTomorrow, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns';
-import { getAttendanceRecords } from '@/api/endpoints/attendance';
-import { getInvoices, getPayments } from '@/api/endpoints/payments';
-import { getWorkLogs, getTimesheets, getRates } from '@/api/endpoints/timekeeping';
-import { getAssessments, getSubmissions, getGrades } from '@/api/endpoints/assessment';
-import { getAnalyticsOverview } from '@/api/endpoints/reporting';
-import { ClickableMetricCard } from '@/components/dashboard/ClickableMetricCard';
-import { ActivityTimeline } from '@/components/dashboard/ActivityTimeline';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { useAuthStore } from "@/store/authStore";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Users,
+  BookOpen,
+  ClipboardCheck,
+  Award,
+  TrendingUp,
+  Calendar,
+  DollarSign,
+  FileText,
+  Plus,
+  ArrowRight,
+  Clock,
+  GraduationCap,
+  FileCheck,
+  Upload,
+} from "lucide-react";
+import { getCohorts } from "@/api/endpoints/catalog";
+import { getEnrollments, getApplications } from "@/api/endpoints/admissions";
+import { getCertificates } from "@/api/endpoints/certificates";
+import { getMySessions } from "@/api/endpoints/catalog";
+import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { getAttendanceRecords } from "@/api/endpoints/attendance";
+import { getInvoices, getPayments } from "@/api/endpoints/payments";
+import { getWorkLogs, getTimesheets, getRates } from "@/api/endpoints/timekeeping";
+import { getAssessments, getSubmissions, getGrades } from "@/api/endpoints/assessment";
+import { getAnalyticsOverview } from "@/api/endpoints/reporting";
+import { ClickableMetricCard } from "@/components/dashboard/ClickableMetricCard";
+import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
+import { useTranslation } from "react-i18next";
 
 function getPercentChange(current: number, previous: number) {
   if (previous === 0) return '+0%';
@@ -27,6 +55,7 @@ function getPercentChange(current: number, previous: number) {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation("common");
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -76,7 +105,7 @@ export default function Dashboard() {
     enabled: user?.role === 'ADMIN',
   });
 
-  const { data: analyticsOverview, error: analyticsError } = useQuery({
+  const { data: analyticsOverview } = useQuery({
     queryKey: ['analytics-overview-dashboard'],
     queryFn: () => getAnalyticsOverview(),
     enabled: user?.role === 'ADMIN',
@@ -173,22 +202,22 @@ export default function Dashboard() {
     }).length;
 
   const studentsChange = getPercentChange(
-    countThisMonth(enrollments, 'enrolled_at'),
-    countLastMonth(enrollments, 'enrolled_at')
+    countThisMonth(enrollments, "enrolled_at"),
+    countLastMonth(enrollments, "enrolled_at")
   );
 
   const cohortsChange = getPercentChange(
-    countThisMonth(cohorts, 'created_at'),
-    countLastMonth(cohorts, 'created_at')
+    countThisMonth(cohorts, "created_at"),
+    countLastMonth(cohorts, "created_at")
   );
 
   const certificatesChange = getPercentChange(
-    countThisMonth(certificates, 'issued_at'),
-    countLastMonth(certificates, 'issued_at')
+    countThisMonth(certificates, "issued_at"),
+    countLastMonth(certificates, "issued_at")
   );
 
 
-  const presentStatuses = ['PRESENT', 'LATE', 'EXCUSED'];
+  const presentStatuses = ["PRESENT", "LATE", "EXCUSED"];
 
   // Determine which attendance records matter for this user
   let relevantAttendance = attendanceRecords;
@@ -243,11 +272,15 @@ export default function Dashboard() {
   const attendanceChange = getPercentChange(attendanceThisMonth, attendanceLastMonth);
 
   // Calculate additional metrics
-  const pendingApplications = applications.filter((a: any) => a.status === 'PENDING').length;
-  const outstandingInvoices = invoices.filter((i: any) => i.status === 'OVERDUE' || i.status === 'ISSUED').length;
+  const pendingApplications = applications.filter(
+    (a: any) => a.status === "PENDING"
+  ).length;
+  const outstandingInvoices = invoices.filter(
+    (i: any) => i.status === "OVERDUE" || i.status === "ISSUED"
+  ).length;
   const totalRevenue = payments
-    .filter((p: any) => p.status === 'COMPLETED')
-    .reduce((sum: number, p: any) => sum + parseFloat(p.amount || '0'), 0);
+    .filter((p: any) => p.status === "COMPLETED")
+    .reduce((sum: number, p: any) => sum + parseFloat(p.amount || "0"), 0);
   
   const pendingSubmissions = submissions.filter((s: any) => !s.graded).length;
   const hoursThisMonth = workLogs
@@ -264,15 +297,15 @@ export default function Dashboard() {
 
   const averageGrade = studentGrades.length > 0
     ? studentGrades.reduce((sum: number, g: any) => {
-        const score = parseFloat(g.score || '0');
-        const maxScore = parseFloat(g.max_score || '1');
+        const score = parseFloat(g.score || "0");
+        const maxScore = parseFloat(g.max_score || "1");
         return sum + (score / maxScore) * 100;
       }, 0) / studentGrades.length
     : 0;
 
   // Helper: copy public recruiting link
   const handleCopyRecruitingLink = () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/apply`;
 
     if (navigator && 'clipboard' in navigator) {
@@ -280,19 +313,19 @@ export default function Dashboard() {
         .writeText(url)
         .then(() => {
           toast({
-            title: 'Link copied',
-            description: 'Public recruiting page URL copied. Share it with candidates.',
+            title: t("dashboard.recruitingLinkCopiedTitle"),
+            description: t("dashboard.recruitingLinkCopiedDescription"),
           });
         })
         .catch(() => {
           toast({
-            title: 'Link ready',
+            title: t("dashboard.recruitingLinkReadyTitle"),
             description: url,
           });
         });
     } else {
       toast({
-        title: 'Link ready',
+        title: t("dashboard.recruitingLinkReadyTitle"),
         description: url,
       });
     }
@@ -301,7 +334,7 @@ export default function Dashboard() {
   // Admin stats
   const adminStats = [
     {
-      title: 'Total Students',
+      title: t("dashboard.totalStudents"),
       value: totalStudentsCount.toString(),
       change: studentsChange,
       icon: Users,
@@ -309,7 +342,7 @@ export default function Dashboard() {
       href: '/admissions/enrollments',
     },
     {
-      title: 'Active Cohorts',
+      title: t("dashboard.activeCohorts"),
       value: activeCohorts.toString(),
       change: cohortsChange,
       icon: BookOpen,
@@ -317,7 +350,7 @@ export default function Dashboard() {
       href: '/catalog/cohorts',
     },
     {
-      title: 'Pending Applications',
+      title: t("dashboard.pendingApplications"),
       value: pendingApplications.toString(),
       change: '+0%',
       icon: FileText,
@@ -325,7 +358,7 @@ export default function Dashboard() {
       href: '/admissions/applications',
     },
     {
-      title: 'Outstanding Invoices',
+      title: t("dashboard.outstandingInvoices"),
       value: outstandingInvoices.toString(),
       change: '+0%',
       icon: DollarSign,
@@ -337,7 +370,7 @@ export default function Dashboard() {
   // Lecturer stats
   const lecturerStats = [
     {
-      title: 'Hours This Month',
+      title: t("dashboard.hoursThisMonth"),
       value: hoursThisMonth.toFixed(1),
       change: '+0%',
       icon: Clock,
@@ -345,7 +378,7 @@ export default function Dashboard() {
       href: '/timekeeping/worklogs',
     },
     {
-      title: 'Pending Submissions',
+      title: t("dashboard.pendingSubmissions"),
       value: pendingSubmissions.toString(),
       change: '+0%',
       icon: FileCheck,
@@ -353,7 +386,7 @@ export default function Dashboard() {
       href: '/assessment/submissions',
     },
     {
-      title: 'Upcoming Sessions',
+      title: t("dashboard.upcomingSessions"),
       value: upcomingSessions.length.toString(),
       change: '+0%',
       icon: Calendar,
@@ -361,8 +394,10 @@ export default function Dashboard() {
       href: '/lecturer/sessions',
     },
     {
-      title: 'Active Rate',
-      value: rates.find((r: any) => r.active) ? 'Set' : 'Not Set',
+      title: t("dashboard.activeRate"),
+      value: rates.find((r: any) => r.active)
+        ? t("dashboard.rateSet")
+        : t("dashboard.rateNotSet"),
       change: '',
       icon: DollarSign,
       trend: 'neutral' as const,
@@ -373,7 +408,7 @@ export default function Dashboard() {
   // Student stats
   const studentStats = [
     {
-      title: 'Pending Assessments',
+      title: t("dashboard.pendingAssessments"),
       value: pendingAssessments.toString(),
       change: '+0%',
       icon: FileCheck,
@@ -381,15 +416,15 @@ export default function Dashboard() {
       href: '/assessment/assessments',
     },
     {
-      title: 'Average Grade',
-      value: averageGrade > 0 ? averageGrade.toFixed(1) + '%' : 'N/A',
+      title: t("dashboard.averageGrade"),
+      value: averageGrade > 0 ? `${averageGrade.toFixed(1)}%` : "N/A",
       change: '+0%',
       icon: GraduationCap,
       trend: 'up' as const,
       href: '/assessment/grades',
     },
     {
-      title: 'Attendance Rate',
+      title: t("dashboard.attendanceRate"),
       value: attendanceRate,
       change: attendanceChange,
       icon: ClipboardCheck,
@@ -397,7 +432,7 @@ export default function Dashboard() {
       href: '/attendance/list',
     },
     {
-      title: 'Certificates',
+      title: t("dashboard.certificates"),
       value: certificates.filter((c: any) => c.student === user?.id && c.status === 'ISSUED').length.toString(),
       change: '+0%',
       icon: Award,
@@ -406,75 +441,109 @@ export default function Dashboard() {
     },
   ];
 
-  const stats = user?.role === 'ADMIN' ? adminStats : user?.role === 'LECTURER' ? lecturerStats : studentStats;
+  const stats =
+    user?.role === "ADMIN"
+      ? adminStats
+      : user?.role === "LECTURER"
+      ? lecturerStats
+      : studentStats;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {t("dashboard.title")}
+        </h2>
         <p className="text-muted-foreground">
-          {user?.role === 'ADMIN' && 'Overview of your academy'}
-          {user?.role === 'LECTURER' && 'Your teaching schedule and students'}
-          {user?.role === 'STUDENT' && 'Your learning progress'}
+          {user?.role === "ADMIN" && t("dashboard.subtitleAdmin")}
+          {user?.role === "LECTURER" && t("dashboard.subtitleLecturer")}
+          {user?.role === "STUDENT" && t("dashboard.subtitleStudent")}
         </p>
       </div>
 
       {/* Quick Actions */}
-      {user?.role === 'ADMIN' && (
+      {user?.role === "ADMIN" && (
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={() => navigate('/admissions/applications')} variant="outline">
+          <Button
+            onClick={() => navigate("/admissions/applications")}
+            variant="outline"
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Review Applications
+            {t("dashboard.reviewApplications")}
           </Button>
-          <Button onClick={() => navigate('/admissions/enrollments')} variant="outline">
+          <Button
+            onClick={() => navigate("/admissions/enrollments")}
+            variant="outline"
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Manage Enrollments
+            {t("dashboard.manageEnrollments")}
           </Button>
-          <Button onClick={() => navigate('/payments/invoices')} variant="outline">
+          <Button
+            onClick={() => navigate("/payments/invoices")}
+            variant="outline"
+          >
             <Plus className="mr-2 h-4 w-4" />
-            View Invoices
+            {t("dashboard.viewInvoices")}
           </Button>
-          <Button onClick={() => navigate('/payments')} variant="outline">
+          <Button onClick={() => navigate("/payments")} variant="outline">
             <DollarSign className="mr-2 h-4 w-4" />
-            Billing & Payments
+            {t("dashboard.billingAndPayments")}
           </Button>
           <Button onClick={handleCopyRecruitingLink} variant="outline">
             <Users className="mr-2 h-4 w-4" />
-            Copy recruit page link
+            {t("dashboard.copyRecruitPageLink")}
           </Button>
         </div>
       )}
 
-      {user?.role === 'LECTURER' && (
+      {user?.role === "LECTURER" && (
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={() => navigate('/timekeeping/worklogs')} variant="outline">
+          <Button
+            onClick={() => navigate("/timekeeping/worklogs")}
+            variant="outline"
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Log Hours
+            {t("dashboard.logHours")}
           </Button>
-          <Button onClick={() => navigate('/lecturer/sessions')} variant="outline">
+          <Button
+            onClick={() => navigate("/lecturer/sessions")}
+            variant="outline"
+          >
             <Calendar className="mr-2 h-4 w-4" />
-            View Sessions
+            {t("dashboard.viewSessions")}
           </Button>
-          <Button onClick={() => navigate('/assessment/submissions')} variant="outline">
+          <Button
+            onClick={() => navigate("/assessment/submissions")}
+            variant="outline"
+          >
             <FileCheck className="mr-2 h-4 w-4" />
-            Grade Submissions
+            {t("dashboard.gradeSubmissions")}
           </Button>
         </div>
       )}
 
-      {user?.role === 'STUDENT' && (
+      {user?.role === "STUDENT" && (
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={() => navigate('/assessment/assessments')} variant="outline">
+          <Button
+            onClick={() => navigate("/assessment/assessments")}
+            variant="outline"
+          >
             <Upload className="mr-2 h-4 w-4" />
-            Submit Assignment
+            {t("dashboard.submitAssignment")}
           </Button>
-          <Button onClick={() => navigate('/catalog/sessions')} variant="outline">
+          <Button
+            onClick={() => navigate("/catalog/sessions")}
+            variant="outline"
+          >
             <Calendar className="mr-2 h-4 w-4" />
-            View Schedule
+            {t("dashboard.viewSchedule")}
           </Button>
-          <Button onClick={() => navigate('/certificates/list')} variant="outline">
+          <Button
+            onClick={() => navigate("/certificates/list")}
+            variant="outline"
+          >
             <Award className="mr-2 h-4 w-4" />
-            My Certificates
+            {t("dashboard.myCertificates")}
           </Button>
         </div>
       )}
@@ -497,11 +566,13 @@ export default function Dashboard() {
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>
-              {user?.role === 'LECTURER' ? 'My Upcoming Sessions' : 'Recent Enrollments'}
+              {user?.role === "LECTURER"
+                ? t("dashboard.cardUpcomingSessionsTitle")
+                : t("dashboard.cardRecentEnrollmentsTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {user?.role === 'LECTURER' ? (
+            {user?.role === "LECTURER" ? (
               <div className="space-y-4">
                 {upcomingSessions.length > 0 ? (
                   upcomingSessions.map((session) => (
@@ -517,14 +588,17 @@ export default function Dashboard() {
                         <div>
                           <p className="font-medium">{session.cohort_name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {isToday(parseISO(session.date)) ? 'Today' : 'Tomorrow'},{' '}
+                            {isToday(parseISO(session.date))
+                              ? t("dashboard.today")
+                              : t("dashboard.tomorrow")}
+                            ,{" "}
                             {session.start_time}
                           </p>
                         </div>
                       </div>
                       <div className="text-right flex items-center gap-2">
                         <p className="text-sm font-medium">
-                          {session.location || 'No location'}
+                          {session.location || t("dashboard.noLocation")}
                         </p>
                         <ArrowRight className="h-4 w-4 text-muted-foreground" />
                       </div>
@@ -536,7 +610,7 @@ export default function Dashboard() {
                   </p>
                 )}
               </div>
-            ) : user?.role === 'STUDENT' ? (
+            ) : user?.role === "STUDENT" ? (
               <div className="space-y-4">
                 {studentAssessments.slice(0, 3).map((assessment: any) => (
                   <div
@@ -551,7 +625,8 @@ export default function Dashboard() {
                       <div>
                         <p className="font-medium">{assessment.title}</p>
                         <p className="text-sm text-muted-foreground">
-                          Due: {format(parseISO(assessment.due_at), 'MMM dd, yyyy')}
+                          {t("dashboard.due")}:{" "}
+                          {format(parseISO(assessment.due_at), "MMM dd, yyyy")}
                         </p>
                       </div>
                     </div>
@@ -560,13 +635,14 @@ export default function Dashboard() {
                 ))}
                 {studentAssessments.length === 0 && (
                   <p className="text-muted-foreground text-center py-8">
-                    No assessments available
+                    {t("dashboard.noAssessments")}
                   </p>
                 )}
               </div>
             ) : (
               <div className="space-y-4">
-                {enrollments && enrollments.slice(0, 3).map((enrollment: any) => (
+                {enrollments &&
+                  enrollments.slice(0, 3).map((enrollment: any) => (
                   <div
                     key={enrollment.id}
                     className="flex items-center justify-between p-4 border border-border rounded-lg cursor-pointer hover:bg-accent transition-colors"
@@ -587,16 +663,19 @@ export default function Dashboard() {
                       <div>
                         <p className="text-sm font-medium">{enrollment.status}</p>
                         <p className="text-xs text-muted-foreground">
-                          {format(parseISO(enrollment.enrolled_at), 'MMM dd, yyyy')}
+                          {format(
+                            parseISO(enrollment.enrolled_at),
+                            "MMM dd, yyyy"
+                          )}
                         </p>
                       </div>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
-                ))}
+                  ))}
                 {(!enrollments || enrollments.length === 0) && (
                   <p className="text-muted-foreground text-center py-8">
-                    No enrollments yet
+                    {t("dashboard.noEnrollments")}
                   </p>
                 )}
               </div>
@@ -607,12 +686,16 @@ export default function Dashboard() {
         <Card className="col-span-3">
           <CardHeader>
             <CardTitle>
-              {user?.role === 'ADMIN' ? 'Recent Certificates' : user?.role === 'STUDENT' ? 'My Certificates' : 'Recent Activity'}
+              {user?.role === "ADMIN"
+                ? t("dashboard.recentCertificates")
+                : user?.role === "STUDENT"
+                ? t("dashboard.myCertificates")
+                : t("dashboard.recentActivity")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {user?.role === 'ADMIN' && (
+              {user?.role === "ADMIN" && (
                 <>
                   {certificates && certificates.slice(0, 4).map((cert: any) => (
                     <div
@@ -622,22 +705,24 @@ export default function Dashboard() {
                     >
                       <div className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium">Certificate Issued</p>
+                        <p className="text-sm font-medium">
+                          {t("dashboard.certificateIssued")}
+                        </p>
                         <p className="text-xs text-muted-foreground">{cert.student_name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {format(parseISO(cert.issued_at), 'MMM dd, yyyy')}
+                          {format(parseISO(cert.issued_at), "MMM dd, yyyy")}
                         </p>
                       </div>
                     </div>
                   ))}
                   {(!certificates || certificates.length === 0) && (
                     <p className="text-muted-foreground text-center py-8">
-                      No certificates issued yet
+                      {t("dashboard.noCertificatesIssued")}
                     </p>
                   )}
                 </>
               )}
-              {user?.role === 'LECTURER' && (
+              {user?.role === "LECTURER" && (
                 <>
                   {submissions.slice(0, 4).map((submission: any) => (
                     <div
@@ -647,19 +732,23 @@ export default function Dashboard() {
                     >
                       <div className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium">New Submission</p>
-                        <p className="text-xs text-muted-foreground">Needs grading</p>
+                        <p className="text-sm font-medium">
+                          {t("dashboard.newSubmission")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t("dashboard.needsGrading")}
+                        </p>
                       </div>
                     </div>
                   ))}
                   {submissions.length === 0 && (
                     <p className="text-muted-foreground text-center py-8">
-                      No pending submissions
+                      {t("dashboard.noPendingSubmissions")}
                     </p>
                   )}
                 </>
               )}
-              {user?.role === 'STUDENT' && (
+              {user?.role === "STUDENT" && (
                 <>
                   {certificates.filter((c: any) => c.student === user?.id).slice(0, 4).map((cert: any) => (
                     <div
@@ -669,16 +758,19 @@ export default function Dashboard() {
                     >
                       <div className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium">Certificate Earned</p>
+                        <p className="text-sm font-medium">
+                          {t("dashboard.certificateEarned")}
+                        </p>
                         <p className="text-xs text-muted-foreground">
-                          {format(parseISO(cert.issued_at), 'MMM dd, yyyy')}
+                          {format(parseISO(cert.issued_at), "MMM dd, yyyy")}
                         </p>
                       </div>
                     </div>
                   ))}
-                  {certificates.filter((c: any) => c.student === user?.id).length === 0 && (
+                  {certificates.filter((c: any) => c.student === user?.id)
+                    .length === 0 && (
                     <p className="text-muted-foreground text-center py-8">
-                      No certificates yet
+                      {t("dashboard.noCertificates")}
                     </p>
                   )}
                 </>

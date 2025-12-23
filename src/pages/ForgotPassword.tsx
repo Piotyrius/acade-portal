@@ -1,14 +1,23 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { requestPasswordReset } from '@/api/endpoints/auth';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { requestPasswordReset } from "@/api/endpoints/auth";
+import { useTranslation } from "react-i18next";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState('');
+  const { t } = useTranslation("common");
+
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
@@ -20,10 +29,20 @@ export default function ForgotPassword() {
     try {
       await requestPasswordReset(email);
       setIsSubmitted(true);
-      toast({ title: 'Request sent', description: 'If an account exists with this email, you will receive a password reset link.' });
+      toast({
+        title: t("auth.resetRequestSentTitle"),
+        description: t("auth.resetRequestSentDescription"),
+      });
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Failed to send request';
-      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.message ||
+        t("auth.resetRequestErrorDefault");
+      toast({
+        title: t("auth.resetRequestErrorTitle"),
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -36,39 +55,41 @@ export default function ForgotPassword() {
           <div className="flex justify-center">
             <img src="/logo.svg" alt="Cyber Academy" className="h-16 w-auto" />
           </div>
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
+          <CardTitle className="text-2xl">
+            {t("auth.resetPasswordTitle")}
+          </CardTitle>
           <CardDescription>
             {isSubmitted
-              ? 'Check your email for instructions to reset your password.'
-              : 'Enter your email address and we will send you a link to reset your password.'}
+              ? t("auth.resetSubmittedMessage")
+              : t("auth.resetInstructions")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isSubmitted ? (
             <div className="space-y-4">
               <Button asChild className="w-full">
-                <Link to="/login">Return to Login</Link>
+                <Link to="/login">{t("auth.backToLogin")}</Link>
               </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Sending link...' : 'Send Reset Link'}
+                {isLoading ? t("auth.sendingResetLink") : t("auth.sendResetLink")}
               </Button>
               <div className="text-center text-sm">
                 <Link to="/login" className="text-primary hover:underline">
-                  Back to Login
+                  {t("auth.backToLogin")}
                 </Link>
               </div>
             </form>
