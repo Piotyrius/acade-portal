@@ -299,10 +299,14 @@ export default function Applications() {
                   <p className="text-sm text-muted-foreground">{app.email}</p>
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
-                      <Phone className="h-3 w-3" />
-                      {app.phone}
-                    </span>
+                    {/* Primary phone, but only if it isn't already present in additional phones */}
+                    {(!app.phones ||
+                      !app.phones.some((p) => p.phone === app.phone)) && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                        <Phone className="h-3 w-3" />
+                        {app.phone}
+                      </span>
+                    )}
                     {app.phones && app.phones.length > 0 && (
                       <span className="inline-flex flex-wrap gap-1">
                         {app.phones.map((p, idx) => (
@@ -335,27 +339,27 @@ export default function Applications() {
                   </div>
 
                   {(app.schedule_pref || app.experience_level || app.referral_source || app.notes) && (
-                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-foreground">
                       {app.schedule_pref && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
                           <Clock className="h-3 w-3" />
                           {app.schedule_pref}
                         </span>
                       )}
                       {app.experience_level && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
                           <Sparkles className="h-3 w-3" />
                           {app.experience_level}
                         </span>
                       )}
                       {app.referral_source && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
                           <Info className="h-3 w-3" />
                           {app.referral_source}
                         </span>
                       )}
                       {app.notes && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 max-w-xs truncate">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 max-w-xs truncate">
                           <Info className="h-3 w-3" />
                           {app.notes}
                         </span>
