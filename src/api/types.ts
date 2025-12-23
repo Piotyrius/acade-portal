@@ -118,8 +118,11 @@ export interface SessionDto {
 
 // Admissions
 export interface ApplicationPhone {
+  // Optional id/created_at are returned by the backend but not required when submitting
+  id?: UUID;
   name: string;
   phone: string;
+  created_at?: string;
 }
 
 export interface ApplicationDto {

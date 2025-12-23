@@ -420,7 +420,7 @@ export default function Enrollments() {
                     key={enrollment.id}
                     className="flex items-center justify-between p-4 border border-border rounded-lg enrollments_item"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-start gap-3">
                       {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
                         <Checkbox
                           checked={selectedEnrollments.includes(enrollment.id)}
@@ -428,16 +428,26 @@ export default function Enrollments() {
                           disabled={!isBulkActivatable(enrollment.status)}
                         />
                       )}
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-medium">
                           {enrollment.student_name || enrollment.student || 'Unknown Student'}
                         </p>
+                        {enrollment.student_email && (
+                          <p className="text-sm text-muted-foreground">
+                            {enrollment.student_email}
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground">
                           Cohort: {cohort?.name || enrollment.cohort_name || 'Unknown'}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                          Enrolled on {new Date(enrollment.enrolled_at).toLocaleDateString()}
                         </p>
+                        {enrollment.notes && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Notes: {enrollment.notes}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

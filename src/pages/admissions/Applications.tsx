@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Check, X, Pencil } from 'lucide-react';
+import { Search, Check, X, Pencil, Phone, Info, Clock, Sparkles } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getApplicationsPaginated, updateApplication, acceptApplication } from '@/api/endpoints/admissions';
 import { getPrograms, getCourses } from '@/api/endpoints/catalog';
@@ -199,11 +199,17 @@ export default function Applications() {
 
   /* ===================== FILTER ===================== */
 
-  const filteredApplications = applications.filter(
-    (app) =>
+  const filteredApplications = applications.filter((app) => {
+    // On this screen we focus on applications that still need a decision
+    if (!(app.status === 'NEW' || app.status === 'IN_REVIEW')) {
+      return false;
+    }
+
+    return (
       app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    );
+  });
 
   /* ===================== UI ===================== */
 
@@ -274,6 +280,10 @@ export default function Applications() {
       <Card>
         <CardHeader>
           <CardTitle>Applications</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Showing only applications that still need a decision. Accepted students appear under
+            Enrollments.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {filteredApplications.map((app) => {
@@ -284,10 +294,74 @@ export default function Applications() {
                 key={app.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
-                <div>
-                  <p className="font-medium">{app.name}</p>
+                <div className="space-y-1">
+                  <p className="font-medium text-base">{app.name}</p>
                   <p className="text-sm text-muted-foreground">{app.email}</p>
-                  <p className="text-xs text-muted-foreground">{program?.name}</p>
+
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                      <Phone className="h-3 w-3" />
+                      {app.phone}
+                    </span>
+                    {app.phones && app.phones.length > 0 && (
+                      <span className="inline-flex flex-wrap gap-1">
+                        {app.phones.map((p, idx) => (
+                          <span
+                            key={p.id ?? `${p.phone}-${idx}`}
+                            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5"
+                          >
+                            <Phone className="h-3 w-3" />
+                            {p.name ? `${p.name}: ${p.phone}` : p.phone}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-2 grid gap-1 text-xs text-muted-foreground md:grid-cols-2">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      <span>Applied on {new Date(app.created_at).toLocaleDateString()}</span>
+                    </div>
+                    {program && (
+                      <div className="flex items-center gap-1">
+                        <Info className="h-3 w-3" />
+                        <span>
+                          {program.name}
+                          {program.code ? ` • ${program.code}` : ''}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {(app.schedule_pref || app.experience_level || app.referral_source || app.notes) && (
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                      {app.schedule_pref && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">
+                          <Clock className="h-3 w-3" />
+                          {app.schedule_pref}
+                        </span>
+                      )}
+                      {app.experience_level && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">
+                          <Sparkles className="h-3 w-3" />
+                          {app.experience_level}
+                        </span>
+                      )}
+                      {app.referral_source && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">
+                          <Info className="h-3 w-3" />
+                          {app.referral_source}
+                        </span>
+                      )}
+                      {app.notes && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 max-w-xs truncate">
+                          <Info className="h-3 w-3" />
+                          {app.notes}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
