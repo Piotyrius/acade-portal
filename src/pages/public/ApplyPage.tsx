@@ -19,6 +19,7 @@ import { IoMdClose } from 'react-icons/io';
 import { GoPlus } from 'react-icons/go';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 type PhoneEntry = {
   name: string;
@@ -114,6 +115,9 @@ export default function ApplyPage() {
     <section className={`recruiting_section ${fullscreen ? 'fullscreen_recruit' : ''}`}>
       <div className="recruiting_container">
         <div className="recruiting_wrapper">
+          <div className="flex justify-end mb-4">
+            <LanguageSwitcher />
+          </div>
           {fullscreen && (
             <button className="recruit_back_btn" onClick={() => setFullscreen(false)}>
               <FaArrowLeft />
