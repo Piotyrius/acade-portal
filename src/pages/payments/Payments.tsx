@@ -19,6 +19,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrencyString } from '@/utils/paymentsFormatting';
 
 export default function Payments() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -214,8 +216,12 @@ export default function Payments() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payments</h2>
-          <p className="text-muted-foreground">You don't have permission to view payments</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.paymentsTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('pages.paymentsNoPermission')}
+          </p>
         </div>
       </div>
     );
@@ -240,14 +246,16 @@ export default function Payments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payments</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.paymentsTitle')}
+          </h2>
           <p className="text-muted-foreground">
-            See payment history and refunds. Use invoices to mark new payments.
+            {t('pages.paymentsSubtitle')}
           </p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          Record payment
+          {t('pages.paymentsRecordPayment')}
         </Button>
       </div>
 
@@ -255,7 +263,7 @@ export default function Payments() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search payments..."
+            placeholder={t('pages.paymentsSearchPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -263,10 +271,10 @@ export default function Payments() {
         </div>
         <Select value={selectedInvoice} onValueChange={setSelectedInvoice}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All Invoices" />
+            <SelectValue placeholder={t('pages.paymentsFilterAllInvoices')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Invoices</SelectItem>
+            <SelectItem value="all">{t('pages.paymentsFilterAllInvoices')}</SelectItem>
             {invoices.map((invoice: any) => (
               <SelectItem key={invoice.id} value={invoice.id}>
                 {invoice.invoice_number || invoice.id.slice(0, 8)}
@@ -276,26 +284,28 @@ export default function Payments() {
         </Select>
         <Select value={selectedStatus} onValueChange={setSelectedStatus}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue placeholder={t('pages.paymentsFilterAllStatuses')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="FAILED">Failed</SelectItem>
-            <SelectItem value="REFUNDED">Refunded</SelectItem>
+            <SelectItem value="all">{t('pages.paymentsFilterAllStatuses')}</SelectItem>
+            <SelectItem value="PENDING">{t('pages.paymentsFilterStatusPending')}</SelectItem>
+            <SelectItem value="COMPLETED">{t('pages.paymentsFilterStatusCompleted')}</SelectItem>
+            <SelectItem value="FAILED">{t('pages.paymentsFilterStatusFailed')}</SelectItem>
+            <SelectItem value="REFUNDED">{t('pages.paymentsFilterStatusRefunded')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Payments</CardTitle>
+          <CardTitle>{t('pages.paymentsCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {filteredPayments.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No payments found</p>
+                <p className="text-muted-foreground text-center py-8">
+                  {t('pages.paymentsNoneFound')}
+                </p>
             ) : (
               filteredPayments.map((payment: PaymentDto) => (
                 <div

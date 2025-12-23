@@ -23,6 +23,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ import { usePaymentsAdmin } from '@/hooks/usePaymentsAdmin';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Invoices() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -359,8 +361,12 @@ export default function Invoices() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Invoices</h2>
-          <p className="text-muted-foreground">You don't have permission to view invoices</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.invoicesTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('pages.invoicesNoPermission')}
+          </p>
         </div>
       </div>
     );
@@ -388,28 +394,32 @@ export default function Invoices() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Invoices</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.invoicesTitle')}
+          </h2>
           <p className="text-muted-foreground">
-            See each student’s bill, track what’s outstanding, and mark invoices as paid.
+            {t('pages.invoicesSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsCreateFromEnrollmentOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Bill student from enrollment
+            {t('pages.invoicesBillFromEnrollment')}
           </Button>
           <Button onClick={() => handleOpenDialog()}>
             <Plus className="mr-2 h-4 w-4" />
-            New manual invoice
+            {t('pages.invoicesNewManual')}
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="list" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="list">All invoices</TabsTrigger>
+          <TabsTrigger value="list">
+            {t('pages.invoicesTabList')}
+          </TabsTrigger>
           <TabsTrigger value="detail" disabled={!selectedInvoice}>
-            Invoice details
+            {t('pages.invoicesTabDetail')}
           </TabsTrigger>
         </TabsList>
 
@@ -418,7 +428,7 @@ export default function Invoices() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by invoice number, student, or cohort..."
+                placeholder={t('pages.invoicesSearchPlaceholder')}
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -426,28 +436,30 @@ export default function Invoices() {
             </div>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="All statuses" />
+                <SelectValue placeholder={t('pages.invoicesFilterAllStatuses')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="DRAFT">Draft</SelectItem>
-                <SelectItem value="ISSUED">Issued</SelectItem>
-                <SelectItem value="PARTIAL">Partially paid</SelectItem>
-                <SelectItem value="PAID">Paid</SelectItem>
-                <SelectItem value="OVERDUE">Overdue</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                <SelectItem value="all">{t('pages.invoicesFilterAllStatuses')}</SelectItem>
+                <SelectItem value="DRAFT">{t('pages.invoicesFilterStatusDraft')}</SelectItem>
+                <SelectItem value="ISSUED">{t('pages.invoicesFilterStatusIssued')}</SelectItem>
+                <SelectItem value="PARTIAL">{t('pages.invoicesFilterStatusPartial')}</SelectItem>
+                <SelectItem value="PAID">{t('pages.invoicesFilterStatusPaid')}</SelectItem>
+                <SelectItem value="OVERDUE">{t('pages.invoicesFilterStatusOverdue')}</SelectItem>
+                <SelectItem value="CANCELLED">{t('pages.invoicesFilterStatusCancelled')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <Card>
             <CardHeader>
-          <CardTitle>Invoices</CardTitle>
+          <CardTitle>{t('pages.invoicesCardTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {filteredInvoices.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No invoices found</p>
+                  <p className="text-muted-foreground text-center py-8">
+                    {t('pages.invoicesNoneFound')}
+                  </p>
                 ) : (
                   filteredInvoices.map((invoice: InvoiceDto) => (
                     <div
