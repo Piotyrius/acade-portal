@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Search, Check, X, Pencil, Phone, Info, Clock, Sparkles } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getApplicationsPaginated, updateApplication, acceptApplication } from '@/api/endpoints/admissions';
+import { getApplications, updateApplication, acceptApplication } from '@/api/endpoints/admissions';
 import { getPrograms, getCourses } from '@/api/endpoints/catalog';
 import { ApplicationDto } from '@/api/types';
 import { useMemo, useState } from 'react';
@@ -42,23 +42,18 @@ export default function Applications() {
 
   /* ===================== QUERIES ===================== */
 
+  // Load the full applications list once from the backend,
+  // then paginate client-side so the UI only shows part of it.
   const {
-    data: applicationsPage,
+    data: applications = [],
     isLoading,
   } = useQuery({
-    queryKey: ['applications', page],
-    queryFn: () => getApplicationsPaginated({ page }),
-    keepPreviousData: true,
+    queryKey: ['applications'],
+    queryFn: () => getApplications(),
   });
 
-  const applications = applicationsPage?.results ?? [];
-
-  const totalCount = applicationsPage?.count ?? applications.length;
-  const pageSize = applications.length || 20;
-  const totalPages = useMemo(
-    () => (totalCount && pageSize ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1),
-    [totalCount, pageSize]
-  );
+  const pageSize = 20;
+  const totalCount = applications.length;
 
   const { data: programs = [] } = useQuery({
     queryKey: ['programs'],
@@ -197,7 +192,7 @@ export default function Applications() {
     );
   };
 
-  /* ===================== FILTER ===================== */
+  /* ===================== FILTER & PAGINATION ===================== */
 
   const filteredApplications = applications.filter((app) => {
     // On this screen we focus on applications that still need a decision
@@ -210,6 +205,19 @@ export default function Applications() {
       app.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+
+  const totalPages = useMemo(
+    () =>
+      totalCount && pageSize
+        ? Math.max(1, Math.ceil(filteredApplications.length / pageSize))
+        : 1,
+    [filteredApplications.length, pageSize, totalCount]
+  );
+
+  const pagedApplications = filteredApplications.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
 
   /* ===================== UI ===================== */
 
@@ -286,7 +294,7 @@ export default function Applications() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {filteredApplications.map((app) => {
+          {pagedApplications.map((app) => {
             const program = programs.find((p) => p.id === app.program);
 
             return (
@@ -422,10 +430,13 @@ export default function Applications() {
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             Showing{' '}
-            {applications.length > 0
-              ? `${(page - 1) * pageSize + 1}-${(page - 1) * pageSize + applications.length}`
-              : '0'}
-            {' '}of {totalCount} applications
+            {filteredApplications.length > 0
+              ? `${(page - 1) * pageSize + 1}-${Math.min(
+                  filteredApplications.length,
+                  page * pageSize
+                )}`
+              : '0'}{' '}
+            of {filteredApplications.length} applications
           </div>
           <div className="flex gap-2">
             <Button
