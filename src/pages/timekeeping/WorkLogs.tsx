@@ -25,8 +25,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 import { getUsers } from '@/api/endpoints/auth';
+import { useTranslation } from 'react-i18next';
 
 export default function WorkLogs() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -68,12 +70,19 @@ export default function WorkLogs() {
     mutationFn: createWorkLog,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['worklogs'] });
-      toast({ title: 'Success', description: 'Work log created successfully' });
+      toast({
+        title: t('pages.workLogsCreateSuccessTitle'),
+        description: t('pages.workLogsCreateSuccessDescription'),
+      });
       setIsDialogOpen(false);
       setFormData({ start_at: '', end_at: '', notes: '', lecturer: '', minutes: '' });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('pages.workLogsCreateErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -93,7 +102,11 @@ export default function WorkLogs() {
       const blob = await exportPayroll();
       saveAs(blob, 'payroll.csv');
     } catch (e) {
-      toast({ title: 'Export failed', description: getErrorMessage(e), variant: 'destructive' });
+      toast({
+        title: t('pages.workLogsExportErrorTitle'),
+        description: getErrorMessage(e),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -104,7 +117,11 @@ export default function WorkLogs() {
     const lecturerId = user?.role === 'LECTURER' ? user.id : formData.lecturer;
 
     if (!formData.start_at || !formData.end_at || !lecturerId || !formData.minutes) {
-      toast({ title: 'Error', description: 'Start, end times, lecturer, and minutes are required', variant: 'destructive' });
+      toast({
+        title: t('pages.workLogsCreateErrorTitle'),
+        description: t('pages.workLogsCreateErrorMissing'),
+        variant: 'destructive',
+      });
       return;
     }
     createMutation.mutate({
@@ -118,20 +135,24 @@ export default function WorkLogs() {
     <div className="space-y-6">
       <div className="flex items-center justify-between worklogs_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Work Logs</h2>
-          <p className="text-muted-foreground">Track your teaching hours and earnings</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.workLogsTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('pages.workLogsSubtitle')}
+          </p>
         </div>
         <div className="flex gap-2 worklogs_btn_wrapper">
           {user?.role === 'ADMIN' && (
             <Button variant="outline" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
-              Export Payroll
+              {t('pages.workLogsExportPayroll')}
             </Button>
           )}
           <div className="flex gap-2">
             <Button onClick={() => setIsDialogOpen(true)} className='log_hours_btn'>
               <Plus className="mr-2 h-4 w-4" />
-              Log Hours
+              {t('pages.workLogsLogHours')}
             </Button>
           </div>
         </div>
@@ -140,11 +161,15 @@ export default function WorkLogs() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.workLogsTotalHoursTitle')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatted}</div>
-            <p className="text-xs text-muted-foreground">This month</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.workLogsTotalHoursThisMonth')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -152,7 +177,7 @@ export default function WorkLogs() {
       {workLogs.length === 0 && <ExampleBanner />}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Work Logs</CardTitle>
+          <CardTitle>{t('pages.workLogsRecentTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -163,7 +188,9 @@ export default function WorkLogs() {
                     <Clock className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">{log.session ?? 'Manual'}</p>
+                    <p className="font-medium">
+                      {log.session ?? t('pages.workLogsSessionManual')}
+                    </p>
                     <p className="text-sm text-muted-foreground">{new Date(log.start_at).toLocaleString()}</p>
                   </div>
                 </div>
@@ -182,26 +209,36 @@ export default function WorkLogs() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Log Hours</DialogTitle>
-            <DialogDescription>Record manual work hours</DialogDescription>
+            <DialogTitle>{t('pages.workLogsDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.workLogsDialogDescription')}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               {/* Only show lecturer dropdown for admins */}
               {user?.role === 'ADMIN' && (
                 <div className="space-y-2">
-                  <Label htmlFor="lecturer">Lecturer *</Label>
+                  <Label htmlFor="lecturer">
+                    {t('pages.workLogsLecturerLabel')} *
+                  </Label>
                   <Select
                     value={formData.lecturer}
                     onValueChange={(value) => setFormData({ ...formData, lecturer: value })}
                     disabled={lecturersLoading}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={lecturersLoading ? "Loading..." : "Select a lecturer"} />
+                      <SelectValue
+                        placeholder={
+                          lecturersLoading
+                            ? t('pages.workLogsLecturerPlaceholderLoading')
+                            : t('pages.workLogsLecturerPlaceholderSelect')
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {!lecturersLoading && lecturers.length === 0 && (
-                        <div className="px-3 py-2 text-sm text-muted-foreground">No lecturers found</div>
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          {t('pages.workLogsLecturerNone')}
+                        </div>
                       )}
                       {!lecturersLoading &&
                         lecturers.map((lect: any) => (
@@ -214,7 +251,9 @@ export default function WorkLogs() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="minutes">Minutes *</Label>
+                <Label htmlFor="minutes">
+                  {t('pages.workLogsMinutesLabel')} *
+                </Label>
                 <Input
                   id="minutes"
                   type="number"
@@ -222,11 +261,13 @@ export default function WorkLogs() {
                   value={formData.minutes}
                   onChange={(e) => setFormData({ ...formData, minutes: e.target.value })}
                   required
-                  placeholder="Enter minutes worked"
+                  placeholder={t('pages.workLogsMinutesPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="start_at">Start Time *</Label>
+                <Label htmlFor="start_at">
+                  {t('pages.workLogsStartTimeLabel')} *
+                </Label>
                 <Input
                   id="start_at"
                   type="datetime-local"
@@ -236,7 +277,9 @@ export default function WorkLogs() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end_at">End Time *</Label>
+                <Label htmlFor="end_at">
+                  {t('pages.workLogsEndTimeLabel')} *
+                </Label>
                 <Input
                   id="end_at"
                   type="datetime-local"
@@ -246,22 +289,26 @@ export default function WorkLogs() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">
+                  {t('pages.workLogsNotesLabel')}
+                </Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows={3}
-                  placeholder="Optional notes about this work session"
+                  placeholder={t('pages.workLogsNotesPlaceholder')}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('pages.workLogsCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Creating...' : 'Log Hours'}
+                {createMutation.isPending
+                  ? t('pages.workLogsCreateSubmitting')
+                  : t('pages.workLogsCreateCta')}
               </Button>
             </DialogFooter>
           </form>

@@ -1000,7 +1000,7 @@ function ReportsExports() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="pay-to">To Date</Label>
+              <Label htmlFor="pay-to">{t("pages.reportingPayrollToDateLabel")}</Label>
               <Input
                 id="pay-to"
                 type="date"
@@ -1010,19 +1010,19 @@ function ReportsExports() {
             </div>
             <Button
               className="w-full"
-              aria-label="Export payroll"
+              aria-label={t("pages.reportingPayrollExportAria")}
               onClick={() => handleExport(exportPayroll, 'payroll', payrollDates, 'payroll')}
               disabled={loading === 'payroll'}
             >
               {loading === 'payroll' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
+                  {t("pages.reportingPayrollExportLoading")}
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  {t("pages.reportingPayrollExportCta")}
                 </>
               )}
             </Button>
@@ -1035,12 +1035,16 @@ function ReportsExports() {
 
 // Main Reporting Component
 export default function Reporting() {
+  const { t } = useTranslation("common");
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Reporting</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("pages.reportingTitle")}
+        </h1>
         <p className="text-muted-foreground">
-          View analytics and export data for analysis
+          {t("pages.reportingSubtitle")}
         </p>
       </div>
 
@@ -1048,11 +1052,11 @@ export default function Reporting() {
         <TabsList>
           <TabsTrigger value="analytics">
             <BarChart3 className="mr-2 h-4 w-4" />
-            Analytics Dashboard
+            {t("pages.reportingTabAnalytics")}
           </TabsTrigger>
           <TabsTrigger value="reports">
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Reports & Exports
+            {t("pages.reportingTabReports")}
           </TabsTrigger>
         </TabsList>
 
