@@ -439,8 +439,8 @@ export default function Dashboard() {
             Billing & Payments
           </Button>
           <Button onClick={handleCopyRecruitingLink} variant="outline">
-            <FileText className="mr-2 h-4 w-4" />
-            Copy recruiting link
+            <Users className="mr-2 h-4 w-4" />
+            Copy recruit page link
           </Button>
         </div>
       )}
