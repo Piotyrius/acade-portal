@@ -16,6 +16,7 @@ import { getAnalyticsOverview } from '@/api/endpoints/reporting';
 import { ClickableMetricCard } from '@/components/dashboard/ClickableMetricCard';
 import { ActivityTimeline } from '@/components/dashboard/ActivityTimeline';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 function getPercentChange(current: number, previous: number) {
@@ -28,6 +29,7 @@ function getPercentChange(current: number, previous: number) {
 export default function Dashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ['cohorts'],
@@ -268,6 +270,34 @@ export default function Dashboard() {
       }, 0) / studentGrades.length
     : 0;
 
+  // Helper: copy public recruiting link
+  const handleCopyRecruitingLink = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}/apply`;
+
+    if (navigator && 'clipboard' in navigator) {
+      navigator.clipboard
+        .writeText(url)
+        .then(() => {
+          toast({
+            title: 'Link copied',
+            description: 'Public recruiting page URL copied. Share it with candidates.',
+          });
+        })
+        .catch(() => {
+          toast({
+            title: 'Link ready',
+            description: url,
+          });
+        });
+    } else {
+      toast({
+        title: 'Link ready',
+        description: url,
+      });
+    }
+  };
+
   // Admin stats
   const adminStats = [
     {
@@ -407,6 +437,10 @@ export default function Dashboard() {
           <Button onClick={() => navigate('/payments')} variant="outline">
             <DollarSign className="mr-2 h-4 w-4" />
             Billing & Payments
+          </Button>
+          <Button onClick={handleCopyRecruitingLink} variant="outline">
+            <FileText className="mr-2 h-4 w-4" />
+            Copy recruiting link
           </Button>
         </div>
       )}
