@@ -2,12 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Check, X } from 'lucide-react';
+import { Search, Check, X, Pencil } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getApplications, updateApplication, acceptApplication } from '@/api/endpoints/admissions';
+import { getApplicationsPaginated, updateApplication, acceptApplication } from '@/api/endpoints/admissions';
 import { getPrograms, getCourses } from '@/api/endpoints/catalog';
 import { ApplicationDto } from '@/api/types';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -27,6 +27,7 @@ export default function Applications() {
   const qc = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
   const [acceptStep, setAcceptStep] = useState<1 | 2>(1);
   const [selectedApp, setSelectedApp] = useState<ApplicationDto | null>(null);
@@ -35,12 +36,29 @@ export default function Applications() {
   const [selectedDiscountIds, setSelectedDiscountIds] = useState<string[]>([]);
   const [isSubmittingFlow, setIsSubmittingFlow] = useState(false);
 
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editApp, setEditApp] = useState<ApplicationDto | null>(null);
+  const [editProgramId, setEditProgramId] = useState<string>('');
+
   /* ===================== QUERIES ===================== */
 
-  const { data: applications = [], isLoading } = useQuery({
-    queryKey: ['applications'],
-    queryFn: () => getApplications(),
+  const {
+    data: applicationsPage,
+    isLoading,
+  } = useQuery({
+    queryKey: ['applications', page],
+    queryFn: () => getApplicationsPaginated({ page }),
+    keepPreviousData: true,
   });
+
+  const applications = applicationsPage?.results ?? [];
+
+  const totalCount = applicationsPage?.count ?? applications.length;
+  const pageSize = applications.length || 20;
+  const totalPages = useMemo(
+    () => (totalCount && pageSize ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1),
+    [totalCount, pageSize]
+  );
 
   const { data: programs = [] } = useQuery({
     queryKey: ['programs'],
@@ -154,6 +172,29 @@ export default function Applications() {
 
   const handleReject = (id: string) => {
     updateMutation.mutate({ id, data: { status: 'REJECTED' } });
+  };
+
+  const handleOpenEditProgram = (app: ApplicationDto) => {
+    setEditApp(app);
+    setEditProgramId(app.program);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEditProgram = () => {
+    if (!editApp || !editProgramId || editProgramId === editApp.program) {
+      setEditDialogOpen(false);
+      return;
+    }
+
+    updateMutation.mutate(
+      { id: editApp.id, data: { program: editProgramId } },
+      {
+        onSuccess: () => {
+          setEditDialogOpen(false);
+          setEditApp(null);
+        },
+      }
+    );
   };
 
   /* ===================== FILTER ===================== */
@@ -280,6 +321,15 @@ export default function Applications() {
                         <X className="h-4 w-4 mr-1" />
                         Reject
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleOpenEditProgram(app)}
+                        title="Change program"
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Edit program
+                      </Button>
                     </>
                   )}
                 </div>
@@ -288,6 +338,37 @@ export default function Applications() {
           })}
         </CardContent>
       </Card>
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing{' '}
+            {applications.length > 0
+              ? `${(page - 1) * pageSize + 1}-${(page - 1) * pageSize + applications.length}`
+              : '0'}
+            {' '}of {totalCount} applications
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* ================= ACCEPT DIALOG ================= */}
 
@@ -354,6 +435,63 @@ export default function Applications() {
               disabled={(!selectedCourse && !defaultCourse) || isSubmittingFlow}
             >
               {isSubmittingFlow ? 'Creating...' : 'Create enrollment'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ================= EDIT PROGRAM DIALOG ================= */}
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) {
+            setEditApp(null);
+            setEditProgramId('');
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit program</DialogTitle>
+            <DialogDescription>
+              Change the program for {editApp?.name}. Use this if the applicant chose a different track.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Program</Label>
+              <Select
+                value={editProgramId}
+                onValueChange={(value) => setEditProgramId(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select program" />
+                </SelectTrigger>
+                <SelectContent>
+                  {programs.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} ({p.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEditProgram}
+              disabled={!editProgramId || editProgramId === editApp?.program || updateMutation.isPending}
+            >
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>

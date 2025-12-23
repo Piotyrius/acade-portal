@@ -15,13 +15,41 @@ export async function submitPublicApplication(payload: Partial<ApplicationDto>):
   return data;
 }
 
-// Applications (Authenticated)
+// Applications (Authenticated - simple list, first page only)
 export async function getApplications(programId?: string, status?: string): Promise<ApplicationDto[]> {
   const params: Record<string, string> = {};
   if (programId) params.program = programId;
   if (status) params.status = status;
   const { data } = await api.get('/api/v1/admissions/applications/', { params });
   return ensureArray(data);
+}
+
+// Applications (Authenticated - paginated, used for recruiter UI)
+export async function getApplicationsPaginated(params?: {
+  program?: string;
+  status?: string;
+  search?: string;
+  ordering?: string;
+  page?: number;
+}): Promise<PaginatedResponse<ApplicationDto>> {
+  const { data } = await api.get('/api/v1/admissions/applications/', { params });
+
+  // Be defensive: some environments may return an array (no pagination).
+  if (Array.isArray(data)) {
+    return {
+      count: data.length,
+      next: null,
+      previous: null,
+      results: ensureArray<ApplicationDto>(data),
+    };
+  }
+
+  return {
+    count: typeof data?.count === 'number' ? data.count : ensureArray<ApplicationDto>(data?.results).length,
+    next: data?.next ?? null,
+    previous: data?.previous ?? null,
+    results: ensureArray<ApplicationDto>(data?.results),
+  };
 }
 
 export async function getApplication(id: string): Promise<ApplicationDto> {
