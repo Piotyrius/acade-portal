@@ -1,6 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_LANGUAGE } from "@/i18n";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type SupportedLang = "ka" | "ru" | "en";
 
@@ -16,33 +22,47 @@ export const LanguageSwitcher = () => {
     void i18n.changeLanguage(lng);
   };
 
+  const currentLabel =
+    current === "ka"
+      ? t("layout.languageKa")
+      : current === "ru"
+      ? t("layout.languageRu")
+      : t("layout.languageEn");
+
   return (
-    <div className="flex items-center gap-1 text-xs">
-      {LANG_ORDER.map((lng) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
         <Button
-          key={lng}
           type="button"
           size="icon"
-          variant={current === lng ? "default" : "outline"}
-          className="h-8 w-8 p-0"
-          onClick={() => handleChange(lng)}
-          aria-pressed={current === lng}
-          aria-label={
+          variant="outline"
+          className="h-8 w-8 p-0 text-xs"
+          aria-label={t("layout.languageEn")}
+        >
+          {currentLabel}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[6rem] text-xs">
+        {LANG_ORDER.map((lng) => {
+          const label =
             lng === "ka"
               ? t("layout.languageKa")
               : lng === "ru"
               ? t("layout.languageRu")
-              : t("layout.languageEn")
-          }
-        >
-          {lng === "ka"
-            ? t("layout.languageKa")
-            : lng === "ru"
-            ? t("layout.languageRu")
-            : t("layout.languageEn")}
-        </Button>
-      ))}
-    </div>
+              : t("layout.languageEn");
+
+          return (
+            <DropdownMenuItem
+              key={lng}
+              onClick={() => handleChange(lng)}
+              className={lng === current ? "font-semibold" : ""}
+            >
+              {label}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
