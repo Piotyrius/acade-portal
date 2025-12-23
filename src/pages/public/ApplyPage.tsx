@@ -18,6 +18,7 @@ import '../admissions/Recruiting.css';
 import { IoMdClose } from 'react-icons/io';
 import { GoPlus } from 'react-icons/go';
 import { FaArrowLeft } from 'react-icons/fa6';
+import { useTranslation } from 'react-i18next';
 
 type PhoneEntry = {
   name: string;
@@ -25,6 +26,7 @@ type PhoneEntry = {
 };
 
 export default function ApplyPage() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
 
   const [form, setForm] = useState({
@@ -119,27 +121,29 @@ export default function ApplyPage() {
           )}
 
           <CardHeader className="recruiting_card_header">
-            <CardTitle className="recruit_student_title">Recruit Student</CardTitle>
+            <CardTitle className="recruit_student_title">
+              {t('pages.publicApplyTitle')}
+            </CardTitle>
           </CardHeader>
 
           <CardContent>
             <form className="recruiting_form" onSubmit={handleSubmit}>
               <div className="name-fields-wrapper">
                 <div className="name-field">
-                  <label> First Name * </label>
+                  <label> {t('pages.publicApplyFirstName')} * </label>
                   <Input
                     className="recruiting_input_name__lastname"
-                    placeholder="Enter first name"
+                    placeholder={t('pages.publicApplyFirstName') ?? 'First name'}
                     value={form.firstName}
                     onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                     required
                   />
                 </div>
                 <div className="name-field">
-                  <label> Last Name * </label>
+                  <label> {t('pages.publicApplyLastName')} * </label>
                   <Input
                     className="recruiting_input_name__lastname"
-                    placeholder="Enter last name"
+                    placeholder={t('pages.publicApplyLastName') ?? 'Last name'}
                     value={form.lastName}
                     onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                     required
@@ -148,11 +152,11 @@ export default function ApplyPage() {
               </div>
 
               <div>
-                <label> Email * </label>
+                <label> {t('pages.publicApplyEmail')} * </label>
                 <Input
                   type="email"
                   className="recruiting_input"
-                  placeholder="Enter email"
+                  placeholder={t('pages.publicApplyEmail') ?? 'Email'}
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
@@ -161,14 +165,14 @@ export default function ApplyPage() {
               </div>
 
               <div>
-                <label> Phone * </label>
+                <label> {t('pages.publicApplyPhone')} * </label>
 
                 {form.phones.map((p, index) => (
                   <div className="recruiting_phone_wrapper" key={index}>
                     {/* Phone number */}
                     <input
                       className="recruiting_phone_input"
-                      placeholder="Enter phone"
+                      placeholder={t('pages.publicApplyPhone') ?? 'Phone'}
                       value={p.phone}
                       inputMode="numeric"
                       maxLength={9}
@@ -231,13 +235,13 @@ export default function ApplyPage() {
               </div>
 
               <div>
-                <label> Program * </label>
+                <label> {t('pages.publicApplyProgram')} * </label>
                 <Select
                   value={form.program}
                   onValueChange={(val) => setForm({ ...form, program: val })}
                 >
                   <SelectTrigger className="recruiting_select">
-                    <SelectValue placeholder="Select program" />
+                    <SelectValue placeholder={t('pages.publicApplyProgram')} />
                   </SelectTrigger>
                   <SelectContent>
                     {(programs as any[]).map((p) => (
@@ -250,17 +254,17 @@ export default function ApplyPage() {
               </div>
 
               <div>
-                <label> Additional info </label>
+                <label> {t('pages.publicApplyAdditionalInfo')} </label>
                 <Input
                   className="recruiting_input"
-                  placeholder="Enter additional info"
+                  placeholder={t('pages.publicApplyAdditionalInfo') ?? 'Additional info'}
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
               </div>
 
               <Button className="recruiting_btn" type="submit" disabled={mutation.isPending}>
-                Recruit
+                {t('pages.publicApplySubmit')}
               </Button>
             </form>
           </CardContent>

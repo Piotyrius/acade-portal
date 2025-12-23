@@ -8,8 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function PublicGallery() {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -34,7 +36,7 @@ export default function PublicGallery() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading gallery...</p>
+          <p className="text-gray-600">{t('pages.publicGalleryLoading')}</p>
         </div>
       </div>
     );
@@ -51,13 +53,13 @@ export default function PublicGallery() {
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Home
+            {t('pages.publicGalleryBack')}
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate('/login')}
           >
-            Login
+            {t('pages.publicGalleryLogin')}
           </Button>
         </div>
 
@@ -66,9 +68,11 @@ export default function PublicGallery() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
             <ImageIcon className="w-8 h-8 text-purple-600" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Student Gallery</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {t('pages.publicGalleryTitle')}
+          </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Explore amazing projects and creative works from our talented students
+            {t('pages.publicGallerySubtitle')}
           </p>
         </div>
 
@@ -77,7 +81,7 @@ export default function PublicGallery() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
-              placeholder="Search works..."
+              placeholder={t('pages.publicGallerySearchPlaceholder')}
               className="pl-9 bg-white"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -91,10 +95,12 @@ export default function PublicGallery() {
             <CardContent className="py-12 text-center">
               <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">
-                {searchTerm ? 'No works found matching your search' : 'No published works yet'}
+                {searchTerm
+                  ? t('pages.publicGalleryEmptySearch')
+                  : t('pages.publicGalleryEmpty')}
               </p>
               <p className="text-gray-400 text-sm mt-2">
-                Check back soon for amazing student projects!
+                {t('pages.publicGalleryEmptyHint')}
               </p>
             </CardContent>
           </Card>
@@ -102,7 +108,9 @@ export default function PublicGallery() {
           <>
             <div className="text-center mb-6">
               <p className="text-sm text-gray-600">
-                Showing {filteredWorks.length} {filteredWorks.length === 1 ? 'work' : 'works'}
+                {t('pages.publicGalleryShowingCount', {
+                  count: filteredWorks.length,
+                })}
               </p>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -123,7 +131,9 @@ export default function PublicGallery() {
                     )}
                     {work.status === 'PUBLISHED' && (
                       <div className="absolute top-3 right-3">
-                        <Badge className="bg-green-500 text-white">Published</Badge>
+                        <Badge className="bg-green-500 text-white">
+                          {t('pages.publicGalleryPublishedBadge')}
+                        </Badge>
                       </div>
                     )}
                   </div>
@@ -141,7 +151,7 @@ export default function PublicGallery() {
                     <div className="flex flex-wrap gap-2 mt-4">
                       <Badge variant="secondary" className="gap-1">
                         <span className="text-xs">👤</span>
-                        {work.owner_name || 'Student'}
+                        {work.owner_name || t('pages.publicGalleryOwnerFallback')}
                       </Badge>
                       {work.published_at && (
                         <Badge variant="outline" className="text-xs">
@@ -163,17 +173,17 @@ export default function PublicGallery() {
         {/* Footer CTA */}
         <div className="mt-16 text-center bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-3">
-            Want to showcase your work?
+            {t('pages.publicGalleryCtaTitle')}
           </h2>
           <p className="text-gray-600 mb-6">
-            Join our academy and share your creative projects with the world
+            {t('pages.publicGalleryCtaSubtitle')}
           </p>
           <div className="flex gap-4 justify-center">
             <Button size="lg" onClick={() => navigate('/apply')}>
-              Apply Now
+              {t('pages.publicGalleryApplyNow')}
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate('/login')}>
-              Student Login
+              {t('pages.publicGalleryStudentLogin')}
             </Button>
           </div>
         </div>

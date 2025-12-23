@@ -8,8 +8,10 @@ import { useToast } from '@/hooks/use-toast';
 import { verifyCertificate } from '@/api/endpoints/certificates';
 import { Shield, CheckCircle, XCircle, Search, Award, Calendar, User } from 'lucide-react';
 import { CertificateDto } from '@/api/types';
+import { useTranslation } from 'react-i18next';
 
 export default function VerifyCertificate() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [serial, setSerial] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,8 +21,8 @@ export default function VerifyCertificate() {
   const handleVerify = async () => {
     if (!serial.trim()) {
       toast({
-        title: 'Serial number required',
-        description: 'Please enter a certificate serial number',
+        title: t('pages.verifyCertificateSerialRequiredTitle'),
+        description: t('pages.verifyCertificateSerialRequiredDescription'),
         variant: 'destructive',
       });
       return;
@@ -34,14 +36,14 @@ export default function VerifyCertificate() {
       const result = await verifyCertificate(serial.trim());
       setCertificate(result);
       toast({
-        title: 'Certificate found',
-        description: 'Certificate is valid and verified',
+        title: t('pages.verifyCertificateFoundTitle'),
+        description: t('pages.verifyCertificateFoundDescription'),
       });
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Certificate not found or invalid');
+      setError(err.response?.data?.detail || t('pages.verifyCertificateErrorFallback'));
       toast({
-        title: 'Verification failed',
-        description: 'Certificate not found or invalid',
+        title: t('pages.verifyCertificateFailedTitle'),
+        description: t('pages.verifyCertificateFailedDescription'),
         variant: 'destructive',
       });
     } finally {
@@ -64,21 +66,19 @@ export default function VerifyCertificate() {
           </div>
           <h1 className="text-4xl font-bold tracking-tight">Certificate Verification</h1>
           <p className="mt-2 text-muted-foreground">
-            Verify the authenticity of Cyber Academy certificates
+            {t('pages.verifyCertificateSubtitle')}
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Enter Certificate Serial Number</CardTitle>
-            <CardDescription>
-              Enter the serial number from the certificate to verify its authenticity
-            </CardDescription>
+            <CardTitle>{t('pages.verifyCertificateFormTitle')}</CardTitle>
+            <CardDescription>{t('pages.verifyCertificateFormSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-2">
               <Input
-                placeholder="e.g., CERT-2024-XXXXXX"
+                placeholder={t('pages.verifyCertificatePlaceholder')}
                 value={serial}
                 onChange={(e) => setSerial(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -86,11 +86,11 @@ export default function VerifyCertificate() {
               />
               <Button onClick={handleVerify} disabled={loading}>
                 {loading ? (
-                  'Verifying...'
+                  t('pages.verifyCertificateButtonLoading')
                 ) : (
                   <>
                     <Search className="mr-2 h-4 w-4" />
-                    Verify
+                    {t('pages.verifyCertificateButtonIdle')}
                   </>
                 )}
               </Button>
@@ -99,7 +99,7 @@ export default function VerifyCertificate() {
             {error && (
               <Alert variant="destructive">
                 <XCircle className="h-4 w-4" />
-                <AlertTitle>Verification Failed</AlertTitle>
+                <AlertTitle>{t('pages.verifyCertificateErrorAlertTitle')}</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -107,9 +107,9 @@ export default function VerifyCertificate() {
             {certificate && (
               <Alert className="border-green-500 bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertTitle>Certificate Verified</AlertTitle>
+                <AlertTitle>{t('pages.verifyCertificateVerifiedAlertTitle')}</AlertTitle>
                 <AlertDescription>
-                  This certificate is valid and has been issued by Cyber Academy
+                  {t('pages.verifyCertificateVerifiedAlertDescription')}
                 </AlertDescription>
               </Alert>
             )}
@@ -121,27 +121,31 @@ export default function VerifyCertificate() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-primary" />
-                Certificate Details
+                {t('pages.verifyCertificateDetailsTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Serial Number</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('pages.verifyCertificateSerialLabel')}
+                  </p>
                   <p className="mt-1 font-mono text-sm">{certificate.serial_number}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('pages.verifyCertificateStatusLabel')}
+                  </p>
                   <div className="mt-1">
                     {certificate.status === 'ISSUED' ? (
                       <Badge variant="default" className="bg-green-500">
                         <CheckCircle className="mr-1 h-3 w-3" />
-                        Issued
+                        {t('pages.verifyCertificateStatusIssued')}
                       </Badge>
                     ) : (
                       <Badge variant="destructive">
                         <XCircle className="mr-1 h-3 w-3" />
-                        Revoked
+                        {t('pages.verifyCertificateStatusRevoked')}
                       </Badge>
                     )}
                   </div>
@@ -149,7 +153,9 @@ export default function VerifyCertificate() {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Student</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t('pages.verifyCertificateStudentLabel')}
+                </p>
                 <p className="mt-1 flex items-center gap-2">
                   <User className="h-4 w-4" />
                   {certificate.student_name}
@@ -157,13 +163,17 @@ export default function VerifyCertificate() {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Course</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t('pages.verifyCertificateCourseLabel')}
+                </p>
                 <p className="mt-1">{certificate.cohort_name}</p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Issue Date</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('pages.verifyCertificateIssueDateLabel')}
+                  </p>
                   <p className="mt-1 flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     {new Date(certificate.issued_at).toLocaleDateString()}
@@ -171,7 +181,9 @@ export default function VerifyCertificate() {
                 </div>
                 {certificate.revoked_at && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Revoked Date</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {t('pages.verifyCertificateRevokedDateLabel')}
+                    </p>
                     <p className="mt-1 flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       {new Date(certificate.revoked_at).toLocaleDateString()}
@@ -182,7 +194,9 @@ export default function VerifyCertificate() {
 
               {certificate.revocation_reason && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Revocation Reason</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('pages.verifyCertificateRevocationReasonLabel')}
+                  </p>
                   <p className="mt-1 text-sm">{certificate.revocation_reason}</p>
                 </div>
               )}
@@ -202,13 +216,12 @@ export default function VerifyCertificate() {
 
         <div className="text-center text-sm text-muted-foreground">
           <p>
-            This verification service confirms the authenticity of certificates issued by Cyber
-            Academy.
+            {t('pages.verifyCertificateFooterLine1')}
           </p>
           <p className="mt-2">
-            For questions or concerns, please contact{' '}
+            {t('pages.verifyCertificateFooterLine2')}{' '}
             <a href="mailto:info@academy.ge" className="text-primary hover:underline">
-              info@academy.ge
+              {t('pages.verifyCertificateFooterEmail')}
             </a>
           </p>
         </div>

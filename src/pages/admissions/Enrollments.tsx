@@ -32,8 +32,10 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import ManualEnrollment from './ManualEnrollment';
+import { useTranslation } from 'react-i18next';
 
 export default function Enrollments() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -364,18 +366,26 @@ export default function Enrollments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between enrollments_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Enrollments</h2>
-          <p className="text-muted-foreground">Manage student enrollments</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.enrollmentsTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('pages.enrollmentsSubtitle')}
+          </p>
         </div>
         <div className="flex gap-2 enrollments_bulk_active_wrapper">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
-            <Button className='enrollments_bulk_active' variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
+            <Button
+              className="enrollments_bulk_active"
+              variant="outline"
+              onClick={() => setIsBulkDialogOpen(true)}
+            >
               <CheckSquare className="mr-2 h-4 w-4" />
-              Bulk Activate
+              {t('pages.enrollmentsBulkActivate')}
             </Button>
           )}
 
-          <Button onClick={handleOpen}>Manual enrollment</Button>
+          <Button onClick={handleOpen}>{t('pages.enrollmentsManualEnrollment')}</Button>
         </div>
       </div>
 
@@ -383,7 +393,7 @@ export default function Enrollments() {
         <div className="relative flex-1 w-[200px] enrollments_input_wrapper">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search enrollments..."
+            placeholder={t('pages.enrollmentsSearchPlaceholder')}
             className="pl-9"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -391,14 +401,14 @@ export default function Enrollments() {
         </div>
         <Select value={selectedStatus} onValueChange={setSelectedStatus}>
           <SelectTrigger className="w-[200px] select_wrapper">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue placeholder={t('pages.enrollmentsStatusAll')} />
           </SelectTrigger>
 
           <SelectContent>
-            <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="ACTIVE">Active</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="WITHDRAWN">Withdrawn</SelectItem>
+            <SelectItem value="PENDING">{t('pages.enrollmentsStatusPending')}</SelectItem>
+            <SelectItem value="ACTIVE">{t('pages.enrollmentsStatusActive')}</SelectItem>
+            <SelectItem value="COMPLETED">{t('pages.enrollmentsStatusCompleted')}</SelectItem>
+            <SelectItem value="WITHDRAWN">{t('pages.enrollmentsStatusWithdrawn')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -406,12 +416,14 @@ export default function Enrollments() {
       {showExample && <ExampleBanner />}
       <Card>
         <CardHeader>
-          <CardTitle>Enrollments</CardTitle>
+          <CardTitle>{t('pages.enrollmentsTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {filteredEnrollments.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No enrollments found</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t('pages.enrollmentsNoneFound')}
+              </p>
             ) : (
               filteredEnrollments.map((enrollment: any) => {
                 const cohort = cohorts?.find((c: any) => c.id === enrollment.cohort);

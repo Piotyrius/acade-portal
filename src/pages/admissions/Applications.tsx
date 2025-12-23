@@ -21,8 +21,10 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslation } from 'react-i18next';
 
 export default function Applications() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -228,9 +230,11 @@ export default function Applications() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Admissions</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {t('pages.admissionsTitle')}
+        </h2>
         <p className="text-muted-foreground">
-          Manage leads, applications, and enrollments for your academy.
+          {t('pages.admissionsSubtitle')}
         </p>
       </div>
 
@@ -238,38 +242,38 @@ export default function Applications() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Applications</CardTitle>
+            <CardTitle>{t('pages.admissionsApplicationsCardTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{applications.length}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Total applications received.
+              {t('pages.admissionsApplicationsCardSubtitle')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Pending Review</CardTitle>
+            <CardTitle>{t('pages.admissionsPendingReviewTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">
               {applications.filter((a) => a.status === 'NEW' || a.status === 'IN_REVIEW').length}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Applications waiting for a decision.
+              {t('pages.admissionsPendingReviewSubtitle')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Accepted</CardTitle>
+            <CardTitle>{t('pages.admissionsAcceptedTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">
               {applications.filter((a) => a.status === 'ACCEPTED').length}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Students ready to enroll into cohorts.
+              {t('pages.admissionsAcceptedSubtitle')}
             </p>
           </CardContent>
         </Card>
@@ -278,7 +282,7 @@ export default function Applications() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search applications..."
+          placeholder={t('pages.admissionsSearchPlaceholder')}
           className="pl-9"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -287,10 +291,9 @@ export default function Applications() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Applications</CardTitle>
+          <CardTitle>{t('pages.admissionsApplicationsCardTitle')}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Showing only applications that still need a decision. Accepted students appear under
-            Enrollments.
+            {t('pages.admissionsListSubtitle')}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -3,9 +3,12 @@ import { initReactI18next } from "react-i18next";
 
 import kaCommon from "./locales/ka/common.json";
 import ruCommon from "./locales/ru/common.json";
+import enCommon from "./locales/en/common.json";
 
 export const DEFAULT_LANGUAGE = "ka";
 export const STORAGE_KEY = "i18n_language";
+
+const SUPPORTED_LANGUAGES = ["ka", "ru", "en"] as const;
 
 const getInitialLanguage = (): string => {
   if (typeof window === "undefined") {
@@ -13,7 +16,7 @@ const getInitialLanguage = (): string => {
   }
 
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored && (stored === "ka" || stored === "ru")) {
+  if (stored && (SUPPORTED_LANGUAGES as readonly string[]).includes(stored)) {
     return stored;
   }
 
@@ -28,10 +31,13 @@ void i18n.use(initReactI18next).init({
     ru: {
       common: ruCommon,
     },
+    en: {
+      common: enCommon,
+    },
   },
   lng: getInitialLanguage(),
   fallbackLng: DEFAULT_LANGUAGE,
-  supportedLngs: ["ka", "ru"],
+  supportedLngs: SUPPORTED_LANGUAGES as unknown as string[],
   ns: ["common"],
   defaultNS: "common",
   interpolation: {
@@ -48,6 +54,4 @@ i18n.on("languageChanged", (lng) => {
 });
 
 export default i18n;
-
-
 
