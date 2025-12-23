@@ -37,6 +37,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { getInvoices, getPayments, PaymentDto } from '@/api/endpoints/payments';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 function isPaidThisMonth(payments: PaymentDto[] | undefined): boolean {
   if (!payments || payments.length === 0) return false;
@@ -105,6 +106,7 @@ function EnrollmentRow({
 
 
 export default function Cohorts() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -335,12 +337,16 @@ export default function Cohorts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between cohorts_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Cohorts</h2>
-          <p className="text-muted-foreground">Manage student cohorts and groups</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.catalogCohortsTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('pages.catalogCohortsSubtitle')}
+          </p>
         </div>
-        <Button onClick={handleOpenCreate} className='cohort_add_btn'>
+        <Button onClick={handleOpenCreate} className="cohort_add_btn">
           <Plus className="mr-2 h-4 w-4" />
-          Add Cohort
+          {t('pages.catalogCohortsAddCohort')}
         </Button>
       </div>
 
@@ -348,7 +354,7 @@ export default function Cohorts() {
         <div className="relative flex-1 max-w-sm cohort_search_wrapper ">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search cohorts..."
+            placeholder={t('pages.catalogCohortsSearchPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -373,20 +379,28 @@ export default function Cohorts() {
                     <div>
                       <CardTitle>{cohort.name}</CardTitle>
                       <CardDescription className="mt-1">
-                        {(cohort as any).course_title} • {(cohort as any).lecturer_name || 'No lecturer assigned'}
+                        {(cohort as any).course_title} •{' '}
+                        {(cohort as any).lecturer_name || t('pages.catalogCohortsNoLecturer')}
                       </CardDescription>
                       <div className="flex gap-2 mt-2">
-                        <Badge variant={getStatusColor(cohort.status)}>{(cohort as any).status_display || cohort.status}</Badge>
+                        <Badge variant={getStatusColor(cohort.status)}>
+                          {(cohort as any).status_display || cohort.status}
+                        </Badge>
                         <Badge variant="outline">
-                          {cohort.current_enrollment_count || 0} / {cohort.capacity} students
+                          {t('pages.catalogCohortsStudentsCount', {
+                            current: cohort.current_enrollment_count || 0,
+                            capacity: cohort.capacity,
+                          })}
                         </Badge>
                         {cohort.is_ready_to_start && cohort.status !== 'ACTIVE' && (
                           <Badge className="bg-green-600 text-white">
-                            Ready to Start ({cohort.min_enrollment || 8} min)
+                            {t('pages.catalogCohortsReadyToStart', {
+                              min: cohort.min_enrollment || 8,
+                            })}
                           </Badge>
                         )}
                         {!cohort.can_accept_enrollment && cohort.status !== 'ACTIVE' && (
-                          <Badge variant="destructive">Full</Badge>
+                          <Badge variant="destructive">{t('pages.catalogCohortsFull')}</Badge>
                         )}
                       </div>
                     </div>
@@ -397,7 +411,9 @@ export default function Cohorts() {
                       <p className="text-sm font-medium cohort_date">
                         {format(new Date(cohort.start_date), 'MMM dd, yyyy')}
                       </p>
-                      <p className="text-xs text-muted-foreground">Start Date</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('pages.catalogCohortsStartDateLabel')}
+                      </p>
                     </div>
                   </div>
 
@@ -413,21 +429,28 @@ export default function Cohorts() {
                         try {
                           await startCohort(cohort.id);
                           qc.invalidateQueries({ queryKey: ['cohorts'] });
-                          toast({ title: 'Success', description: 'Cohort started successfully' });
+                          toast({
+                            title: t('pages.catalogCohortsStartCohortSuccessTitle'),
+                            description: t('pages.catalogCohortsStartCohortSuccessDescription'),
+                          });
                         } catch (error) {
-                          toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+                          toast({
+                            title: t('pages.catalogCohortsStartCohortErrorTitle'),
+                            description: getErrorMessage(error),
+                            variant: 'destructive',
+                          });
                         }
                       }}
-                      title="Start Cohort"
+                      title={t('pages.catalogCohortsStartCohortTitle')}
                     >
-                      Start Cohort
+                      {t('pages.catalogCohortsStartCohort')}
                     </Button>
                   )}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleStudentList(cohort.id)}
-                    title="View Students"
+                    title={t('pages.catalogCohortsViewStudentsTitle')}
                   >
                     {expandedCohortId === cohort.id ? <ChevronUp className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -435,7 +458,7 @@ export default function Cohorts() {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate(`/attendance/list?cohort=${cohort.id}`)}
-                    title="Take attendance"
+                    title={t('pages.catalogCohortsTakeAttendanceTitle')}
                   >
                     <ClipboardCheck className="h-4 w-4" />
                   </Button>
@@ -443,7 +466,7 @@ export default function Cohorts() {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate(`/assessment?tab=grades&cohort=${cohort.id}`)}
-                    title="Enter grades"
+                    title={t('pages.catalogCohortsViewSessionsTitle')}
                   >
                     <FileCheck className="h-4 w-4" />
                   </Button>

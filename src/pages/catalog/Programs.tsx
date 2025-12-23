@@ -27,6 +27,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { IoIosArrowDown } from "react-icons/io";
 import { getEnrollments } from '@/api/endpoints/admissions';
+import { useTranslation } from 'react-i18next';
 
 
 function EnrollmentRow({
@@ -50,6 +51,7 @@ function EnrollmentRow({
 
 
 export default function Programs() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -511,13 +513,17 @@ export default function Programs() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Programs</h2>
-            <p className="text-muted-foreground">Manage your educational programs</p>
+            <h2 className="text-3xl font-bold tracking-tight">
+              {t('pages.catalogProgramsErrorTitle')}
+            </h2>
+            <p className="text-muted-foreground">
+              {t('pages.catalogProgramsErrorSubtitle')}
+            </p>
           </div>
         </div>
         <Card>
           <CardContent className="py-8 text-center text-destructive">
-            <p>Failed to load programs. Please try again later.</p>
+            <p>{t('pages.catalogProgramsErrorMessage')}</p>
           </CardContent>
         </Card>
       </div>
@@ -528,9 +534,11 @@ export default function Programs() {
     <div className="space-y-6">
       <div className="flex items-center justify-between programs_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Programs</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.catalogProgramsTitle')}
+          </h2>
           <p className="text-muted-foreground">
-            Manage programs and plan upcoming cohorts and recruitment goals.
+            {t('pages.catalogProgramsSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -542,11 +550,11 @@ export default function Programs() {
             }}
           >
             <Calendar className="mr-2 h-4 w-4" />
-            Plan recruitment
+            {t('pages.catalogProgramsPlanRecruitment')}
           </Button>
           <Button onClick={handleOpenCreate} className="programs_plus_btn">
             <Plus className="mr-2 h-4 w-4" />
-            Add Program
+            {t('pages.catalogProgramsAddProgram')}
           </Button>
         </div>
       </div>
@@ -555,7 +563,7 @@ export default function Programs() {
         <div className="relative flex-1 max-w-sm programs_search_input">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search programs..."
+            placeholder={t('pages.catalogProgramsSearchPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -564,13 +572,13 @@ export default function Programs() {
           
         <Select value={filter} onValueChange={(v) => setFilter(v as 'all' | 'active' | 'inactive')}>
           <SelectTrigger className="w-[200px] select_wrapper">
-            <SelectValue placeholder="All Programs" />
+            <SelectValue placeholder={t('pages.catalogProgramsFilterAll')} />
           </SelectTrigger>
 
           <SelectContent>
-            <SelectItem value="all">All Programs</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="all">{t('pages.catalogProgramsFilterAll')}</SelectItem>
+            <SelectItem value="active">{t('pages.catalogProgramsFilterActive')}</SelectItem>
+            <SelectItem value="inactive">{t('pages.catalogProgramsFilterInactive')}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -591,7 +599,9 @@ export default function Programs() {
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg">{program.name}</CardTitle>
                   <Badge variant={program.active ? 'default' : 'secondary'}>
-                    {program.active ? 'Active' : 'Inactive'}
+                    {program.active
+                      ? t('pages.catalogProgramsStatusActive')
+                      : t('pages.catalogProgramsStatusInactive')}
                   </Badge>
                 </div>
                 <CardDescription>{program.code}</CardDescription>
