@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { getPrograms } from '@/api/endpoints/catalog';
 import { submitPublicApplication } from '@/api/endpoints/admissions';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -15,328 +12,260 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, CheckCircle2 } from 'lucide-react';
+import { getErrorMessage } from '@/lib/errors';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import '../admissions/Recruiting.css';
+import { IoMdClose } from 'react-icons/io';
+import { GoPlus } from 'react-icons/go';
+import { FaArrowLeft } from 'react-icons/fa6';
+
+type PhoneEntry = {
+  name: string;
+  phone: string;
+};
 
 export default function ApplyPage() {
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const [submitted, setSubmitted] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: '',
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
     email: '',
-    phone: '',
+    phones: [{ name: '', phone: '' }] as PhoneEntry[],
     program: '',
-    schedule_pref: '',
-    experience_level: '',
-    referral_source: '',
     notes: '',
+    status: 'NEW' as 'NEW',
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [fullscreen, setFullscreen] = useState(true);
 
-  // Fetch programs
-  const { data: programs = [], isLoading: loadingPrograms } = useQuery({
-    queryKey: ['programs-public'],
-    queryFn: () => getPrograms(),
+  const { data: programs = [] } = useQuery({
+    queryKey: ['programs', 'active'],
+    queryFn: async () => {
+      const allPrograms = await getPrograms({ active: true });
+      // Sort programs: "Thinking" first, then alphabetically by name
+      return allPrograms.sort((a, b) => {
+        if (a.name.toLowerCase().includes('thinking')) return -1;
+        if (b.name.toLowerCase().includes('thinking')) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    },
   });
 
-  // Submit application mutation
-  const submitMutation = useMutation({
+  const mutation = useMutation({
     mutationFn: submitPublicApplication,
     onSuccess: () => {
-      setSubmitted(true);
-      toast({
-        title: 'Application Submitted!',
-        description: 'Thank you for applying. We will contact you soon.',
+      toast({ title: 'Success', description: 'Application submitted successfully' });
+      setForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phones: [{ name: '', phone: '' }],
+        program: '',
+        notes: '',
+        status: 'NEW',
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: 'Submission Failed',
-        description: error.response?.data?.detail || 'Please try again.',
-        variant: 'destructive',
-      });
+    onError: (error) => {
+      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
     },
   });
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) newErrors.name = 'Full name is required';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.program) newErrors.program = 'Please select a program';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    // Clean phones: remove empty ones, trim, and keep shape { name, phone }
+    const cleanedPhones: PhoneEntry[] = form.phones
+      .map((p) => ({
+        name: p.name.trim(),
+        phone: p.phone.trim(),
+      }))
+      .filter((p) => p.phone !== '');
 
-    submitMutation.mutate({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      program: formData.program,
-      schedule_pref: formData.schedule_pref,
-      experience_level: formData.experience_level,
-      referral_source: formData.referral_source,
-      notes: formData.notes,
-      status: 'NEW',
-    });
+    if (cleanedPhones.length === 0) {
+      toast({
+        title: 'Phone required',
+        description: 'Please enter at least one phone number.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
+
+    const payload = {
+      ...form,
+      name: fullName,
+      phones: cleanedPhones,
+      phone: cleanedPhones[0].phone, // backend "phone": main phone
+    };
+
+    mutation.mutate(payload);
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 text-center">
-          <div className="mb-6">
-            <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Application Submitted!
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Thank you for your interest in our academy. We have received your
-            application and will review it shortly. You will hear from us within
-            2-3 business days.
-          </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-800">
-              <strong>Application ID:</strong> Confirmation email sent to{' '}
-              <span className="font-medium">{formData.email}</span>
-            </p>
-          </div>
-          <Button
-            onClick={() => navigate('/')}
-            className="w-full"
-          >
-            Return to Home
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const removePhone = (i: number) => {
+    const updated = form.phones.filter((_, index) => index !== i);
+    setForm({ ...form, phones: updated });
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-white rounded-lg shadow-xl p-8">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-            <GraduationCap className="w-8 h-8 text-blue-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Apply to Our Academy
-          </h1>
-          <p className="text-gray-600">
-            Fill out the form below to start your learning journey with us
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Full Name */}
-          <div>
-            <Label htmlFor="name">
-              Full Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="John Doe"
-              className={errors.name ? 'border-red-500' : ''}
-            />
-            {errors.name && (
-              <p className="text-sm text-red-500 mt-1">{errors.name}</p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div>
-            <Label htmlFor="email">
-              Email Address <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="john@example.com"
-              className={errors.email ? 'border-red-500' : ''}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Phone */}
-          <div>
-            <Label htmlFor="phone">
-              Phone Number <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="+995 555 123 456"
-              className={errors.phone ? 'border-red-500' : ''}
-            />
-            {errors.phone && (
-              <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
-            )}
-          </div>
-
-          {/* Program */}
-          <div>
-            <Label htmlFor="program">
-              Program <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={formData.program}
-              onValueChange={(value) => setFormData({ ...formData, program: value })}
-            >
-              <SelectTrigger className={errors.program ? 'border-red-500' : ''}>
-                <SelectValue placeholder="Select a program" />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingPrograms ? (
-                  <SelectItem value="loading" disabled>
-                    Loading programs...
-                  </SelectItem>
-                ) : (
-                  programs.map((program) => (
-                    <SelectItem key={program.id} value={program.id}>
-                      {program.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            {errors.program && (
-              <p className="text-sm text-red-500 mt-1">{errors.program}</p>
-            )}
-          </div>
-
-          {/* Schedule Preference */}
-          <div>
-            <Label htmlFor="schedule_pref">Preferred Schedule (Optional)</Label>
-            <Select
-              value={formData.schedule_pref}
-              onValueChange={(value) =>
-                setFormData({ ...formData, schedule_pref: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select schedule preference" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="morning">Morning (9 AM - 1 PM)</SelectItem>
-                <SelectItem value="afternoon">Afternoon (2 PM - 6 PM)</SelectItem>
-                <SelectItem value="evening">Evening (6 PM - 9 PM)</SelectItem>
-                <SelectItem value="weekend">Weekend</SelectItem>
-                <SelectItem value="flexible">Flexible</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Experience Level */}
-          <div>
-            <Label htmlFor="experience_level">Experience Level (Optional)</Label>
-            <Select
-              value={formData.experience_level}
-              onValueChange={(value) =>
-                setFormData({ ...formData, experience_level: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select your experience level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="beginner">Beginner - No prior experience</SelectItem>
-                <SelectItem value="intermediate">
-                  Intermediate - Some experience
-                </SelectItem>
-                <SelectItem value="advanced">Advanced - Extensive experience</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Referral Source */}
-          <div>
-            <Label htmlFor="referral_source">How did you hear about us? (Optional)</Label>
-            <Select
-              value={formData.referral_source}
-              onValueChange={(value) =>
-                setFormData({ ...formData, referral_source: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select referral source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="google">Google Search</SelectItem>
-                <SelectItem value="social">Social Media</SelectItem>
-                <SelectItem value="friend">Friend/Family Referral</SelectItem>
-                <SelectItem value="advertisement">Advertisement</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Additional Notes */}
-          <div>
-            <Label htmlFor="notes">Additional Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Tell us more about your goals and why you want to join..."
-              rows={4}
-            />
-          </div>
-
-          {/* Privacy Notice */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <p className="text-xs text-gray-600">
-              By submitting this application, you consent to the processing of your
-              personal data in accordance with our Privacy Policy. We will use your
-              information to process your application and contact you regarding your
-              enrollment.
-            </p>
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={submitMutation.isPending}
-          >
-            {submitMutation.isPending ? 'Submitting...' : 'Submit Application'}
-          </Button>
-        </form>
-
-        {/* Login Link */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <button
-              onClick={() => navigate('/login')}
-              className="text-blue-600 hover:underline font-medium"
-            >
-              Login here
+    <section className={`recruiting_section ${fullscreen ? 'fullscreen_recruit' : ''}`}>
+      <div className="recruiting_container">
+        <div className="recruiting_wrapper">
+          {fullscreen && (
+            <button className="recruit_back_btn" onClick={() => setFullscreen(false)}>
+              <FaArrowLeft />
             </button>
-          </p>
+          )}
+
+          <CardHeader className="recruiting_card_header">
+            <CardTitle className="recruit_student_title">Recruit Student</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <form className="recruiting_form" onSubmit={handleSubmit}>
+              <div className="name-fields-wrapper">
+                <div className="name-field">
+                  <label> First Name * </label>
+                  <Input
+                    className="recruiting_input_name__lastname"
+                    placeholder="Enter first name"
+                    value={form.firstName}
+                    onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="name-field">
+                  <label> Last Name * </label>
+                  <Input
+                    className="recruiting_input_name__lastname"
+                    placeholder="Enter last name"
+                    value={form.lastName}
+                    onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label> Email * </label>
+                <Input
+                  type="email"
+                  className="recruiting_input"
+                  placeholder="Enter email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  required
+                  inputMode="email"
+                />
+              </div>
+
+              <div>
+                <label> Phone * </label>
+
+                {form.phones.map((p, index) => (
+                  <div className="recruiting_phone_wrapper" key={index}>
+                    {/* Phone number */}
+                    <input
+                      className="recruiting_phone_input"
+                      placeholder="Enter phone"
+                      value={p.phone}
+                      inputMode="numeric"
+                      maxLength={9}
+                      onChange={(e) => {
+                        const updated = [...form.phones];
+                        updated[index] = {
+                          ...updated[index],
+                          phone: e.target.value.replace(/\D/g, ''),
+                        };
+                        setForm({ ...form, phones: updated });
+                      }}
+                      required={index === 0}
+                    />
+
+                    {/* Phone name */}
+                    <Input
+                      type="text"
+                      placeholder="Phone name (e.g. Mom, Work)"
+                      value={p.name}
+                      onChange={(e) => {
+                        const updated = [...form.phones];
+                        updated[index] = {
+                          ...updated[index],
+                          name: e.target.value,
+                        };
+                        setForm({ ...form, phones: updated });
+                      }}
+                      className="phone__name"
+                    />
+
+                    {/* Add / remove buttons */}
+                    {index === 0 && (
+                      <div className="add_another_phone_field">
+                        <button
+                          type="button"
+                          className="h-10"
+                          onClick={() =>
+                            setForm({
+                              ...form,
+                              phones: [...form.phones, { name: '', phone: '' }],
+                            })
+                          }
+                        >
+                          <GoPlus className="recruiting_plus_icon" />
+                        </button>
+                      </div>
+                    )}
+
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => removePhone(index)}
+                        className="input_delete_btn_wrapper"
+                      >
+                        <IoMdClose className="input_delete_btn" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <label> Program * </label>
+                <Select
+                  value={form.program}
+                  onValueChange={(val) => setForm({ ...form, program: val })}
+                >
+                  <SelectTrigger className="recruiting_select">
+                    <SelectValue placeholder="Select program" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(programs as any[]).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label> Additional info </label>
+                <Input
+                  className="recruiting_input"
+                  placeholder="Enter additional info"
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                />
+              </div>
+
+              <Button className="recruiting_btn" type="submit" disabled={mutation.isPending}>
+                Recruit
+              </Button>
+            </form>
+          </CardContent>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
