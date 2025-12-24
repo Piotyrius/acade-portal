@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -665,6 +666,7 @@ function AnalyticsDashboard() {
 // Reports & Exports Component (existing functionality)
 function ReportsExports() {
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const [loading, setLoading] = useState<string | null>(null);
 
   // Date range state

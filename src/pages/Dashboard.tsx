@@ -46,6 +46,7 @@ import {
   Line,
 } from "recharts";
 import { useTranslation } from "react-i18next";
+import { WorkLogDto } from '@/api/types';
 
 function getPercentChange(current: number, previous: number) {
   if (previous === 0) return '+0%';
@@ -111,10 +112,7 @@ export default function Dashboard() {
     enabled: user?.role === 'ADMIN',
     retry: false, // Don't retry on error
     refetchOnWindowFocus: false, // Don't refetch on window focus
-    onError: (error) => {
-      // Silently handle analytics errors - don't break the dashboard
-      console.warn('Analytics overview failed:', error);
-    },
+
   });
 
   // Lecturer-specific queries
@@ -273,7 +271,7 @@ export default function Dashboard() {
 
   // Calculate additional metrics
   const pendingApplications = applications.filter(
-    (a: any) => a.status === "PENDING"
+    (a: any) => a.status === "NEW" || a.status === "IN_REVIEW"
   ).length;
   const outstandingInvoices = invoices.filter(
     (i: any) => i.status === "OVERDUE" || i.status === "ISSUED"
@@ -283,12 +281,12 @@ export default function Dashboard() {
     .reduce((sum: number, p: any) => sum + parseFloat(p.amount || "0"), 0);
   
   const pendingSubmissions = submissions.filter((s: any) => !s.graded).length;
-  const hoursThisMonth = workLogs
-    .filter((w: any) => {
+  const hoursThisMonth = (workLogs as WorkLogDto[])
+    .filter((w) => {
       const logDate = new Date(w.start_at);
       return logDate >= lastMonth;
     })
-    .reduce((sum: number, w: any) => sum + (w.minutes || 0) / 60, 0);
+    .reduce((sum: number, w) => sum + (w.minutes ?? 0) / 60, 0);
   
   const pendingAssessments = studentAssessments.filter((a: any) => {
     const dueDate = new Date(a.due_at);

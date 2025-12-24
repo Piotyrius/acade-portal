@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Georgian-friendly font: Noto Sans with Georgian subset */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@100..900&display=swap');
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -107,6 +109,9 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Noto Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    /* Reasonable base size; we'll slightly reduce for Georgian if needed */
+    font-size: 16px;
   }
 
   /* Scrollbars (match theme background) */
@@ -137,4 +142,12 @@ All colors MUST be HSL.
   *::-webkit-scrollbar-corner {
     background: hsl(var(--background));
   }
+}
+
+/* When the document language is Georgian, prefer the Georgian subset and slightly adjust sizing */
+html[lang="ka"] body {
+font-family: "Noto Sans Georgian", sans-serif;
+
+  font-size: 15.5px;
+  line-height: 1.45;
 }

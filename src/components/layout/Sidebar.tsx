@@ -57,6 +57,13 @@ const navigation: NavItem[] = [
     roles: ["ADMIN"],
   },
 
+  {
+    labelKey: "layout.sessions",
+    href: "/catalog/sessions",
+    icon: Calendar,
+    roles: ["ADMIN", "LECTURER"],
+  },
+
   // Teaching
   { labelKey: "layout.teaching", href: "/assessment", icon: FileCheck },
   {
