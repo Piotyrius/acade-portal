@@ -14,6 +14,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Timesheets() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -68,12 +70,12 @@ export default function Timesheets() {
     mutationFn: createTimesheet,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['timesheets'] });
-      toast({ title: 'Success', description: 'Timesheet created successfully' });
+      toast({ title: t('pages.timesheetsCreateSuccessTitle', 'Success'), description: t('pages.timesheetsCreateSuccessDescription', 'Timesheet created successfully') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.timesheetsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -81,13 +83,13 @@ export default function Timesheets() {
     mutationFn: ({ id, data }: { id: string; data: Partial<TimesheetDto> }) => updateTimesheet(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['timesheets'] });
-      toast({ title: 'Success', description: 'Timesheet updated successfully' });
+      toast({ title: t('pages.timesheetsUpdateSuccessTitle', 'Success'), description: t('pages.timesheetsUpdateSuccessDescription', 'Timesheet updated successfully') });
       setIsDialogOpen(false);
       setEditingTimesheet(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.timesheetsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -95,10 +97,10 @@ export default function Timesheets() {
     mutationFn: deleteTimesheet,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['timesheets'] });
-      toast({ title: 'Success', description: 'Timesheet deleted successfully' });
+      toast({ title: t('pages.timesheetsDeleteSuccessTitle', 'Deleted'), description: t('pages.timesheetsDeleteSuccessDescription', 'Timesheet deleted successfully') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.timesheetsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -131,8 +133,8 @@ export default function Timesheets() {
     e.preventDefault();
     if (!formData.period_start || !formData.period_end) {
       toast({
-        title: 'Error',
-        description: 'Period start and end dates are required',
+        title: t('pages.timesheetsErrorTitle', 'Error'),
+        description: t('pages.timesheetsValidationPeriod', 'Period start and end dates are required'),
         variant: 'destructive',
       });
       return;
@@ -156,7 +158,7 @@ export default function Timesheets() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this timesheet?')) {
+    if (confirm(t('pages.timesheetsDeleteConfirm', 'Are you sure you want to delete this timesheet?'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -171,18 +173,18 @@ export default function Timesheets() {
 
   const handleBulkApprove = () => {
     if (selectedIds.length === 0) {
-      toast({ title: 'No selection', description: 'Please select timesheets to approve', variant: 'destructive' });
+      toast({ title: t('pages.timesheetsNoSelectionTitle', 'No selection'), description: t('pages.timesheetsNoSelectionDescription', 'Please select timesheets to approve'), variant: 'destructive' });
       return;
     }
 
     Promise.all(selectedIds.map(id => updateTimesheet(id, { status: 'APPROVED' })))
       .then(() => {
         qc.invalidateQueries({ queryKey: ['timesheets'] });
-        toast({ title: 'Success', description: `${selectedIds.length} timesheet(s) approved` });
+        toast({ title: t('pages.timesheetsBulkApprovedTitle', 'Success'), description: t('pages.timesheetsBulkApprovedDescription', '{{count}} timesheet(s) approved', { count: selectedIds.length }) });
         setSelectedIds([]);
       })
       .catch((error) => {
-        toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+        toast({ title: t('pages.timesheetsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
       });
   };
 
@@ -215,21 +217,21 @@ export default function Timesheets() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between timesheets_header_wrapper">
+          <div className="flex items-center justify-between timesheets_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Timesheets</h2>
-          <p className="text-muted-foreground">Manage timesheet periods and status</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.timesheetsTitle', 'Timesheets')}</h2>
+          <p className="text-muted-foreground">{t('pages.timesheetsSubtitle', 'Manage timesheet periods and status')}</p>
         </div>
         <div className="flex gap-2 timesheet_btn_wrapper">
           {user?.role === 'ADMIN' && selectedIds.length > 0 && (
             <Button onClick={handleBulkApprove} variant="default">
               <CheckCircle className="mr-2 h-4 w-4" />
-              Approve Selected ({selectedIds.length})
+                  {t('pages.timesheetsApproveSelected', 'Approve Selected ({{count}})', { count: selectedIds.length })}
             </Button>
           )}
           <Button onClick={() => handleOpenDialog()} className='create_timesheet_btn'>
             <Plus className="mr-2 h-4 w-4" />
-            Create Timesheet
+            {t('pages.timesheetsCreateCta', 'Create Timesheet')}
           </Button>
         </div>
       </div>
@@ -240,13 +242,13 @@ export default function Timesheets() {
           <div className="flex gap-4 flex-wrap">
             {user?.role === 'ADMIN' && (
               <div className="flex-1 min-w-[200px]">
-                <Label>Filter by Lecturer</Label>
+                <Label>{t('pages.timesheetsFilterByLecturerLabel', 'Filter by Lecturer')}</Label>
                 <Select value={lecturerFilter} onValueChange={setLecturerFilter}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">All Lecturers</SelectItem>
+                    <SelectItem value="ALL">{t('pages.timesheetsFilterAllLecturers', 'All Lecturers')}</SelectItem>
                     {lecturers.map((lect: any) => (
                       <SelectItem key={lect.id} value={lect.id}>
                         {lect.first_name} {lect.last_name}
@@ -257,17 +259,17 @@ export default function Timesheets() {
               </div>
             )}
             <div className="flex-1 min-w-[200px]">
-              <Label>Filter by Status</Label>
+              <Label>{t('pages.timesheetsFilterByStatusLabel', 'Filter by Status')}</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All Statuses</SelectItem>
-                  <SelectItem value="OPEN">Open</SelectItem>
-                  <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                  <SelectItem value="APPROVED">Approved</SelectItem>
-                  <SelectItem value="PAID">Paid</SelectItem>
+                  <SelectItem value="ALL">{t('pages.timesheetsFilterAllStatuses', 'All Statuses')}</SelectItem>
+                  <SelectItem value="OPEN">{t('pages.timesheetsStatus_OPEN', 'Open')}</SelectItem>
+                  <SelectItem value="SUBMITTED">{t('pages.timesheetsStatus_SUBMITTED', 'Submitted')}</SelectItem>
+                  <SelectItem value="APPROVED">{t('pages.timesheetsStatus_APPROVED', 'Approved')}</SelectItem>
+                  <SelectItem value="PAID">{t('pages.timesheetsStatus_PAID', 'Paid')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -277,16 +279,16 @@ export default function Timesheets() {
 
       {timesheets.length === 0 && <ExampleBanner />}
       <Card>
-        <CardHeader>
+          <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Timesheets</CardTitle>
+            <CardTitle>{t('pages.timesheetsTitle', 'Timesheets')}</CardTitle>
             {user?.role === 'ADMIN' && displayTimesheets.length > 0 && (
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={selectedIds.length === displayTimesheets.length}
                   onCheckedChange={toggleSelectAll}
                 />
-                <Label className="text-sm">Select All</Label>
+                <Label className="text-sm">{t('pages.timesheetsSelectAll', 'Select All')}</Label>
               </div>
             )}
           </div>
@@ -294,7 +296,7 @@ export default function Timesheets() {
         <CardContent>
           <div className="space-y-4">
             {displayTimesheets.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No timesheets found</p>
+              <p className="text-muted-foreground text-center py-8">{t('pages.timesheetsNoResults', 'No timesheets found')}</p>
             ) : (
               displayTimesheets.map((timesheet: TimesheetDto) => {
                 const lecturer = lecturers.find((l: any) => l.id === timesheet.lecturer);
@@ -314,7 +316,7 @@ export default function Timesheets() {
                       </div>
                       <div>
                         <p className="font-medium">
-                          {lecturer ? `${lecturer.first_name} ${lecturer.last_name}` : 'Unknown Lecturer'}
+                          {lecturer ? `${lecturer.first_name} ${lecturer.last_name}` : t('pages.timesheetsUnknownLecturer', 'Unknown Lecturer')}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {new Date(timesheet.period_start).toLocaleDateString()} -{' '}
@@ -332,7 +334,7 @@ export default function Timesheets() {
                       {user?.role === 'LECTURER' && timesheet.status === 'OPEN' && (
                         <Button variant="default" size="sm" onClick={() => handleSubmitTimesheet(timesheet.id)}>
                           <Send className="h-4 w-4 mr-1" />
-                          Submit
+                          {t('pages.timesheetsSubmitCta', 'Submit')}
                         </Button>
                       )}
 
@@ -340,7 +342,7 @@ export default function Timesheets() {
                       {user?.role === 'ADMIN' && timesheet.status === 'SUBMITTED' && (
                         <Button variant="default" size="sm" onClick={() => handleApprove(timesheet.id)}>
                           <CheckCircle className="h-4 w-4 mr-1" />
-                          Approve
+                          {t('pages.timesheetsApproveCta', 'Approve')}
                         </Button>
                       )}
 
@@ -361,23 +363,23 @@ export default function Timesheets() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingTimesheet ? 'Edit Timesheet' : 'Create Timesheet'}</DialogTitle>
+            <DialogHeader>
+            <DialogTitle>{editingTimesheet ? t('pages.timesheetsDialogTitleEdit', 'Edit Timesheet') : t('pages.timesheetsDialogTitleCreate', 'Create Timesheet')}</DialogTitle>
             <DialogDescription>
-              {editingTimesheet ? 'Update the timesheet period and status' : 'Create a new timesheet period'}
+              {editingTimesheet ? t('pages.timesheetsDialogDescEdit', 'Update the timesheet period and status') : t('pages.timesheetsDialogDescCreate', 'Create a new timesheet period')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               {user?.role === 'ADMIN' && (
                 <div className="space-y-2">
-                  <Label htmlFor="lecturer">Lecturer</Label>
+                  <Label htmlFor="lecturer">{t('pages.timesheetsLecturerLabel', 'Lecturer')}</Label>
                   <Select
                     value={formData.lecturer}
                     onValueChange={(value) => setFormData({ ...formData, lecturer: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select lecturer" />
+                      <SelectValue placeholder={t('pages.timesheetsSelectLecturerPlaceholder', 'Select lecturer')} />
                     </SelectTrigger>
                     <SelectContent>
                       {lecturers.map((lecturer: any) => (
@@ -390,7 +392,7 @@ export default function Timesheets() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="period_start">Period Start *</Label>
+                <Label htmlFor="period_start">{t('pages.timesheetsPeriodStartLabel', 'Period Start *')}</Label>
                 <Input
                   id="period_start"
                   type="date"
@@ -400,7 +402,7 @@ export default function Timesheets() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="period_end">Period End *</Label>
+                <Label htmlFor="period_end">{t('pages.timesheetsPeriodEndLabel', 'Period End *')}</Label>
                 <Input
                   id="period_end"
                   type="date"
@@ -410,7 +412,7 @@ export default function Timesheets() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">{t('pages.timesheetsStatusLabel', 'Status')}</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value: 'OPEN' | 'SUBMITTED' | 'APPROVED' | 'PAID') =>
@@ -421,26 +423,26 @@ export default function Timesheets() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="OPEN">Open</SelectItem>
-                    <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                    <SelectItem value="APPROVED">Approved</SelectItem>
-                    <SelectItem value="PAID">Paid</SelectItem>
+                    <SelectItem value="OPEN">{t('pages.timesheetsStatus_OPEN', 'Open')}</SelectItem>
+                    <SelectItem value="SUBMITTED">{t('pages.timesheetsStatus_SUBMITTED', 'Submitted')}</SelectItem>
+                    <SelectItem value="APPROVED">{t('pages.timesheetsStatus_APPROVED', 'Approved')}</SelectItem>
+                    <SelectItem value="PAID">{t('pages.timesheetsStatus_PAID', 'Paid')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                 {editingTimesheet
                   ? updateMutation.isPending
-                    ? 'Updating...'
-                    : 'Update'
+                    ? t('updating')
+                    : t('update')
                   : createMutation.isPending
-                    ? 'Creating...'
-                    : 'Create'}
+                    ? t('creating')
+                    : t('create')}
               </Button>
             </DialogFooter>
           </form>

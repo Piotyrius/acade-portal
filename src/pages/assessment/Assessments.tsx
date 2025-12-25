@@ -9,6 +9,7 @@ import { getAssessments, createAssessment, updateAssessment, deleteAssessment } 
 import { getCohorts } from '@/api/endpoints/catalog';
 import { AssessmentDto } from '@/api/types';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -26,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function Assessments() {
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState<AssessmentDto | null>(null);
@@ -155,10 +157,11 @@ export default function Assessments() {
       ...formData,
       due_at: formData.due_at || null,
     };
+    const payloadData = payload as Partial<AssessmentDto>;
     if (editingAssessment) {
-      updateMutation.mutate({ id: editingAssessment.id, data: payload });
+      updateMutation.mutate({ id: editingAssessment.id, data: payloadData });
     } else {
-      createMutation.mutate(payload);
+      createMutation.mutate(payloadData);
     }
   };
 
@@ -191,13 +194,13 @@ export default function Assessments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between assesments_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Assessments</h2>
-          <p className="text-muted-foreground">Create and manage course assessments</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('assessment.page.title')}</h2>
+          <p className="text-muted-foreground">{t('assessment.page.subtitle')}</p>
         </div>
         <div className="flex gap-2 assesments_create_btn_wrapper">
           <Button onClick={handleOpenCreate} className='assesments_create_btn'>
             <Plus className="mr-2 h-4 w-4" />
-            Create Assessment
+            {t('assessment.page.createButton')}
           </Button>
         </div>
       </div>
@@ -262,8 +265,8 @@ export default function Assessments() {
 
       {assessments.length === 0 && (
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            No assessments yet. Create your first assessment!
+            <CardContent className="py-8 text-center text-muted-foreground">
+            {t('assessment.page.empty')}
           </CardContent>
         </Card>
       )}
@@ -271,9 +274,9 @@ export default function Assessments() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingAssessment ? 'Edit Assessment' : 'Create Assessment'}</DialogTitle>
+            <DialogTitle>{editingAssessment ? t('assessment.page.dialog.editTitle') : t('assessment.page.dialog.createTitle')}</DialogTitle>
             <DialogDescription>
-              {editingAssessment ? 'Update assessment details' : 'Add a new assessment'}
+              {editingAssessment ? t('assessment.page.dialog.editDescription') : t('assessment.page.dialog.createDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>

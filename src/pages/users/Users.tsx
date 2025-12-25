@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +46,7 @@ import {
 
 export default function Users() {
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const queryClient = useQueryClient();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -220,12 +222,12 @@ export default function Users() {
     <div className="space-y-6">
       <div className="flex items-center justify-between add_user_wrapper">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight user_title">User Management</h1>
-          <p className="text-muted-foreground user_description">Manage system users and their roles</p>
+          <h1 className="text-3xl font-bold tracking-tight user_title">{t('pages.usersTitle')}</h1>
+          <p className="text-muted-foreground user_description">{t('pages.usersSubtitle')}</p>
         </div>
         <Button onClick={() => { resetForm(); setIsCreateOpen(true); }} className='add_user_btn'>
           <Plus />
-          Add User
+          {t('pages.usersAddUserButton')}
         </Button>
       </div>
 
@@ -233,7 +235,7 @@ export default function Users() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by email or name..."
+            placeholder={t('pages.usersSearchPlaceholder')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -248,20 +250,20 @@ export default function Users() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Cohort</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableHead>{t('pages.usersTableHeadEmail')}</TableHead>
+              <TableHead>{t('pages.usersTableHeadName')}</TableHead>
+              <TableHead>{t('pages.usersTableHeadCohort')}</TableHead>
+              <TableHead>{t('pages.usersTableHeadPhone')}</TableHead>
+              <TableHead>{t('pages.usersTableHeadRole')}</TableHead>
+              <TableHead>{t('pages.usersTableHeadStatus')}</TableHead>
+              <TableHead className="w-[100px]">{t('pages.usersTableHeadActions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
-                  Loading...
+                  {t('pages.loading')}
                 </TableCell>
               </TableRow>
             ) : users.length > 0 ? (
@@ -282,35 +284,35 @@ export default function Users() {
                     {user.is_active ? (
                       <Badge variant="outline" className="gap-1">
                         <UserCheck className="h-3 w-3" />
-                        Active
+                        {t('pages.usersActive')}
                       </Badge>
                     ) : (
                       <Badge variant="secondary" className="gap-1">
                         <UserX className="h-3 w-3" />
-                        Inactive
+                        {t('pages.usersInactive')}
                       </Badge>
                     )}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Edit user"
-                        title="Edit"
-                        onClick={() => openEditDialog(user)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Delete user"
-                        title="Delete"
-                        onClick={() => openDeleteDialog(user)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={t('pages.edit')}
+                          title={t('pages.edit')}
+                          onClick={() => openEditDialog(user)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={t('pages.delete')}
+                          title={t('pages.delete')}
+                          onClick={() => openDeleteDialog(user)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -318,7 +320,7 @@ export default function Users() {
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
-                  No users found
+                  {t('pages.usersNoUsersFound')}
                 </TableCell>
               </TableRow>
             )}
@@ -332,11 +334,11 @@ export default function Users() {
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={!canGoPrev}
         >
-          Previous
+          {t('pages.previous')}
         </Button>
-        <div className="text-sm text-muted-foreground">Page {page}</div>
+        <div className="text-sm text-muted-foreground">{t('pages.page', { page })}</div>
         <Button variant="outline" onClick={() => setPage((p) => p + 1)} disabled={!canGoNext}>
-          Next
+          {t('pages.next')}
         </Button>
       </div>
 
@@ -344,12 +346,12 @@ export default function Users() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New User</DialogTitle>
-            <DialogDescription>Add a new user to the system</DialogDescription>
+            <DialogTitle>{t('pages.usersCreateTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.usersCreateDescription')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="create-email">Email</Label>
+              <Label htmlFor="create-email">{t('pages.usersFieldEmail')}</Label>
               <Input
                 id="create-email"
                 type="email"
@@ -358,7 +360,7 @@ export default function Users() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-password">Password</Label>
+              <Label htmlFor="create-password">{t('pages.usersFieldPassword')}</Label>
               <Input
                 id="create-password"
                 type="password"
@@ -368,7 +370,7 @@ export default function Users() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="create-first-name">First Name</Label>
+                <Label htmlFor="create-first-name">{t('pages.usersFieldFirstName')}</Label>
                 <Input
                   id="create-first-name"
                   value={formData.first_name}
@@ -376,7 +378,7 @@ export default function Users() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="create-last-name">Last Name</Label>
+                <Label htmlFor="create-last-name">{t('pages.usersFieldLastName')}</Label>
                 <Input
                   id="create-last-name"
                   value={formData.last_name}
@@ -385,7 +387,7 @@ export default function Users() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-phone">Phone</Label>
+              <Label htmlFor="create-phone">{t('pages.usersFieldPhone')}</Label>
               <Input
                 id="create-phone"
                 value={formData.phone}
@@ -393,7 +395,7 @@ export default function Users() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-role">Role</Label>
+              <Label htmlFor="create-role">{t('pages.usersFieldRole')}</Label>
               <Select
                 value={formData.role}
                 onValueChange={(value: any) => setFormData({ ...formData, role: value })}
@@ -402,19 +404,19 @@ export default function Users() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="STUDENT">Student</SelectItem>
-                  <SelectItem value="LECTURER">Lecturer</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="STUDENT">{t('pages.usersRoleStudent')}</SelectItem>
+                  <SelectItem value="LECTURER">{t('pages.usersRoleLecturer')}</SelectItem>
+                  <SelectItem value="ADMIN">{t('pages.usersRoleAdmin')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              Cancel
+              {t('pages.cancel')}
             </Button>
             <Button onClick={handleCreate} disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Creating...' : 'Create User'}
+              {createMutation.isPending ? t('pages.creating') : t('pages.usersCreateAction')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -424,8 +426,8 @@ export default function Users() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user information</DialogDescription>
+            <DialogTitle>{t('pages.usersEditTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.usersEditDescription')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -439,7 +441,7 @@ export default function Users() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-first-name">First Name</Label>
+                <Label htmlFor="edit-first-name">{t('pages.usersFieldFirstName')}</Label>
                 <Input
                   id="edit-first-name"
                   value={formData.first_name}
@@ -447,7 +449,7 @@ export default function Users() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-last-name">Last Name</Label>
+                <Label htmlFor="edit-last-name">{t('pages.usersFieldLastName')}</Label>
                 <Input
                   id="edit-last-name"
                   value={formData.last_name}
@@ -456,7 +458,7 @@ export default function Users() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-phone">Phone</Label>
+              <Label htmlFor="edit-phone">{t('pages.usersFieldPhone')}</Label>
               <Input
                 id="edit-phone"
                 value={formData.phone}
@@ -464,7 +466,7 @@ export default function Users() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-role">Role</Label>
+              <Label htmlFor="edit-role">{t('pages.usersFieldRole')}</Label>
               <Select
                 value={formData.role}
                 onValueChange={(value: any) => setFormData({ ...formData, role: value })}
@@ -473,19 +475,19 @@ export default function Users() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="STUDENT">Student</SelectItem>
-                  <SelectItem value="LECTURER">Lecturer</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="STUDENT">{t('pages.usersRoleStudent')}</SelectItem>
+                  <SelectItem value="LECTURER">{t('pages.usersRoleLecturer')}</SelectItem>
+                  <SelectItem value="ADMIN">{t('pages.usersRoleAdmin')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
+              {t('pages.cancel')}
             </Button>
             <Button onClick={handleEdit} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? 'Updating...' : 'Update User'}
+              {updateMutation.isPending ? t('pages.updating') : t('pages.usersUpdateAction')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -495,20 +497,19 @@ export default function Users() {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t('pages.usersDeleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the user {selectedUser?.email}. This action cannot be
-              undone.
+              {t('pages.usersDeleteDescription', { email: selectedUser?.email })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('pages.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? t('pages.deleting') : t('pages.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

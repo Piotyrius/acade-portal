@@ -14,6 +14,7 @@ import { getEnrollments } from '@/api/endpoints/admissions';
 import { getUsers } from '@/api/endpoints/auth';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -30,6 +31,7 @@ import { useSearchParams } from 'react-router-dom';
 
 export default function AttendanceList() {
   const { user } = useAuthStore();
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
@@ -250,19 +252,19 @@ export default function AttendanceList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between attendance_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Attendance</h2>
-          <p className="text-muted-foreground">Track student attendance records</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.attendanceTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.attendanceSubtitle')}</p>
         </div>
         <div className="flex gap-2 attendance_btn_wrapper">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
             <>
               <Button className='attendance_button' variant="outline" onClick={handleOpenBulkDialog}>
                 <Users className="mr-2 h-4 w-4" />
-                Bulk Mark
+                {t('pages.attendanceBulkMark')}
               </Button>
               <Button className='attendance_button' onClick={() => handleOpenDialog()}>
                 <Plus className="mr-2 h-4 w-4" />
-                Mark Attendance
+                {t('pages.attendanceTakeButton')}
               </Button>
             </>
           )}
@@ -273,7 +275,7 @@ export default function AttendanceList() {
         <div className="relative flex-1 max-w-sm attendance_input_wrapper">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search attendance..."
+            placeholder={t('pages.attendanceFilterPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -284,7 +286,7 @@ export default function AttendanceList() {
       {records.length === 0 && <ExampleBanner />}
       <Card>
         <CardHeader>
-          <CardTitle>Attendance Records</CardTitle>
+          <CardTitle>{t('pages.attendanceTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4 attendance_table_wrapper">
@@ -293,11 +295,11 @@ export default function AttendanceList() {
                 <thead>
                   <tr>
 
-                    <th> Student </th>
-                    <th> Sessions </th>
-                    <th> Status </th>
-                    <th> Note </th>
-                    <th> Action </th>
+                    <th> {t('pages.attendanceStudentLabel')} </th>
+                    <th> {t('pages.attendanceSessionLabel')} </th>
+                    <th> {t('pages.attendanceStatusLabel')} </th>
+                    <th> {t('pages.attendanceNoteLabel')} </th>
+                    <th> {t('pages.attendanceActionLabel')} </th>
 
                   </tr>
                 </thead>
@@ -317,7 +319,7 @@ export default function AttendanceList() {
 
                         <td>
                           <p className="text-sm text-muted-foreground">
-                           Session: {session ? new Date(session.start_at).toLocaleString() : 'Unknown'} •{' '}
+                           {t('pages.attendanceSessionLabel')}: {session ? new Date(session.start_at).toLocaleString() : t('pages.attendanceUnknown')} •{' '}
                            {new Date(record.marked_at).toLocaleDateString()}
                           </p>
                         </td>
@@ -328,7 +330,7 @@ export default function AttendanceList() {
 
                         
                         <td>
-                            {record.note && <p className="text-xs text-muted-foreground mt-1">Note: {record.note}</p>}
+                            {record.note && <p className="text-xs text-muted-foreground mt-1">{t('pages.attendanceNoteLabel')}: {record.note}</p>}
                         </td>
 
                         <td>
@@ -350,7 +352,7 @@ export default function AttendanceList() {
           </div>
           {filteredRecords.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
-              {searchTerm ? 'No attendance records found' : 'No attendance records yet'}
+              {t('pages.attendanceNoRecords')}
             </div>
           )}
         </CardContent>
@@ -361,22 +363,22 @@ export default function AttendanceList() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingRecord ? 'Edit Attendance' : 'Mark Attendance'}</DialogTitle>
+                <DialogTitle>{editingRecord ? t('pages.attendanceEdit',) : t('pages.attendanceTakeButton')}</DialogTitle>
                 <DialogDescription>
-                  {editingRecord ? 'Update attendance record' : 'Create a new attendance record'}
+                  {editingRecord ? t('pages.attendanceUpdateDescription') : t('pages.attendanceCreateDescription' )}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="session">Session *</Label>
+                    <Label htmlFor="session">{t('pages.attendanceSessionLabel')}</Label>
                     <Select
                       value={formData.session}
                       onValueChange={(value) => setFormData({ ...formData, session: value })}
                       disabled={!!editingRecord}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select session" />
+                        <SelectValue placeholder={t('pages.attendanceSelectSessionPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {sessions.map((session: any) => (
@@ -388,14 +390,14 @@ export default function AttendanceList() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="student">Student *</Label>
+                    <Label htmlFor="student">{t('pages.attendanceStudentLabel')}</Label>
                     <Select
                       value={formData.student}
                       onValueChange={(value) => setFormData({ ...formData, student: value })}
                       disabled={!!editingRecord}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select student" />
+                        <SelectValue placeholder={t('pages.attendanceSelectStudentPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {students.map((student: any) => (
@@ -407,7 +409,7 @@ export default function AttendanceList() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="status">Status *</Label>
+                    <Label htmlFor="status">{t('pages.attendanceStatusLabel')}</Label>
                     <Select
                       value={formData.status}
                       onValueChange={(value: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED') =>
@@ -418,15 +420,15 @@ export default function AttendanceList() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="PRESENT">Present</SelectItem>
-                        <SelectItem value="LATE">Late</SelectItem>
-                        <SelectItem value="ABSENT">Absent</SelectItem>
-                        <SelectItem value="EXCUSED">Excused</SelectItem>
+                        <SelectItem value="PRESENT">{t('pages.attendanceStatusPresent')}</SelectItem>
+                        <SelectItem value="LATE">{t('pages.attendanceStatusLate')}</SelectItem>
+                        <SelectItem value="ABSENT">{t('pages.attendanceStatusAbsent')}</SelectItem>
+                        <SelectItem value="EXCUSED">{t('pages.attendanceStatusExcused')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="note">Note</Label>
+                    <Label htmlFor="note">{t('pages.attendanceNoteLabel')}</Label>
                     <Textarea
                       id="note"
                       value={formData.note}
@@ -438,10 +440,10 @@ export default function AttendanceList() {
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
+                    {t('pages.cancel')}
                   </Button>
                   <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                    {editingRecord ? (updateMutation.isPending ? 'Updating...' : 'Update') : createMutation.isPending ? 'Creating...' : 'Create'}
+                    {editingRecord ? (updateMutation.isPending ? t('pages.updating',) : t('pages.update')) : createMutation.isPending ? t('pages.creating') : t('pages.create')}
                   </Button>
                 </DialogFooter>
               </form>
@@ -451,16 +453,16 @@ export default function AttendanceList() {
           <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Bulk Mark Attendance</DialogTitle>
-                <DialogDescription>Mark attendance for multiple students at once</DialogDescription>
+                <DialogTitle>{t('pages.attendanceBulkMark')}</DialogTitle>
+                <DialogDescription>{t('pages.attendanceBulkDescription')}</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleBulkSubmit}>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bulk_session">Session *</Label>
+                    <Label htmlFor="bulk_session">{t('pages.attendanceSessionLabel')}</Label>
                     <Select value={bulkFormData.session} onValueChange={handleBulkSessionChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select session" />
+                        <SelectValue placeholder={t('pages.attendanceSelectSessionPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {sessions.map((session: any) => (
@@ -493,10 +495,10 @@ export default function AttendanceList() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="PRESENT">Present</SelectItem>
-                                  <SelectItem value="LATE">Late</SelectItem>
-                                  <SelectItem value="ABSENT">Absent</SelectItem>
-                                  <SelectItem value="EXCUSED">Excused</SelectItem>
+                                  <SelectItem value="PRESENT">{t('pages.attendanceStatusPresent')}</SelectItem>
+                                  <SelectItem value="LATE">{t('pages.attendanceStatusLate')}</SelectItem>
+                                  <SelectItem value="ABSENT">{t('pages.attendanceStatusAbsent')}</SelectItem>
+                                  <SelectItem value="EXCUSED">{t('pages.attendanceStatusExcused')}</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -508,10 +510,10 @@ export default function AttendanceList() {
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsBulkDialogOpen(false)}>
-                    Cancel
+                    {t('pages.cancel')}
                   </Button>
                   <Button type="submit" disabled={bulkMutation.isPending || !bulkFormData.session}>
-                    {bulkMutation.isPending ? 'Marking...' : 'Mark Attendance'}
+                    {bulkMutation.isPending ? t('pages.marking') : t('pages.attendanceBulkMarkButton')}
                   </Button>
                 </DialogFooter>
               </form>

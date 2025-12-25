@@ -81,6 +81,7 @@ const formatPercentage = (value: number): string => {
 function AnalyticsDashboard() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   
   // Filter state
   const [dateFrom, setDateFrom] = useState<string>('');
@@ -240,7 +241,7 @@ function AnalyticsDashboard() {
   if (user?.role !== 'ADMIN') {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Analytics dashboard is only available for administrators.</p>
+        <p className="text-muted-foreground">{t('pages.reportingAdminOnly')}</p>
       </div>
     );
   }
@@ -250,13 +251,13 @@ function AnalyticsDashboard() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
-          <CardDescription>Filter analytics data by date range and other criteria</CardDescription>
+          <CardTitle>{t('pages.reportingFiltersTitle')}</CardTitle>
+          <CardDescription>{t('pages.reportingFiltersDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
-              <Label htmlFor="date-from">From Date</Label>
+              <Label htmlFor="date-from">{t('pages.reportingFromDateLabel')}</Label>
               <Input
                 id="date-from"
                 type="date"
@@ -265,7 +266,7 @@ function AnalyticsDashboard() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="date-to">To Date</Label>
+              <Label htmlFor="date-to">{t('pages.reportingToDateLabel')}</Label>
               <Input
                 id="date-to"
                 type="date"
@@ -274,13 +275,13 @@ function AnalyticsDashboard() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="program">Program</Label>
+              <Label htmlFor="program">{t('pages.reportingProgramLabel')}</Label>
               <Select value={programId || 'all'} onValueChange={setProgramId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Programs" />
+                  <SelectValue placeholder={t('pages.reportingProgramPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Programs</SelectItem>
+                  <SelectItem value="all">{t('pages.reportingProgramPlaceholder')}</SelectItem>
                   {programs.map((program) => (
                     <SelectItem key={program.id} value={program.id}>
                       {program.name}
@@ -290,13 +291,13 @@ function AnalyticsDashboard() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cohort">Cohort</Label>
+              <Label htmlFor="cohort">{t('pages.reportingCohortLabel')}</Label>
               <Select value={cohortId || 'all'} onValueChange={setCohortId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Cohorts" />
+                  <SelectValue placeholder={t('pages.reportingCohortPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Cohorts</SelectItem>
+                  <SelectItem value="all">{t('pages.reportingCohortPlaceholder')}</SelectItem>
                   {cohorts.map((cohort) => (
                     <SelectItem key={cohort.id} value={cohort.id}>
                       {cohort.name}
@@ -308,19 +309,19 @@ function AnalyticsDashboard() {
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setQuickDateRange(7)}>
-              Last 7 Days
+              {t('pages.reportingQuickLast7')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setQuickDateRange(30)}>
-              Last 30 Days
+              {t('pages.reportingQuickLast30')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setQuickDateRange(90)}>
-              Last 90 Days
+              {t('pages.reportingQuickLast90')}
             </Button>
             <Button variant="outline" size="sm" onClick={setThisMonth}>
-              This Month
+              {t('pages.reportingQuickThisMonth')}
             </Button>
             <Button variant="outline" size="sm" onClick={setThisYear}>
-              This Year
+              {t('pages.reportingQuickThisYear')}
             </Button>
           </div>
         </CardContent>
@@ -332,7 +333,7 @@ function AnalyticsDashboard() {
           {[1, 2, 3, 4].map((i) => (
             <Card key={i}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('pages.loading')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">-</div>
@@ -344,19 +345,19 @@ function AnalyticsDashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Enrollments</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.reportingTotalEnrollments')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{overview.total_enrollments}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {overview.active_enrollments} active, {overview.completed_enrollments} completed
+                {t('pages.reportingOverviewEnrollmentsSummary', { active: overview.active_enrollments, completed: overview.completed_enrollments })}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.reportingTotalRevenue')}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -367,7 +368,7 @@ function AnalyticsDashboard() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.reportingTotalPaid')}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -378,7 +379,7 @@ function AnalyticsDashboard() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Outstanding Balance</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.reportingOutstandingBalance')}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -392,9 +393,9 @@ function AnalyticsDashboard() {
 
       {/* Cohort Performance Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Cohort Performance</CardTitle>
-          <CardDescription>Student count, attendance rate, and average grade by cohort</CardDescription>
+          <CardHeader>
+          <CardTitle>{t('pages.reportingCohortPerformanceTitle')}</CardTitle>
+          <CardDescription>{t('pages.reportingCohortPerformanceDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           {cohortLoading ? (
@@ -402,11 +403,11 @@ function AnalyticsDashboard() {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : cohortAnalytics && cohortAnalytics.length > 0 ? (
-            <ChartContainer
+              <ChartContainer
               config={{
-                students: { label: 'Students', color: 'hsl(var(--chart-1))' },
-                attendance: { label: 'Attendance Rate (%)', color: 'hsl(var(--chart-2))' },
-                grade: { label: 'Average Grade', color: 'hsl(var(--chart-3))' },
+                students: { label: t('pages.reportingCohortStudentsLabel'), color: 'hsl(var(--chart-1))' },
+                attendance: { label: t('pages.reportingCohortAttendanceLabel'), color: 'hsl(var(--chart-2))' },
+                grade: { label: t('pages.reportingCohortAvgGradeLabel'), color: 'hsl(var(--chart-3))' },
               }}
               className="h-[400px]"
             >
@@ -422,14 +423,14 @@ function AnalyticsDashboard() {
                 <YAxis yAxisId="right" orientation="right" />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Legend />
-                <Bar yAxisId="left" dataKey="students" fill="var(--color-students)" name="Students" />
-                <Bar yAxisId="right" dataKey="attendance" fill="var(--color-attendance)" name="Attendance %" />
-                <Bar yAxisId="right" dataKey="grade" fill="var(--color-grade)" name="Avg Grade" />
+                <Bar yAxisId="left" dataKey="students" fill="var(--color-students)" name={t('pages.reportingCohortStudentsLabel')} />
+                <Bar yAxisId="right" dataKey="attendance" fill="var(--color-attendance)" name={t('pages.reportingCohortAttendanceLabel')} />
+                <Bar yAxisId="right" dataKey="grade" fill="var(--color-grade)" name={t('pages.reportingCohortAvgGradeLabel')} />
               </BarChart>
             </ChartContainer>
           ) : (
             <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">No cohort data available</p>
+              <p className="text-muted-foreground">{t('pages.reportingNoCohortData')}</p>
             </div>
           )}
         </CardContent>
@@ -441,9 +442,9 @@ function AnalyticsDashboard() {
           {/* Program Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle>Revenue by Program</CardTitle>
-              <CardDescription>Total revenue distribution across programs</CardDescription>
-            </CardHeader>
+                <CardTitle>{t('pages.reportingRevenueByProgramTitle')}</CardTitle>
+                <CardDescription>{t('pages.reportingRevenueByProgramDescription')}</CardDescription>
+              </CardHeader>
             <CardContent>
               {financialLoading ? (
                 <div className="flex items-center justify-center h-64">
@@ -480,7 +481,7 @@ function AnalyticsDashboard() {
                 </ChartContainer>
               ) : (
                 <div className="flex items-center justify-center h-64">
-                  <p className="text-muted-foreground">No program data available</p>
+                  <p className="text-muted-foreground">{t('pages.reportingNoProgramData')}</p>
                 </div>
               )}
             </CardContent>
@@ -489,9 +490,9 @@ function AnalyticsDashboard() {
           {/* Invoice Status Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle>Invoice Status Distribution</CardTitle>
-              <CardDescription>Breakdown of invoices by status</CardDescription>
-            </CardHeader>
+                <CardTitle>{t('pages.reportingInvoiceStatusDistributionTitle')}</CardTitle>
+                <CardDescription>{t('pages.reportingInvoiceStatusDistributionDescription')}</CardDescription>
+              </CardHeader>
             <CardContent>
               {financialLoading ? (
                 <div className="flex items-center justify-center h-64">
@@ -528,7 +529,7 @@ function AnalyticsDashboard() {
                 </ChartContainer>
               ) : (
                 <div className="flex items-center justify-center h-64">
-                  <p className="text-muted-foreground">No status data available</p>
+                  <p className="text-muted-foreground">{t('pages.reportingNoStatusData')}</p>
                 </div>
               )}
             </CardContent>
@@ -541,17 +542,17 @@ function AnalyticsDashboard() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Time-Series Analytics</CardTitle>
-              <CardDescription>Enrollments and payments over time</CardDescription>
+              <CardTitle>{t('pages.reportingTimeSeriesTitle')}</CardTitle>
+              <CardDescription>{t('pages.reportingTimeSeriesDescription')}</CardDescription>
             </div>
             <Select value={groupBy} onValueChange={(v: 'day' | 'week' | 'month') => setGroupBy(v)}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="day">Day</SelectItem>
-                <SelectItem value="week">Week</SelectItem>
-                <SelectItem value="month">Month</SelectItem>
+                <SelectContent>
+                <SelectItem value="day">{t('pages.reportingGroupByDay')}</SelectItem>
+                <SelectItem value="week">{t('pages.reportingGroupByWeek')}</SelectItem>
+                <SelectItem value="month">{t('pages.reportingGroupByMonth')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -564,8 +565,8 @@ function AnalyticsDashboard() {
           ) : timeseriesData && timeseriesData.length > 0 ? (
             <ChartContainer
               config={{
-                enrollments: { label: 'Enrollments', color: 'hsl(var(--chart-1))' },
-                payments: { label: 'Payments', color: 'hsl(var(--chart-2))' },
+                enrollments: { label: t('pages.reportingTimeseriesEnrollmentsLabel'), color: 'hsl(var(--chart-1))' },
+                payments: { label: t('pages.reportingTimeseriesPaymentsLabel'), color: 'hsl(var(--chart-2))' },
               }}
               className="h-[400px]"
             >
@@ -580,13 +581,13 @@ function AnalyticsDashboard() {
                 <YAxis yAxisId="right" orientation="right" />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Legend />
-                <Area yAxisId="left" type="monotone" dataKey="enrollments" stackId="1" stroke="var(--color-enrollments)" fill="var(--color-enrollments)" />
-                <Area yAxisId="right" type="monotone" dataKey="payments" stackId="2" stroke="var(--color-payments)" fill="var(--color-payments)" />
+                <Area yAxisId="left" type="monotone" dataKey="enrollments" stackId="1" stroke="var(--color-enrollments)" fill="var(--color-enrollments)" name={t('pages.reportingTimeseriesEnrollmentsLabel')} />
+                <Area yAxisId="right" type="monotone" dataKey="payments" stackId="2" stroke="var(--color-payments)" fill="var(--color-payments)" name={t('pages.reportingTimeseriesPaymentsLabel')} />
               </AreaChart>
             </ChartContainer>
           ) : (
             <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">No time-series data available</p>
+              <p className="text-muted-foreground">{t('pages.reportingNoTimeseriesData')}</p>
             </div>
           )}
         </CardContent>
@@ -594,9 +595,9 @@ function AnalyticsDashboard() {
 
       {/* Student Financial Report Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Student Financial Report</CardTitle>
-          <CardDescription>Detailed financial information by student enrollment</CardDescription>
+          <CardHeader>
+          <CardTitle>{t('pages.reportingStudentFinancialReportTitle')}</CardTitle>
+          <CardDescription>{t('pages.reportingStudentFinancialReportDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           {studentFinancialLoading ? (
@@ -608,17 +609,17 @@ function AnalyticsDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Cohort</TableHead>
-                    <TableHead>Program</TableHead>
-                    <TableHead className="text-right">Total Amount</TableHead>
-                    <TableHead className="text-right">Paid</TableHead>
-                    <TableHead className="text-right">Outstanding</TableHead>
+                    <TableHead>{t('pages.reportingTableHeadStudent')}</TableHead>
+                    <TableHead>{t('pages.reportingTableHeadCohort')}</TableHead>
+                    <TableHead>{t('pages.reportingTableHeadProgram')}</TableHead>
+                    <TableHead className="text-right">{t('pages.reportingTableHeadTotalAmount')}</TableHead>
+                    <TableHead className="text-right">{t('pages.reportingTableHeadPaid')}</TableHead>
+                    <TableHead className="text-right">{t('pages.reportingTableHeadOutstanding')}</TableHead>
                     {studentFinancial.some(s => s.average_grade !== undefined) && (
-                      <TableHead className="text-right">Avg Grade</TableHead>
+                      <TableHead className="text-right">{t('pages.reportingTableHeadAvgGrade')}</TableHead>
                     )}
                     {studentFinancial.some(s => s.attendance_rate !== undefined) && (
-                      <TableHead className="text-right">Attendance</TableHead>
+                      <TableHead className="text-right">{t('pages.reportingTableHeadAttendance')}</TableHead>
                     )}
                   </TableRow>
                 </TableHeader>
@@ -654,7 +655,7 @@ function AnalyticsDashboard() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">No student financial data available</p>
+              <p className="text-muted-foreground">{t('pages.reportingNoStudentFinancialData')}</p>
             </div>
           )}
         </CardContent>
@@ -711,10 +712,8 @@ function ReportsExports() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Reports & Exports</h2>
-        <p className="text-muted-foreground">
-          Export data as CSV files for external analysis and reporting
-        </p>
+        <h2 className="text-2xl font-bold tracking-tight">{t('pages.reportingExportsTitle')}</h2>
+        <p className="text-muted-foreground">{t('pages.reportingExportsSubtitle')}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -723,13 +722,13 @@ function ReportsExports() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              Applications
+              {t('pages.reportingExportApplicationsTitle')}
             </CardTitle>
-            <CardDescription>Export all application records</CardDescription>
+            <CardDescription>{t('pages.reportingExportApplicationsDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="app-from">From Date</Label>
+              <Label htmlFor="app-from">{t('pages.reportingFromDateLabel')}</Label>
               <Input
                 id="app-from"
                 type="date"
@@ -740,7 +739,7 @@ function ReportsExports() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="app-to">To Date</Label>
+              <Label htmlFor="app-to">{t('pages.reportingToDateLabel')}</Label>
               <Input
                 id="app-to"
                 type="date"
@@ -760,12 +759,12 @@ function ReportsExports() {
               {loading === 'applications' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
+                  {t('pages.reportingExportLoading')}
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  {t('pages.reportingExportCta')}
                 </>
               )}
             </Button>
@@ -777,13 +776,13 @@ function ReportsExports() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              Enrollments
+              {t('pages.reportingExportEnrollmentsTitle')}
             </CardTitle>
-            <CardDescription>Export all enrollment records</CardDescription>
+            <CardDescription>{t('pages.reportingExportEnrollmentsDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="enr-from">From Date</Label>
+              <Label htmlFor="enr-from">{t('pages.reportingFromDateLabel')}</Label>
               <Input
                 id="enr-from"
                 type="date"
@@ -794,7 +793,7 @@ function ReportsExports() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="enr-to">To Date</Label>
+              <Label htmlFor="enr-to">{t('pages.reportingToDateLabel')}</Label>
               <Input
                 id="enr-to"
                 type="date"
@@ -814,12 +813,12 @@ function ReportsExports() {
               {loading === 'enrollments' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
+                  {t('pages.reportingExportLoading')}
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  {t('pages.reportingExportCta')}
                 </>
               )}
             </Button>
@@ -829,15 +828,15 @@ function ReportsExports() {
         {/* Attendance Export */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              Attendance
+              {t('pages.reportingExportAttendanceTitle')}
             </CardTitle>
-            <CardDescription>Export attendance records</CardDescription>
+            <CardDescription>{t('pages.reportingExportAttendanceDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="att-from">From Date</Label>
+              <Label htmlFor="att-from">{t('pages.reportingFromDateLabel')}</Label>
               <Input
                 id="att-from"
                 type="date"
@@ -848,7 +847,7 @@ function ReportsExports() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="att-to">To Date</Label>
+              <Label htmlFor="att-to">{t('pages.reportingToDateLabel')}</Label>
               <Input
                 id="att-to"
                 type="date"
@@ -868,12 +867,12 @@ function ReportsExports() {
               {loading === 'attendance' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
+                  {t('pages.reportingExportLoading')}
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  {t('pages.reportingExportCta')}
                 </>
               )}
             </Button>
@@ -885,13 +884,13 @@ function ReportsExports() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              Grades
+              {t('pages.reportingExportGradesTitle')}
             </CardTitle>
-            <CardDescription>Export grade records</CardDescription>
+            <CardDescription>{t('pages.reportingExportGradesDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="grd-from">From Date</Label>
+              <Label htmlFor="grd-from">{t('pages.reportingFromDateLabel')}</Label>
               <Input
                 id="grd-from"
                 type="date"
@@ -900,7 +899,7 @@ function ReportsExports() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="grd-to">To Date</Label>
+              <Label htmlFor="grd-to">{t('pages.reportingToDateLabel')}</Label>
               <Input
                 id="grd-to"
                 type="date"
@@ -916,12 +915,12 @@ function ReportsExports() {
               {loading === 'grades' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
+                  {t('pages.reportingExportLoading')}
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  {t('pages.reportingExportCta')}
                 </>
               )}
             </Button>
@@ -933,13 +932,13 @@ function ReportsExports() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              Certificates
+              {t('pages.reportingExportCertificatesTitle')}
             </CardTitle>
-            <CardDescription>Export certificate records</CardDescription>
+            <CardDescription>{t('pages.reportingExportCertificatesDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="cert-from">From Date</Label>
+              <Label htmlFor="cert-from">{t('pages.reportingFromDateLabel')}</Label>
               <Input
                 id="cert-from"
                 type="date"
@@ -950,7 +949,7 @@ function ReportsExports() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="cert-to">To Date</Label>
+              <Label htmlFor="cert-to">{t('pages.reportingToDateLabel')}</Label>
               <Input
                 id="cert-to"
                 type="date"
@@ -970,12 +969,12 @@ function ReportsExports() {
               {loading === 'certificates' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
+                  {t('pages.reportingExportLoading')}
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  {t('pages.reportingExportCta')}
                 </>
               )}
             </Button>
@@ -987,13 +986,13 @@ function ReportsExports() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              Payroll
+              {t('pages.reportingExportPayrollTitle')}
             </CardTitle>
-            <CardDescription>Export payroll data for lecturers</CardDescription>
+            <CardDescription>{t('pages.reportingExportPayrollDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="pay-from">From Date</Label>
+              <Label htmlFor="pay-from">{t('pages.reportingFromDateLabel')}</Label>
               <Input
                 id="pay-from"
                 type="date"

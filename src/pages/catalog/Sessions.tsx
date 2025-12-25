@@ -19,6 +19,7 @@ import {
 } from '@/api/endpoints/catalog';
 import { SessionDto } from '@/api/types';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -48,6 +49,7 @@ import { exampleSessions } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 
 export default function Sessions() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -292,8 +294,8 @@ export default function Sessions() {
     <div className="space-y-6">
       <div className="flex items-center justify-between sessions_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Sessions</h2>
-          <p className="text-muted-foreground">Manage class sessions and schedules</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.catalogSessionsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.catalogSessionsSubtitle')}</p>
         </div>
         <div className="flex gap-2 sessions_calendar_btns">
           <Button
@@ -302,7 +304,7 @@ export default function Sessions() {
             onClick={() => setViewMode('list')}
           >
             <List className="mr-2 h-4 w-4" />
-            List
+            {t('pages.catalogSessionsDurationLabel')}
           </Button>
           <Button
             variant={viewMode === 'calendar' ? 'default' : 'outline'}
@@ -310,11 +312,11 @@ export default function Sessions() {
             onClick={() => setViewMode('calendar')}
           >
             <Cal className="mr-2 h-4 w-4" />
-            Calendar
+            {t('pages.catalogSessionsTitle')}
           </Button>
           <Button onClick={handleOpenCreate} className='create_sessions_btn'>
             <Plus className="mr-2 h-4 w-4" />
-            Add Session
+            {t('pages.catalogSessionsAddSession')}
           </Button>
         </div>
       </div>
@@ -323,7 +325,7 @@ export default function Sessions() {
         <div className="relative flex-1  sessions_input">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search sessions..."
+            placeholder={t('pages.catalogSessionsSearchPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -331,10 +333,10 @@ export default function Sessions() {
         </div>
         <Select value={selectedCohort} onValueChange={setSelectedCohort}>
           <SelectTrigger className="w-[200px] sessions_select">
-            <SelectValue placeholder="Filter by cohort" />
+            <SelectValue placeholder={t('pages.catalogSessionsFilterCohortPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Cohorts</SelectItem>
+            <SelectItem value="all">{t('pages.catalogSessionsFilterAllCohorts')}</SelectItem>
             {cohorts?.map((cohort) => (
               <SelectItem key={cohort.id} value={cohort.id}>
                 {cohort.name}

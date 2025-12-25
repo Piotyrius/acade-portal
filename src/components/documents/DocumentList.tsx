@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DocumentDto, deleteDocument, downloadDocument, downloadBlob } from '@/api/endpoints/documents';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +37,7 @@ interface DocumentListProps {
 }
 
 export function DocumentList({ documents, isLoading }: DocumentListProps) {
+    const { t } = useTranslation('common');
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
@@ -48,7 +50,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
         mutationFn: deleteDocument,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['documents'] });
-            toast({ title: 'Success', description: 'Document deleted successfully' });
+            toast({ title: t('pages.documentsDeletedTitle', 'Success'), description: t('pages.documentsDeletedDescription', 'Document deleted successfully') });
         },
         onError: (error) => {
             toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
@@ -62,18 +64,18 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
             if (doc) {
                 const filename = getFilename(doc);
                 downloadBlob(blob, filename);
-                toast({ title: 'Success', description: 'Document downloaded successfully' });
+                toast({ title: t('pages.documentsDownloadTitle', 'Success'), description: t('pages.documentsDownloadDescription', 'Document downloaded successfully') });
             }
             setDownloadingId(null);
         },
         onError: (error) => {
-            toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+            toast({ title: t('pages.documentsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
             setDownloadingId(null);
         },
     });
 
     const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this document?')) {
+        if (confirm(t('pages.documentsDeleteConfirm', 'Are you sure you want to delete this document?'))) {
             deleteMutation.mutate(id);
         }
     };
@@ -108,15 +110,15 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
     };
 
     const getCategoryFromDoc = (doc: DocumentDto) => {
-        if (doc.kind === 'CONSENT') return 'Consent Form';
-        if (doc.kind === 'ID') return 'ID Document';
+        if (doc.kind === 'CONSENT') return t('pages.documentsCategory_CONSENT', 'Consent Form');
+        if (doc.kind === 'ID') return t('pages.documentsCategory_ID', 'ID Document');
 
-        if (doc.description.startsWith('[Student Doc]')) return 'Student Document';
-        if (doc.description.startsWith('[Course Material]')) return 'Course Material';
-        if (doc.description.startsWith('[Admin]')) return 'Administrative';
-        if (doc.description.startsWith('[Certificate]')) return 'Certificate';
+        if (doc.description.startsWith('[Student Doc]')) return t('pages.documentsCategory_STUDENT_DOC', 'Student Document');
+        if (doc.description.startsWith('[Course Material]')) return t('pages.documentsCategory_COURSE_MATERIAL', 'Course Material');
+        if (doc.description.startsWith('[Admin]')) return t('pages.documentsCategory_ADMINISTRATIVE', 'Administrative');
+        if (doc.description.startsWith('[Certificate]')) return t('pages.documentsCategory_CERTIFICATE', 'Certificate');
 
-        return 'Other';
+        return t('pages.documentsCategory_OTHER', 'Other');
     };
 
     const getCleanDescription = (doc: DocumentDto) => {
@@ -167,7 +169,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                 <div className="relative flex-1">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search documents..."
+                        placeholder={t('pages.documentsSearchPlaceholder', 'Search documents...')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-8"
@@ -175,28 +177,28 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                 </div>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter by Category" />
+                        <SelectValue placeholder={t('pages.documentsFilterCategoryPlaceholder', 'Filter by Category')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="STUDENT_DOC">Student Document</SelectItem>
-                        <SelectItem value="COURSE_MATERIAL">Course Material</SelectItem>
-                        <SelectItem value="ADMINISTRATIVE">Administrative</SelectItem>
-                        <SelectItem value="CERTIFICATE">Certificate</SelectItem>
-                        <SelectItem value="CONSENT">Consent Form</SelectItem>
-                        <SelectItem value="ID">ID Document</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
+                        <SelectItem value="all">{t('pages.documentsFilterAllCategories', 'All Categories')}</SelectItem>
+                        <SelectItem value="STUDENT_DOC">{t('pages.documentsCategory_STUDENT_DOC', 'Student Document')}</SelectItem>
+                        <SelectItem value="COURSE_MATERIAL">{t('pages.documentsCategory_COURSE_MATERIAL', 'Course Material')}</SelectItem>
+                        <SelectItem value="ADMINISTRATIVE">{t('pages.documentsCategory_ADMINISTRATIVE', 'Administrative')}</SelectItem>
+                        <SelectItem value="CERTIFICATE">{t('pages.documentsCategory_CERTIFICATE', 'Certificate')}</SelectItem>
+                        <SelectItem value="CONSENT">{t('pages.documentsCategory_CONSENT', 'Consent Form')}</SelectItem>
+                        <SelectItem value="ID">{t('pages.documentsCategory_ID', 'ID Document')}</SelectItem>
+                        <SelectItem value="OTHER">{t('pages.documentsCategory_OTHER', 'Other')}</SelectItem>
                     </SelectContent>
                 </Select>
                 <Select value={visibilityFilter} onValueChange={setVisibilityFilter}>
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter by Visibility" />
+                        <SelectValue placeholder={t('pages.documentsFilterVisibilityPlaceholder', 'Filter by Visibility')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Visibility</SelectItem>
-                        <SelectItem value="PRIVATE">Private</SelectItem>
-                        <SelectItem value="LECTURER">Lecturer</SelectItem>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
+                        <SelectItem value="all">{t('pages.documentsFilterAllVisibility', 'All Visibility')}</SelectItem>
+                        <SelectItem value="PRIVATE">{t('pages.documentsVisibility_Private', 'Private')}</SelectItem>
+                        <SelectItem value="LECTURER">{t('pages.documentsVisibility_Lecturer', 'Lecturer')}</SelectItem>
+                        <SelectItem value="ADMIN">{t('pages.documentsVisibility_Admin', 'Admin')}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -205,24 +207,24 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Visibility</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>{t('pages.documentsTableHeadCategory', 'Category')}</TableHead>
+                            <TableHead>{t('pages.documentsTableHeadDescription', 'Description')}</TableHead>
+                            <TableHead>{t('pages.documentsTableHeadVisibility', 'Visibility')}</TableHead>
+                            <TableHead>{t('pages.documentsTableHeadDate', 'Date')}</TableHead>
+                            <TableHead className="text-right">{t('pages.documentsTableHeadActions', 'Actions')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8">
-                                    Loading documents...
+                                    {t('pages.documentsLoading', 'Loading documents...')}
                                 </TableCell>
                             </TableRow>
                         ) : filteredDocuments.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    No documents found
+                                    {t('pages.documentsNoResults', 'No documents found')}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -250,7 +252,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => setPreviewDoc(doc)}
-                                                    title="Preview"
+                                                    title={t('pages.documentsPreviewAction', 'Preview')}
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
@@ -260,7 +262,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                                 size="icon"
                                                 onClick={() => handleDownload(doc)}
                                                 disabled={downloadingId === doc.id}
-                                                title="Download"
+                                                title={t('pages.documentsDownloadAction', 'Download')}
                                             >
                                                 {downloadingId === doc.id ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -273,7 +275,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                                 size="icon"
                                                 onClick={() => handleDelete(doc.id)}
                                                 className="text-destructive hover:text-destructive"
-                                                title="Delete"
+                                                title={t('pages.documentsDeleteAction', 'Delete')}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
@@ -289,7 +291,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
             <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
                 <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                     <DialogHeader>
-                        <DialogTitle>Document Preview</DialogTitle>
+                        <DialogTitle>{t('pages.documentsPreviewTitle', 'Document Preview')}</DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 min-h-0 bg-muted/20 rounded-md overflow-hidden flex items-center justify-center">
                         {previewDoc && (
@@ -298,12 +300,12 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                     <iframe
                                         src={previewDoc.file}
                                         className="w-full h-full"
-                                        title="PDF Preview"
+                                        title={t('pages.documentsPdfPreviewTitle', 'PDF Preview')}
                                     />
                                 ) : (
                                     <img
                                         src={previewDoc.file}
-                                        alt="Preview"
+                                        alt={t('pages.documentsImagePreviewAlt', 'Preview')}
                                         className="max-w-full max-h-full object-contain"
                                     />
                                 )}
@@ -318,12 +320,12 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                             {previewDoc && downloadingId === previewDoc.id ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Downloading...
+                                    {t('pages.documentsDownloading', 'Downloading...')}
                                 </>
                             ) : (
                                 <>
                                     <Download className="mr-2 h-4 w-4" />
-                                    Download Original
+                                    {t('pages.documentsDownloadOriginal', 'Download Original')}
                                 </>
                             )}
                         </Button>

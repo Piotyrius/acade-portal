@@ -12,6 +12,7 @@ import { getSubmissions, createSubmission, updateSubmission, SubmissionDto } fro
 import { getAssessments } from '@/api/endpoints/assessment';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -25,6 +26,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Submissions() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -141,16 +143,16 @@ export default function Submissions() {
     <div className="space-y-6">
       <div className="flex items-center justify-between submissions_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Submissions</h2>
-          <p className="text-muted-foreground">View and manage assessment submissions</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.assessmentSubmissionsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.assessmentSubmissionsSubtitle') || t('pages.assessmentSubmissionsSubtitle')}</p>
         </div>
         <div className="flex gap-2 select_wrapper">
           <Select value={selectedAssessment} onValueChange={setSelectedAssessment}>
             <SelectTrigger>
-              <SelectValue placeholder="Filter by assessment" />
+              <SelectValue placeholder={t('pages.assessmentSubmissionsFilterPlaceholder') || t('assessmentSubmissionsFilterPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Assessments</SelectItem>
+              <SelectItem value="all">{t('pages.assessmentSubmissionsAllAssessments') || t('assessmentSubmissionsAllAssessments')}</SelectItem>
               {assessments.map((assessment: any) => (
                 <SelectItem key={assessment.id} value={assessment.id}>
                   {assessment.title}
@@ -162,7 +164,7 @@ export default function Submissions() {
             {user?.role === 'STUDENT' && (
               <Button onClick={() => setIsDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Submit
+                {t('pages.assessmentSubmitButton') || t('assessmentSubmitButton')}
               </Button>
             )}
           </div>
@@ -171,13 +173,13 @@ export default function Submissions() {
 
       {submissions.length === 0 && <ExampleBanner />}
       <Card>
-        <CardHeader>
-          <CardTitle>Submissions</CardTitle>
+          <CardHeader>
+          <CardTitle>{t('pages.assessmentSubmissionsTitle') || t('assessmentSubmissionsTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredSubmissions.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No submissions found</p>
+              {filteredSubmissions.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">{t('pages.assessmentSubmissionsEmpty') || t('assessmentSubmissionsEmpty')}</p>
             ) : (
               filteredSubmissions.map((submission: any) => {
                 const assessment = assessments.find((a: any) => a.id === submission.assessment);
@@ -188,7 +190,7 @@ export default function Submissions() {
                         <FileText className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{assessment?.title || 'Unknown Assessment'}</p>
+                        <p className="font-medium">{assessment?.title || t('pages.catalogCoursesUnknownProgram') || 'Unknown Assessment'}</p>
                         <p className="text-sm text-muted-foreground">
                           Student: {submission.student_name || submission.student}
                         </p>
@@ -206,7 +208,7 @@ export default function Submissions() {
                         <Button variant="outline" size="sm" asChild>
                           <a href={submission.file} download target="_blank" rel="noopener noreferrer">
                             <Download className="mr-2 h-4 w-4" />
-                            Download
+                            {t('pages.catalogCoursesSave') || 'Download'}
                           </a>
                         </Button>
                       )}
@@ -223,9 +225,9 @@ export default function Submissions() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Submit Assessment</DialogTitle>
-              <DialogDescription>Submit your work for an assessment</DialogDescription>
-            </DialogHeader>
+                <DialogTitle>{t('pages.assessmentSubmitDialogTitle') || t('assessmentSubmitDialogTitle')}</DialogTitle>
+                <DialogDescription>{t('pages.assessmentSubmitDialogDescription') || t('assessmentSubmitDialogDescription')}</DialogDescription>
+              </DialogHeader>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -235,7 +237,7 @@ export default function Submissions() {
                     onValueChange={(value) => setFormData({ ...formData, assessment: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select assessment" />
+                      <SelectValue placeholder={t('pages.assessmentSubmissionsFilterPlaceholder') || t('assessmentSubmissionsFilterPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {assessments
@@ -250,12 +252,12 @@ export default function Submissions() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="text">Text Response</Label>
-                  <Textarea
+                    <Textarea
                     id="text"
                     value={formData.text}
                     onChange={(e) => setFormData({ ...formData, text: e.target.value })}
                     rows={5}
-                    placeholder="Enter your submission text..."
+                    placeholder={t('pages.assessmentSubmitDialogDescription') || 'Enter your submission text...'}
                   />
                 </div>
                 <div className="space-y-2">
@@ -325,10 +327,10 @@ export default function Submissions() {
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
+                  {t('catalogCoursesCancel')}
                 </Button>
                 <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Submitting...' : 'Submit'}
+                  {createMutation.isPending ? (t('gradesModerationProcessing') || 'Submitting...') : (t('pages.assessmentSubmitButton') || t('assessmentSubmitButton'))}
                 </Button>
               </DialogFooter>
             </form>

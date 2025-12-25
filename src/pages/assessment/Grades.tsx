@@ -14,6 +14,7 @@ import { getUsers } from '@/api/endpoints/auth';
 import { getEnrollments } from '@/api/endpoints/admissions';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -27,6 +28,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Grades() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -243,8 +245,8 @@ export default function Grades() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">My Grades</h2>
-          <p className="text-muted-foreground">View your assessment grades</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.gradesMyTitle') || t('gradesMyTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.gradesMySubtitle') || t('gradesMySubtitle')}</p>
         </div>
         <Card>
           <CardHeader>
@@ -253,7 +255,7 @@ export default function Grades() {
           <CardContent>
             <div className="space-y-4">
               {studentGrades.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No grades found</p>
+                <p className="text-muted-foreground text-center py-8">{t('pages.gradesNoGrades') || t('gradesNoGrades')}</p>
               ) : (
                 studentGrades.map((grade: any) => {
                   const assessment = assessments.find((a: any) => a.id === grade.assessment);
@@ -288,16 +290,16 @@ export default function Grades() {
     <div className="space-y-6">
       <div className="flex items-center justify-between grade_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Grades</h2>
-          <p className="text-muted-foreground">Manage assessment grades</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.gradesTitle') || t('gradesTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.gradesSubtitle') || t('gradesSubtitle')}</p>
         </div>
         <div className="flex gap-2 grade_btn_wrapper">
           <Select value={selectedAssessment} onValueChange={setSelectedAssessment}>
             <SelectTrigger className="grade_select">
-              <SelectValue placeholder="Filter by assessment" />
+              <SelectValue placeholder={t('pages.gradesFilterPlaceholder') || t('gradesFilterPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Assessments</SelectItem>
+              <SelectItem value="all">{t('pages.assessmentSubmissionsAllAssessments') || t('assessmentSubmissionsAllAssessments')}</SelectItem>
               {assessments.map((assessment: any) => (
                 <SelectItem key={assessment.id} value={assessment.id}>
                   {assessment.title}
@@ -321,7 +323,7 @@ export default function Grades() {
           <div className="flex gap-2 add_grade_btn_wrapper">
             <Button onClick={() => handleOpenDialog()} className='add_grade_btn'>
               <Plus className="mr-2 h-4 w-4" />
-              Add Grade
+              {t('pages.gradesAddButton') || t('gradesAddButton')}
             </Button>
           </div>
         </div>
@@ -335,7 +337,7 @@ export default function Grades() {
         <CardContent>
           <div className="space-y-4">
             {filteredGrades.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No grades found</p>
+              <p className="text-muted-foreground text-center py-8">{t('pages.gradesNoGrades') || t('gradesNoGrades')}</p>
             ) : (
               filteredGrades.map((grade: any) => {
                 const assessment = assessments.find((a: any) => a.id === grade.assessment);
@@ -420,9 +422,9 @@ export default function Grades() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingGrade ? 'Edit Grade' : 'Add Grade'}</DialogTitle>
+            <DialogTitle>{editingGrade ? (t('pages.gradesDialogEditTitle') || t('gradesDialogEditTitle')) : (t('pages.gradesDialogCreateTitle') || t('gradesDialogCreateTitle'))}</DialogTitle>
             <DialogDescription>
-              {editingGrade ? 'Update the grade details' : 'Create a new grade for a student'}
+              {editingGrade ? (t('pages.gradesDialogEditDescription') || t('gradesDialogEditDescription')) : (t('pages.gradesDialogCreateDescription') || t('gradesDialogCreateDescription'))}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
@@ -576,7 +578,7 @@ export default function Grades() {
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsModerationDialogOpen(false)}>
-              Cancel
+              {t('catalogCoursesCancel')}
             </Button>
             <Button
               onClick={handleModerate}
@@ -584,10 +586,10 @@ export default function Grades() {
               variant={moderationAction === 'reject' ? 'destructive' : 'default'}
             >
               {moderateMutation.isPending
-                ? 'Processing...'
+                ? (t('pages.gradesModerationProcessing') || t('gradesModerationProcessing'))
                 : moderationAction === 'approve'
-                ? 'Approve'
-                : 'Reject'}
+                ? (t('pages.gradesModerationApprove') || t('gradesModerationApprove'))
+                : (t('pages.gradesModerationReject') || t('gradesModerationReject'))}
             </Button>
           </DialogFooter>
         </DialogContent>

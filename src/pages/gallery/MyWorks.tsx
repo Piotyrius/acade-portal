@@ -19,6 +19,7 @@ import {
 } from '@/api/endpoints/gallery';
 import { WorkDto } from '@/api/types';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -33,6 +34,7 @@ import { useAuthStore } from '@/store/authStore';
 import api from '@/api/client';
 
 export default function MyWorks() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['my-works'], queryFn: getMyWorks });
@@ -70,35 +72,35 @@ const displayWorks: WorkDto[] =
     mutationFn: (payload: { owner: string; title: string; description?: string; file: File }) =>
       uploadWork(payload),
     onSuccess: () => {
-      toast({ title: 'Uploaded', description: 'Work uploaded as draft' });
+      toast({ title: t('pages.galleryUploadedTitle', 'Uploaded'), description: t('pages.galleryUploadedDescription', 'Work uploaded as draft') });
       setTitle('');
       setDescription('');
       setFile(null);
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
     onError: (e: any) =>
-      toast({ title: 'Upload failed', description: getErrorMessage(e), variant: 'destructive' }),
+      toast({ title: t('pages.galleryUploadFailedTitle', 'Upload failed'), description: getErrorMessage(e), variant: 'destructive' }),
   });
 
   // Publish/unpublish/visibility/update/delete mutations (unchanged)
   const publishMut = useMutation({
     mutationFn: (id: string) => publishWork(id),
     onSuccess: () => {
-      toast({ title: 'Published', description: 'Work is now visible' });
+      toast({ title: t('pages.galleryPublishedTitle', 'Published'), description: t('pages.galleryPublishedDescription', 'Work is now visible') });
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
     onError: (e: any) =>
-      toast({ title: 'Publish failed', description: getErrorMessage(e), variant: 'destructive' }),
+      toast({ title: t('pages.galleryPublishFailedTitle', 'Publish failed'), description: getErrorMessage(e), variant: 'destructive' }),
   });
 
   const unpublishMut = useMutation({
     mutationFn: (id: string) => unpublishWork(id),
     onSuccess: () => {
-      toast({ title: 'Unpublished', description: 'Work unpublished successfully' });
+      toast({ title: t('pages.galleryUnpublishedTitle', 'Unpublished'), description: t('pages.galleryUnpublishedDescription', 'Work unpublished successfully') });
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
     onError: (e: any) =>
-      toast({ title: 'Unpublish failed', description: getErrorMessage(e), variant: 'destructive' }),
+      toast({ title: t('pages.galleryUnpublishFailedTitle', 'Unpublish failed'), description: getErrorMessage(e), variant: 'destructive' }),
   });
 
   const toggleVisibilityMut = useMutation({
@@ -109,13 +111,15 @@ const displayWorks: WorkDto[] =
     },
     onSuccess: (_, variables) => {
       toast({
-        title: 'Visibility Updated',
-        description: `Work is now ${variables.isPublic ? 'public' : 'private'}`,
+        title: t('pages.galleryVisibilityUpdatedTitle', 'Visibility Updated'),
+        description: t('pages.galleryVisibilityUpdatedDescription', 'Work is now {{state}}', {
+          state: variables.isPublic ? t('pages.galleryPublicLabel', 'Public') : t('pages.galleryPrivateLabel', 'Private'),
+        }),
       });
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
     onError: (e: any) => {
-      toast({ title: 'Update failed', description: getErrorMessage(e), variant: 'destructive' });
+      toast({ title: t('pages.galleryUpdateFailedTitle', 'Update failed'), description: getErrorMessage(e), variant: 'destructive' });
     },
     onSettled: () => {
       setTogglingWorkId(null);
@@ -127,23 +131,23 @@ const displayWorks: WorkDto[] =
     mutationFn: ({ id, data }: { id: string; data: { title: string; description?: string } }) =>
       api.patch(`/api/v1/gallery/works/${id}/`, data),
     onSuccess: () => {
-      toast({ title: 'Updated', description: 'Work updated successfully' });
+      toast({ title: t('pages.galleryUpdatedTitle', 'Updated'), description: t('pages.galleryUpdatedDescription', 'Work updated successfully') });
       qc.invalidateQueries({ queryKey: ['my-works'] });
       setIsEditDialogOpen(false);
       setEditingWork(null);
     },
     onError: (e: any) =>
-      toast({ title: 'Update failed', description: getErrorMessage(e), variant: 'destructive' }),
+      toast({ title: t('pages.galleryUpdateFailedTitle', 'Update failed'), description: getErrorMessage(e), variant: 'destructive' }),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id: string) => api.delete(`/api/v1/gallery/works/${id}/`),
     onSuccess: () => {
-      toast({ title: 'Deleted', description: 'Work deleted successfully' });
+      toast({ title: t('pages.galleryDeletedTitle', 'Deleted'), description: t('pages.galleryDeletedDescription', 'Work deleted successfully') });
       qc.invalidateQueries({ queryKey: ['my-works'] });
     },
     onError: (e: any) =>
-      toast({ title: 'Delete failed', description: getErrorMessage(e), variant: 'destructive' }),
+      toast({ title: t('pages.galleryDeleteFailedTitle', 'Delete failed'), description: getErrorMessage(e), variant: 'destructive' }),
   });
 
   const handleOpenEdit = (work: WorkDto) => {
@@ -159,9 +163,24 @@ const displayWorks: WorkDto[] =
   };
 
   const handleDeleteWork = (id: string) => {
-    if (confirm('Are you sure you want to delete this work? This action cannot be undone.')) {
+    if (
+      confirm(
+        t('pages.galleryDeleteConfirm', 'Are you sure you want to delete this work? This action cannot be undone.')
+      )
+    ) {
       deleteMut.mutate(id);
     }
+  };
+
+  // Cloudinary: if URL points to a raw resource (no image extension), try to request an automatic format
+  const getPreviewUrl = (url?: string) => {
+    if (!url) return '';
+    const lower = url.split('?')[0].toLowerCase();
+    if (/(\.jpg|\.jpeg|\.png|\.webp|\.gif|\.svg)$/i.test(lower)) return url;
+    // If Cloudinary URL contains /upload/, insert f_auto to request an image-compatible format
+    if (url.includes('/upload/')) return url.replace('/upload/', '/upload/f_auto/');
+    // fallback: return original URL
+    return url;
   };
   
 
@@ -170,22 +189,22 @@ const displayWorks: WorkDto[] =
       {/* Header and upload form */}
       <div className="flex items-center justify-between gallery_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">My Works</h2>
-          <p className="text-muted-foreground">Upload and manage your project portfolio</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.galleryMyWorksTitle', 'My Works')}</h2>
+          <p className="text-muted-foreground">{t('pages.galleryUploadSubtitle', 'Upload and manage your project portfolio')}</p>
         </div>
         <div className="flex items-end gap-2 header_upload_btns">
           <div className="space-y-1">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t('pages.galleryFieldTitle', 'Title')}</Label>
             <Input
               id="title"
               className="gallery_add_btn"
-              placeholder="Project title"
+              placeholder={t('pages.galleryFieldTitlePlaceholder', 'Project title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="file">File</Label>
+            <Label htmlFor="file">{t('pages.galleryFieldFile', 'File')}</Label>
             <Input
               id="file"
               type="file"
@@ -203,7 +222,7 @@ const displayWorks: WorkDto[] =
             disabled={!file || !title || uploadMut.isPending}
           >
             <Plus className="mr-2 h-4 w-4" />
-            {uploadMut.isPending ? 'Uploading...' : 'Upload'}
+            {uploadMut.isPending ? t('pages.galleryUploading', 'Uploading...') : t('pages.galleryUploadButton', 'Upload')}
           </Button>
         </div>
       </div>
@@ -216,36 +235,27 @@ const displayWorks: WorkDto[] =
         {displayWorks.map((work: WorkDto) => (
           <Card key={work.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardHeader className="p-0">
-  <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
-    {work.media ? (
-      <img
-        src={
-          work.media_url
-        }
-        alt={work.title}
-        className="w-full h-full object-cover"
-      />
-    ) : (
-      <ImageIcon className="h-12 w-12 text-muted-foreground" />
-    )}
-  </div>
-</CardHeader>
+              <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+                {work.media || work.media_url ? (
+                  <img src={getPreviewUrl(work.media_url || work.media)} alt={work.title} className="w-full h-full object-cover" />
+                ) : (
+                  <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                )}
+              </div>
+            </CardHeader>
 
             <CardContent className="p-4">
               <CardTitle className="text-base mb-2">{work.title}</CardTitle>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Badge variant={work.status === 'PUBLISHED' ? 'default' : 'secondary'}>
-                    {work.status}
+                    {t(`pages.galleryStatus_${work.status}`, work.status)}
                   </Badge>
-                  {work.is_public && <Badge variant="outline">Public</Badge>}
+                  {work.is_public && <Badge variant="outline">{t('pages.galleryPublicBadge', 'Public')}</Badge>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label
-                    htmlFor={`visibility-${work.id}`}
-                    className="text-xs text-muted-foreground cursor-pointer"
-                  >
-                    Public
+                  <Label htmlFor={`visibility-${work.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                    {t('pages.galleryPublicLabel', 'Public')}
                   </Label>
                     <Switch
                       id={`visibility-${work.id}`}
@@ -271,7 +281,7 @@ const displayWorks: WorkDto[] =
                     onClick={() => unpublishMut.mutate(work.id)}
                     disabled={unpublishMut.isPending}
                   >
-                    {unpublishMut.isPending ? 'Unpublishing...' : 'Unpublish'}
+                    {unpublishMut.isPending ? t('pages.galleryUnpublishing', 'Unpublishing...') : t('pages.galleryUnpublish', 'Unpublish')}
                   </Button>
                 ) : (
                   <Button
@@ -280,7 +290,7 @@ const displayWorks: WorkDto[] =
                     onClick={() => publishMut.mutate(work.id)}
                     disabled={publishMut.isPending}
                   >
-                    {publishMut.isPending ? 'Publishing...' : 'Publish'}
+                    {publishMut.isPending ? t('pages.galleryPublishing', 'Publishing...') : t('pages.galleryPublish', 'Publish')}
                   </Button>
                 )}
                 <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(work)}>
@@ -304,7 +314,7 @@ const displayWorks: WorkDto[] =
       {displayWorks.length === 0 && works.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            No works yet. Upload your first project!
+            {t('pages.galleryNoWorks', 'No works yet. Upload your first project!')}
           </CardContent>
         </Card>
       )}
@@ -313,43 +323,40 @@ const displayWorks: WorkDto[] =
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Work</DialogTitle>
-            <DialogDescription>Update your work details</DialogDescription>
+            <DialogTitle>{t('pages.galleryEditTitle', 'Edit Work')}</DialogTitle>
+            <DialogDescription>{t('pages.galleryEditDescription', 'Update your work details')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-title">Title *</Label>
+              <Label htmlFor="edit-title">{t('pages.galleryFieldTitle', 'Title')} *</Label>
               <Input
                 id="edit-title"
                 value={editFormData.title}
                 onChange={(e) =>
                   setEditFormData({ ...editFormData, title: e.target.value })
                 }
-                placeholder="Work title"
+                placeholder={t('pages.galleryEditTitlePlaceholder', 'Work title')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">{t('pages.galleryFieldDescription', 'Description')}</Label>
               <Textarea
                 id="edit-description"
                 value={editFormData.description}
                 onChange={(e) =>
                   setEditFormData({ ...editFormData, description: e.target.value })
                 }
-                placeholder="Describe your work..."
+                placeholder={t('pages.galleryEditDescriptionPlaceholder', 'Describe your work...')}
                 rows={4}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+              {t('cancel', 'Cancel')}
             </Button>
-            <Button
-              onClick={handleUpdateWork}
-              disabled={!editFormData.title || updateMut.isPending}
-            >
-              {updateMut.isPending ? 'Updating...' : 'Update'}
+            <Button onClick={handleUpdateWork} disabled={!editFormData.title || updateMut.isPending}>
+              {updateMut.isPending ? t('updating', 'Updating...') : t('update', 'Update')}
             </Button>
           </DialogFooter>
         </DialogContent>

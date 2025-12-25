@@ -6,6 +6,7 @@ import { ClipboardCheck, FileCheck } from 'lucide-react';
 import Assessments from './Assessments';
 import Submissions from './Submissions';
 import Grades from './Grades';
+import { useTranslation } from 'react-i18next';
 
 export default function AssessmentUnified() {
   const [tab, setTab] = useState<'assessments' | 'submissions' | 'grades'>('assessments');
@@ -20,6 +21,8 @@ export default function AssessmentUnified() {
     }
   }, [searchParams]);
 
+  const { t } = useTranslation('common');
+
   const handleGoToAttendance = () => {
     navigate('/attendance/list');
   };
@@ -31,32 +34,31 @@ export default function AssessmentUnified() {
     setTab('grades');
   };
 
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Teaching</h2>
-          <p className="text-muted-foreground">
-            Take attendance and manage assessments, submissions, and grades.
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('layout.teaching')}</h2>
+          <p className="text-muted-foreground">{t('pages.catalogCohortsTakeAttendanceTitle')} &mdash; {t('dashboard.gradeSubmissions')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleGoToAttendance}>
             <ClipboardCheck className="mr-2 h-4 w-4" />
-            Take attendance today
+            {t('pages.catalogCohortsTakeAttendanceTitle')}
           </Button>
           <Button onClick={handleGoToGrades}>
             <FileCheck className="mr-2 h-4 w-4" />
-            Enter grades
+            {t('dashboard.gradeSubmissions')}
           </Button>
         </div>
       </div>
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="assessments">Assessments</TabsTrigger>
-          <TabsTrigger value="submissions">Submissions</TabsTrigger>
-          <TabsTrigger value="grades">Grades</TabsTrigger>
+          <TabsTrigger value="assessments">{t('assessment.tabs.assessments')}</TabsTrigger>
+          <TabsTrigger value="submissions">{t('assessment.tabs.submissions')}</TabsTrigger>
+          <TabsTrigger value="grades">{t('assessment.tabs.grades')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="assessments" className="mt-6">
