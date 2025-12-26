@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getMyPayments } from '@/api/endpoints/payments';
 import { InvoiceDto } from '@/api/endpoints/payments';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { formatCurrencyString } from '@/utils/paymentsFormatting';
 import {
   Table,
@@ -16,6 +17,7 @@ import {
 import { Loader2, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 
 export default function StudentPayments() {
+  const { t } = useTranslation('common');
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['my-payments'],
     queryFn: getMyPayments,
@@ -72,10 +74,8 @@ export default function StudentPayments() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">My Payments</h2>
-        <p className="text-muted-foreground">
-          View your invoices, payment status, and due dates
-        </p>
+        <h2 className="text-3xl font-bold tracking-tight">{t('pages.studentPaymentsTitle')}</h2>
+        <p className="text-muted-foreground">{t('pages.studentPaymentsDescription')}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -112,24 +112,24 @@ export default function StudentPayments() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Invoices</CardTitle>
-          <CardDescription>All your invoices and payment status</CardDescription>
-        </CardHeader>
+          <CardHeader>
+            <CardTitle>{t('pages.studentInvoicesTitle')}</CardTitle>
+            <CardDescription>{t('pages.studentInvoicesDescription')}</CardDescription>
+          </CardHeader>
         <CardContent>
           {invoices.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No invoices found</p>
+            <p className="text-center text-muted-foreground py-8">{t('pages.noInvoicesFound')}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Cohort</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Paid</TableHead>
-                  <TableHead>Outstanding</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('pages.table.invoiceNumber')}</TableHead>
+                  <TableHead>{t('pages.table.cohort')}</TableHead>
+                  <TableHead>{t('pages.table.totalAmount')}</TableHead>
+                  <TableHead>{t('pages.table.paid')}</TableHead>
+                  <TableHead>{t('pages.table.outstanding')}</TableHead>
+                  <TableHead>{t('pages.table.dueDate')}</TableHead>
+                  <TableHead>{t('pages.table.status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

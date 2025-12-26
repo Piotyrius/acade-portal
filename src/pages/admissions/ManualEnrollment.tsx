@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ type EnrollmentForm = {
 };
 
 export default function ManualEnrollment({ onSuccess }: { onSuccess: () => void }) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -44,15 +46,15 @@ export default function ManualEnrollment({ onSuccess }: { onSuccess: () => void 
     mutationFn: createEnrollment,
     onSuccess: () => {
       toast({
-        title: 'Success',
-        description: 'Student enrolled successfully',
+        title: t('success'),
+        description: t('pages.enrollmentsManualEnrollSuccess'),
       });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
       onSuccess();
     },
     onError: (err) =>
       toast({
-        title: 'Error',
+        title: t('error'),
         description: getErrorMessage(err),
         variant: 'destructive',
       }),
@@ -67,7 +69,7 @@ export default function ManualEnrollment({ onSuccess }: { onSuccess: () => void 
     <form className="space-y-4" onSubmit={handleSubmit}>
       <Select value={form.student} onValueChange={(v) => setForm({ ...form, student: v })}>
         <SelectTrigger>
-          <SelectValue placeholder="Select student" />
+          <SelectValue placeholder={t('pages.enrollmentsManualSelectStudent')} />
         </SelectTrigger>
         <SelectContent>
           {students.map((s: any) => (
@@ -80,7 +82,7 @@ export default function ManualEnrollment({ onSuccess }: { onSuccess: () => void 
 
       <Select value={form.cohort} onValueChange={(v) => setForm({ ...form, cohort: v })}>
         <SelectTrigger>
-          <SelectValue placeholder="Select cohort" />
+          <SelectValue placeholder={t('pages.enrollmentsManualSelectCohort')} />
         </SelectTrigger>
         <SelectContent>
           {cohorts.map((c: any) => (
@@ -92,13 +94,13 @@ export default function ManualEnrollment({ onSuccess }: { onSuccess: () => void 
       </Select>
 
       <Input
-        placeholder="Notes (optional)"
+        placeholder={t('pages.enrollmentsManualNotesPlaceholder')}
         value={form.notes}
         onChange={(e) => setForm({ ...form, notes: e.target.value })}
       />
 
       <Button type="submit" className="w-full" disabled={mutation.isPending}>
-        Enroll Student
+        {mutation.isPending ? t('creating') : t('pages.enrollmentsManualEnrollButton')}
       </Button>
     </form>
   );

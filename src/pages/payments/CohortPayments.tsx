@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import { getCohortPaymentSummary, getCohorts } from '@/api/endpoints/payments';
+import { getCohortPaymentSummary } from '@/api/endpoints/payments';
 import { getCohorts as getCohortsCatalog } from '@/api/endpoints/catalog';
 import { formatCurrencyString } from '@/utils/paymentsFormatting';
 import {
@@ -17,13 +17,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState } from 'react';
 import { Loader2, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 export default function CohortPayments() {
   const [selectedCohortId, setSelectedCohortId] = useState<string>('');
+  const { t } = useTranslation('common');
 
   const { data: cohorts = [], isLoading: cohortsLoading } = useQuery({
     queryKey: ['cohorts'],
-    queryFn: getCohortsCatalog,
+    queryFn: () => getCohortsCatalog(),
   });
 
   const { data: paymentSummary, isLoading: summaryLoading } = useQuery({
@@ -56,26 +58,24 @@ export default function CohortPayments() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Cohort Payment Summary</h2>
-        <p className="text-muted-foreground">
-          View payment status for all students in a cohort
-        </p>
+        <h2 className="text-3xl font-bold tracking-tight">{t('pages.cohortPaymentSummaryTitle')}</h2>
+        <p className="text-muted-foreground">{t('pages.cohortPaymentSummaryDescription')}</p>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Select Cohort</CardTitle>
-          <CardDescription>Choose a cohort to view payment summary</CardDescription>
+          <CardHeader>
+          <CardTitle>{t('pages.cohortSelectTitle')}</CardTitle>
+          <CardDescription>{t('pages.cohortSelectDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Select value={selectedCohortId} onValueChange={setSelectedCohortId}>
-            <SelectTrigger className="w-full max-w-md">
-              <SelectValue placeholder="Select a cohort" />
+              <SelectTrigger className="w-full max-w-md">
+              <SelectValue placeholder={t('pages.selectCohortPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {cohorts.map((cohort) => (
                 <SelectItem key={cohort.id} value={cohort.id}>
-                  {cohort.name} - {cohort.course_title || 'Course'}
+                  {cohort.name} - {cohort.course_title || t('pages.courseFallback')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -129,23 +129,23 @@ export default function CohortPayments() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Student Payments</CardTitle>
+                  <CardTitle>{t('pages.studentPaymentsTitle')}</CardTitle>
                   <CardDescription>
-                    Payment status for all students in {paymentSummary.cohort_name}
+                    {t('pages.studentPaymentsForCohort', { cohort: paymentSummary.cohort_name })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {paymentSummary.students && paymentSummary.students.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No students found</p>
+                    <p className="text-center text-muted-foreground py-8">{t('pages.noStudentsFound')}</p>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Student Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Invoice #</TableHead>
-                          <TableHead>Total Amount</TableHead>
-                          <TableHead>Paid</TableHead>
+                              <TableHead>{t('pages.table.studentName')}</TableHead>
+                              <TableHead>{t('pages.table.email')}</TableHead>
+                              <TableHead>{t('pages.table.invoiceNumber')}</TableHead>
+                              <TableHead>{t('pages.table.totalAmount')}</TableHead>
+                              <TableHead>{t('pages.table.paid')}</TableHead>
                           <TableHead>Outstanding</TableHead>
                           <TableHead>Status</TableHead>
                         </TableRow>

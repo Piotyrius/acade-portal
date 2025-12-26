@@ -27,10 +27,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Pricings() {
   const { user } = useAuthStore();
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -120,12 +122,12 @@ export default function Pricings() {
     mutationFn: createPricing,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pricings'] });
-      toast({ title: 'Success', description: 'Pricing created successfully' });
+      toast({ title: t('success'), description: t('pages.pricingCreateSuccess') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -133,13 +135,13 @@ export default function Pricings() {
     mutationFn: ({ id, data }: { id: string; data: Partial<PricingRequest> }) => updatePricing(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pricings'] });
-      toast({ title: 'Success', description: 'Pricing updated successfully' });
+      toast({ title: t('success'), description: t('pages.pricingUpdateSuccess') });
       setIsDialogOpen(false);
       setEditingPricing(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -147,10 +149,10 @@ export default function Pricings() {
     mutationFn: deletePricing,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pricings'] });
-      toast({ title: 'Success', description: 'Pricing deleted successfully' });
+      toast({ title: t('success'), description: t('pages.pricingDeleteSuccess') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -209,11 +211,7 @@ export default function Pricings() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.object_id || !formData.content_type || !formData.amount || !formData.effective_from) {
-      toast({
-        title: 'Error',
-        description: 'Object, content type, amount, and effective from date are required',
-        variant: 'destructive',
-      });
+      toast({ title: t('error'), description: t('pages.pricingFormRequired'), variant: 'destructive' });
       return;
     }
 
@@ -235,7 +233,7 @@ export default function Pricings() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this pricing?')) {
+    if (confirm(t('pages.pricingDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -252,8 +250,8 @@ export default function Pricings() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Pricings</h2>
-          <p className="text-muted-foreground">You don't have permission to view pricings</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.pricingsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.noPermissionPricings')}</p>
         </div>
       </div>
     );
@@ -272,12 +270,12 @@ export default function Pricings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Pricings</h2>
-          <p className="text-muted-foreground">Manage pricing for programs, courses, and cohorts</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.pricingsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.pricingsDescription')}</p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Pricing
+          {t('pages.createPricing')}
         </Button>
       </div>
 
@@ -288,7 +286,7 @@ export default function Pricings() {
         <CardContent>
           <div className="space-y-4">
             {pricings.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No pricings found</p>
+              <p className="text-muted-foreground text-center py-8">{t('pages.noPricingsFound')}</p>
             ) : (
               pricings.map((pricing: PricingDto) => (
                 <div
@@ -301,15 +299,15 @@ export default function Pricings() {
                         {pricing.pricing_object_name || `Object ${pricing.object_id.slice(0, 8)}`}
                       </p>
                       <Badge variant={pricing.is_active ? 'default' : 'outline'}>
-                        {pricing.is_active ? 'Active' : 'Inactive'}
+                        {pricing.is_active ? t('pages.statusActive') : t('pages.statusInactive')}
                       </Badge>
                     </div>
                     <p className="text-sm font-medium">
                       Price: {formatCurrency(pricing.amount)} {pricing.currency}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Effective from: {new Date(pricing.effective_from).toLocaleDateString()}
-                      {pricing.effective_to && ` to ${new Date(pricing.effective_to).toLocaleDateString()}`}
+                      {t('pages.effectiveFrom')}: {new Date(pricing.effective_from).toLocaleDateString()}
+                      {pricing.effective_to && ` ${t('pages.to')} ${new Date(pricing.effective_to).toLocaleDateString()}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -317,7 +315,7 @@ export default function Pricings() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenDialog(pricing)}
-                      title="Edit Pricing"
+                      title={t('pages.editPricing')}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -325,7 +323,7 @@ export default function Pricings() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(pricing.id)}
-                      title="Delete Pricing"
+                      title={t('pages.deletePricing')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -340,15 +338,15 @@ export default function Pricings() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingPricing ? 'Edit Pricing' : 'Create Pricing'}</DialogTitle>
+            <DialogTitle>{editingPricing ? t('pages.editPricing') : t('pages.createPricing')}</DialogTitle>
             <DialogDescription>
-              {editingPricing ? 'Update pricing details' : 'Create a new pricing for a program, course, or cohort'}
+              {editingPricing ? t('pages.updatePricingDetails') : t('pages.createPricingDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="object_type">Object Type *</Label>
+                <Label htmlFor="object_type">{t('pages.objectTypeLabel')}</Label>
                 <Select
                   value={formData.object_type || undefined}
                   onValueChange={(value: 'program' | 'course' | 'cohort') => {
@@ -365,17 +363,17 @@ export default function Pricings() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select object type" />
+                    <SelectValue placeholder={t('pages.selectObjectType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="program">Program</SelectItem>
-                    <SelectItem value="course">Course</SelectItem>
-                    <SelectItem value="cohort">Cohort</SelectItem>
+                    <SelectItem value="program">{t('pages.objectProgram')}</SelectItem>
+                    <SelectItem value="course">{t('pages.objectCourse')}</SelectItem>
+                    <SelectItem value="cohort">{t('pages.objectCohort')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="object_id">Object *</Label>
+                <Label htmlFor="object_id">{t('pages.objectLabel')}</Label>
                 <Select
                   value={formData.object_id || undefined}
                   onValueChange={(value) => {
@@ -391,7 +389,7 @@ export default function Pricings() {
                   disabled={!formData.object_type}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={formData.object_type ? `Select a ${formData.object_type}` : "Select object type first"} />
+                    <SelectValue placeholder={formData.object_type ? t('pages.selectObject') : t('pages.selectObjectTypeFirst')} />
                   </SelectTrigger>
                   <SelectContent>
                     {formData.object_type === 'program' && programs.length > 0 && (
@@ -419,51 +417,51 @@ export default function Pricings() {
                       ((formData.object_type === 'program' && programs.length === 0) ||
                        (formData.object_type === 'course' && courses.length === 0) ||
                        (formData.object_type === 'cohort' && cohorts.length === 0)) && (
-                      <SelectItem value="none" disabled>No {formData.object_type}s available</SelectItem>
+                      <SelectItem value="none" disabled>{t('pages.noObjectsAvailable', { type: formData.object_type })}</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="content_type">Content Type ID *</Label>
-                <Input
+                <Label htmlFor="content_type">{t('pages.contentTypeLabel')}</Label>
+                  <Input
                   id="content_type"
                   type="number"
                   value={formData.content_type}
                   onChange={(e) => setFormData({ ...formData, content_type: parseInt(e.target.value) || 0 })}
-                  placeholder="Content Type ID (auto-filled based on object type)"
+                    placeholder={t('pages.contentTypePlaceholder')}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Content Type ID: {formData.content_type || 'Not set'} (auto-filled when object type is selected)
+                  {t('pages.contentTypeInfo')}: {formData.content_type || t('dashboard.rateNotSet')} ({t('pages.autoFilledWhenObjectTypeSelected')})
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount *</Label>
+                  <Label htmlFor="amount">{t('pages.amountLabel')}</Label>
                   <Input
                     id="amount"
                     type="number"
                     step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    placeholder="0.00"
+                    placeholder={t('pages.amountPlaceholder')}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">{t('pages.currencyLabel')}</Label>
                   <Input
                     id="currency"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    placeholder="GEL"
+                    placeholder={t('pages.currencyPlaceholder')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="effective_from">Effective From *</Label>
+                  <Label htmlFor="effective_from">{t('pages.effectiveFrom')}</Label>
                   <Input
                     id="effective_from"
                     type="date"
@@ -473,7 +471,7 @@ export default function Pricings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="effective_to">Effective To</Label>
+                  <Label htmlFor="effective_to">{t('pages.effectiveTo')}</Label>
                   <Input
                     id="effective_to"
                     type="date"
@@ -491,16 +489,16 @@ export default function Pricings() {
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  Active
+                  {t('pages.active')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingPricing ? 'Update' : 'Create'}
+                {editingPricing ? t('pages.update') : t('pages.create')}
               </Button>
             </DialogFooter>
           </form>

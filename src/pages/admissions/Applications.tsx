@@ -389,7 +389,7 @@ export default function Applications() {
                         : 'secondary'
                     }
                   >
-                    {app.status}
+                    {t(`pages.admissionsStatus.${app.status}`, { defaultValue: app.status })}
                   </Badge>
 
                   {(app.status === 'NEW' || app.status === 'IN_REVIEW') && (
@@ -400,7 +400,7 @@ export default function Applications() {
                         onClick={() => handleOpenAccept(app)}
                       >
                         <Check className="h-4 w-4 mr-1" />
-                        Accept
+                        {t('pages.admissionsAcceptButton')}
                       </Button>
                       <Button
                         size="sm"
@@ -408,16 +408,16 @@ export default function Applications() {
                         onClick={() => handleReject(app.id)}
                       >
                         <X className="h-4 w-4 mr-1" />
-                        Reject
+                        {t('pages.admissionsRejectButton')}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => handleOpenEditProgram(app)}
-                        title="Change program"
+                        title={t('pages.admissionsEditProgramTitle')}
                       >
                         <Pencil className="h-4 w-4 mr-1" />
-                        Edit program
+                        {t('pages.admissionsEditProgramButton')}
                       </Button>
                     </>
                   )}
@@ -432,14 +432,12 @@ export default function Applications() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing{' '}
-            {filteredApplications.length > 0
+            {t('pages.admissionsShowing')} {filteredApplications.length > 0
               ? `${(page - 1) * pageSize + 1}-${Math.min(
                   filteredApplications.length,
                   page * pageSize
                 )}`
-              : '0'}{' '}
-            of {filteredApplications.length} applications
+              : '0'} {t('of')} {filteredApplications.length} {t('Applications')}
           </div>
           <div className="flex gap-2">
             <Button
@@ -448,7 +446,7 @@ export default function Applications() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              Previous
+              {t('previous')}
             </Button>
             <Button
               variant="outline"
@@ -456,7 +454,7 @@ export default function Applications() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >
-              Next
+              {t('next')}
             </Button>
           </div>
         </div>
@@ -478,15 +476,15 @@ export default function Applications() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Enrollment</DialogTitle>
+            <DialogTitle>{t('pages.admissionsCreateEnrollmentTitle')}</DialogTitle>
             <DialogDescription>
-              Choose a course for {selectedApp?.name}. A cohort will be automatically created if needed, and an invoice will be generated automatically.
+              {t('pages.admissionsCreateEnrollmentDescription', { name: selectedApp?.name })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Course *</Label>
+              <Label>{t('pages.admissionsCourseLabel')}</Label>
               <Select 
                 value={selectedCourse || defaultCourse} 
                 onValueChange={(value) => {
@@ -494,7 +492,7 @@ export default function Applications() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select course (defaults to first course)" />
+                  <SelectValue placeholder={t('pages.admissionsSelectCoursePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {coursesForProgram.map((c) => (
@@ -507,10 +505,10 @@ export default function Applications() {
             </div>
 
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>• A cohort will be automatically created for this course if needed</p>
-              <p>• An invoice will be automatically generated with default payment plan (Full Payment)</p>
-              <p>• Payment due date will be set to 2-3 weeks from enrollment</p>
-              <p>• You can change the course assignment later if needed (before cohort starts)</p>
+              <p>• {t('pages.admissionsAutoCreateCohort')}</p>
+              <p>• {t('pages.admissionsAutoInvoice')}</p>
+              <p>• {t('pages.admissionsPaymentDue')}</p>
+              <p>• {t('pages.admissionsCourseChangeInfo')}</p>
             </div>
           </div>
 
@@ -519,14 +517,14 @@ export default function Applications() {
               variant="outline"
               onClick={() => setAcceptDialogOpen(false)}
             >
-              Cancel
+              {t('cancel')}
             </Button>
 
             <Button
               onClick={handleAcceptAndBill}
               disabled={(!selectedCourse && !defaultCourse) || isSubmittingFlow}
             >
-              {isSubmittingFlow ? 'Creating...' : 'Create enrollment'}
+              {isSubmittingFlow ? t('creating') : t('pages.admissionsCreateEnrollmentCreateButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -545,21 +543,21 @@ export default function Applications() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit program</DialogTitle>
+            <DialogTitle>{t('pages.admissionsEditProgramTitle')}</DialogTitle>
             <DialogDescription>
-              Change the program for {editApp?.name}. Use this if the applicant chose a different track.
+              {t('pages.admissionsEditProgramDescription', { name: editApp?.name })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Program</Label>
+              <Label>{t('pages.admissionsProgramLabel')}</Label>
               <Select
                 value={editProgramId}
                 onValueChange={(value) => setEditProgramId(value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select program" />
+                  <SelectValue placeholder={t('pages.admissionsSelectProgramPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {programs.map((p) => (
@@ -577,13 +575,13 @@ export default function Applications() {
               variant="outline"
               onClick={() => setEditDialogOpen(false)}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               onClick={handleSaveEditProgram}
               disabled={!editProgramId || editProgramId === editApp?.program || updateMutation.isPending}
             >
-              Save
+              {t('pages.admissionsSave')}
             </Button>
           </DialogFooter>
         </DialogContent>

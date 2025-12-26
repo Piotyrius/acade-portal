@@ -51,6 +51,8 @@ function isPaidThisMonth(payments: PaymentDto[] | undefined): boolean {
   })
 }
 
+  const { t } = useTranslation('common');
+
 
 function EnrollmentRow({
     enrollment,
@@ -81,18 +83,18 @@ function EnrollmentRow({
       <div>
         <p className="font-medium text-sm">{enrollment.student_name}</p>
         <p className="text-xs text-muted-foreground">
-          Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+          {t('pages.enrolledOn', { date: new Date(enrollment.enrolled_at).toLocaleDateString() })}
         </p>
       </div>
 
       {/* Payment Badge */}
       <div className="flex items-center gap-2">
         {loadingInvoices || loadingPayments ? (
-          <Badge variant="outline">Checking...</Badge>
+          <Badge variant="outline">{t('pages.checking')}</Badge>
         ) : paid ? (
-          <Badge className="bg-green-600 text-white">Paid</Badge>
+          <Badge className="bg-green-600 text-white">{t('pages.paid')}</Badge>
         ) : (
-          <Badge variant="destructive">Not Paid</Badge>
+          <Badge variant="destructive">{t('pages.notPaid')}</Badge>
         )}
 
         {/* Enrollment Status Badge */}
@@ -158,7 +160,7 @@ export default function Cohorts() {
     mutationFn: createCohort,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: 'Success', description: 'Cohort created successfully' });
+      toast({ title: t('success'), description: t('pages.catalogCohortsCreateSuccess') });
       setIsDialogOpen(false);
       resetForm();
     },
@@ -171,7 +173,7 @@ export default function Cohorts() {
     mutationFn: ({ id, data }: { id: string; data: Partial<CohortDto> }) => updateCohort(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: 'Success', description: 'Cohort updated successfully' });
+      toast({ title: t('success'), description: t('pages.catalogCohortsUpdateSuccess') });
       setIsDialogOpen(false);
       setEditingCohort(null);
       resetForm();
@@ -185,7 +187,7 @@ export default function Cohorts() {
     mutationFn: deleteCohort,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: 'Success', description: 'Cohort deleted successfully' });
+      toast({ title: t('success'), description: t('pages.catalogCohortsDeleteSuccess') });
     },
     onError: (error) => {
       toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
@@ -198,8 +200,8 @@ export default function Cohorts() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
       toast({
-        title: 'Success',
-        description: `Generated ${data.created} sessions successfully`,
+        title: t('success'),
+        description: t('pages.catalogProgramsGenerateSessionsSuccess', { count: data.created }),
       });
       setIsSessionDialogOpen(false);
       setSelectedCohort(null);
@@ -281,7 +283,7 @@ export default function Cohorts() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this cohort?')) {
+    if (confirm(t('pages.catalogCohortsDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -475,7 +477,7 @@ export default function Cohorts() {
                     className='cohort_delete_btn'
                     size="sm"
                     onClick={() => handleOpenGenerateSessions(cohort)}
-                    title="Generate Sessions"
+                    title={t('pages.catalogSessionsGenerateTitle')}
                   >
                     <Calendar className="h-4 w-4" />
                   </Button>
@@ -493,14 +495,14 @@ export default function Cohorts() {
             {expandedCohortId === cohort.id && (
               <CardContent>
                 <div className="border-t pt-4">
-                  <h4 className="text-sm font-semibold mb-3">Enrolled Students</h4>
+                  <h4 className="text-sm font-semibold mb-3">{t('pages.catalogCohortsEnrolledStudentsTitle')}</h4>
                   {isLoadingEnrollments ? (
                     <div className="space-y-2">
                       <div className="h-12 bg-muted animate-pulse rounded" />
                       <div className="h-12 bg-muted animate-pulse rounded" />
                     </div>
                   ) : cohortEnrollments.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">No students enrolled yet</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">{t('pages.catalogCohortsStudentsNone')}</p>
                   ) : (
                     <div className="space-y-2">
                       {cohortEnrollments.map((enrollment: EnrollmentDto) => (
@@ -522,7 +524,7 @@ export default function Cohorts() {
       {filteredCohorts.length === 0 && cohorts.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            {searchTerm ? 'No cohorts found matching your search' : 'No cohorts yet. Create your first cohort!'}
+            {searchTerm ? t('pages.catalogCohortsNoResultsSearch') : t('pages.catalogCohortsNoCohortsDefault')}
           </CardContent>
         </Card>
       )}
@@ -531,21 +533,21 @@ export default function Cohorts() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingCohort ? 'Edit Cohort' : 'Create Cohort'}</DialogTitle>
+            <DialogTitle>{editingCohort ? t('pages.catalogCohortsDialogEditTitle') : t('pages.catalogCohortsDialogCreateTitle')}</DialogTitle>
             <DialogDescription>
-              {editingCohort ? 'Update cohort details' : 'Add a new student cohort'}
+              {editingCohort ? t('pages.catalogCohortsDialogEditDescription') : t('pages.catalogCohortsDialogCreateDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="course">Course *</Label>
+                <Label htmlFor="course">{t('pages.catalogCohortsFieldCourse')} *</Label>
                 <Select
                   value={formData.course}
                   onValueChange={(value) => setFormData({ ...formData, course: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select course" />
+                    <SelectValue placeholder={t('pages.catalogCohortsFieldCoursePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {courses.map((c) => (
@@ -557,7 +559,7 @@ export default function Cohorts() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="name">Cohort Name *</Label>
+                <Label htmlFor="name">{t('pages.catalogCohortsFieldName')} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -567,7 +569,7 @@ export default function Cohorts() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start_date">Start Date *</Label>
+                  <Label htmlFor="start_date">{t('pages.catalogCohortsFieldStartDate')} *</Label>
                   <Input
                     id="start_date"
                     type="date"
@@ -577,7 +579,7 @@ export default function Cohorts() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="end_date">End Date *</Label>
+                  <Label htmlFor="end_date">{t('pages.catalogCohortsFieldEndDate')} *</Label>
                   <Input
                     id="end_date"
                     type="date"
@@ -589,7 +591,7 @@ export default function Cohorts() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="capacity">Capacity *</Label>
+                  <Label htmlFor="capacity">{t('pages.catalogCohortsFieldCapacity')} *</Label>
                   <Input
                     id="capacity"
                     type="number"
@@ -600,7 +602,7 @@ export default function Cohorts() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status *</Label>
+                  <Label htmlFor="status">{t('pages.catalogCohortsFieldStatus')} *</Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value) => setFormData({ ...formData, status: value as CohortDto['status'] })}
@@ -609,23 +611,23 @@ export default function Cohorts() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PLANNED">Planned</SelectItem>
-                      <SelectItem value="ENROLLING">Enrolling</SelectItem>
-                      <SelectItem value="ACTIVE">Active</SelectItem>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
-                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                        <SelectItem value="PLANNED">{t('pages.catalogCohortsStatusPlanned')}</SelectItem>
+                        <SelectItem value="ENROLLING">{t('pages.catalogCohortsStatusEnrolling')}</SelectItem>
+                        <SelectItem value="ACTIVE">{t('pages.catalogCohortsStatusActive')}</SelectItem>
+                        <SelectItem value="COMPLETED">{t('pages.catalogCohortsStatusCompleted')}</SelectItem>
+                        <SelectItem value="CANCELLED">{t('pages.catalogCohortsStatusCancelled')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingCohort ? 'Update' : 'Create'}
-              </Button>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  {t('cancel')}
+                </Button>
+                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {editingCohort ? t('pages.catalogCohortsDialogUpdateButton') : t('pages.catalogCohortsDialogCreateButton')}
+                </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -635,25 +637,23 @@ export default function Cohorts() {
       <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Generate Sessions</DialogTitle>
+            <DialogTitle>{t('pages.catalogSessionsGenerateTitle')}</DialogTitle>
             <DialogDescription>
-              Generate recurring sessions for {selectedCohort?.name}
+              {t('pages.catalogSessionsGenerateDescription', { name: selectedCohort?.name })}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleGenerateSessions}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="pattern">Pattern * (e.g., MON,WED,FRI or TUE,THU)</Label>
+                <Label htmlFor="pattern">{t('pages.catalogSessionsPatternLabel')} *</Label>
                 <Input
                   id="pattern"
-                  placeholder="MON,WED,FRI"
+                  placeholder={t('pages.catalogSessionsPatternPlaceholder')}
                   value={sessionFormData.pattern}
                   onChange={(e) => setSessionFormData({ ...sessionFormData, pattern: e.target.value.toUpperCase() })}
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Use day abbreviations: MON, TUE, WED, THU, FRI, SAT, SUN
-                </p>
+                <p className="text-xs text-muted-foreground">{t('pages.catalogSessionsPatternHelper')}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -680,10 +680,10 @@ export default function Cohorts() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsSessionDialogOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={generateSessionsMutation.isPending}>
-                Generate Sessions
+                {t('pages.catalogSessionsGenerateButton')}
               </Button>
             </DialogFooter>
           </form>

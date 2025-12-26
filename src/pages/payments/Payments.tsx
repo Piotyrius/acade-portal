@@ -78,12 +78,12 @@ export default function Payments() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Payment recorded successfully' });
+      toast({ title: t('success'), description: t('pages.paymentRecordedSuccess') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -92,10 +92,10 @@ export default function Payments() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Payment deleted successfully' });
+      toast({ title: t('success'), description: t('pages.paymentDeleteSuccess') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -105,13 +105,13 @@ export default function Payments() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Refund processed successfully' });
+      toast({ title: t('success'), description: t('pages.refundProcessedSuccess') });
       setIsRefundDialogOpen(false);
       setSelectedPaymentForRefund(null);
       setRefundData({ amount: '', reason: '' });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -134,8 +134,8 @@ export default function Payments() {
     e.preventDefault();
     if (!formData.invoice || !formData.amount) {
       toast({
-        title: 'Error',
-        description: 'Invoice and amount are required',
+        title: t('error'),
+        description: t('pages.invoiceAndAmountRequired'),
         variant: 'destructive',
       });
       return;
@@ -155,7 +155,7 @@ export default function Payments() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this payment?')) {
+    if (confirm(t('pages.paymentDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -169,8 +169,8 @@ export default function Payments() {
   const handleProcessRefund = () => {
     if (!selectedPaymentForRefund || !refundData.amount) {
       toast({
-        title: 'Error',
-        description: 'Refund amount is required',
+        title: t('error'),
+        description: t('pages.refundAmountRequired'),
         variant: 'destructive',
       });
       return;
@@ -369,19 +369,19 @@ export default function Payments() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Record payment</DialogTitle>
-            <DialogDescription>Mark a payment received against a student invoice.</DialogDescription>
+            <DialogTitle>{t('pages.recordPaymentTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.recordPaymentDescription')}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="invoice">Invoice *</Label>
+                <Label htmlFor="invoice">{t('pages.invoiceLabel')}</Label>
                 <Select
                   value={formData.invoice}
                   onValueChange={(value) => setFormData({ ...formData, invoice: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select invoice" />
+                    <SelectValue placeholder={t('pages.selectInvoicePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {invoices.map((invoice: any) => (
@@ -394,15 +394,15 @@ export default function Payments() {
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount *</Label>
+                  <div className="space-y-2">
+                  <Label htmlFor="amount">{t('pages.amountLabel')}</Label>
                   <Input
                     id="amount"
                     type="number"
                     step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    placeholder="0.00"
+                    placeholder={t('pages.amountPlaceholder')}
                     required
                   />
                 </div>
@@ -411,7 +411,7 @@ export default function Payments() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="payment_method">Payment Method *</Label>
+                  <Label htmlFor="payment_method">{t('pages.paymentMethodLabel')}</Label>
                   <Select
                     value={formData.payment_method}
                     onValueChange={(value: RecordPaymentRequest['payment_method']) =>
@@ -422,13 +422,13 @@ export default function Payments() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="MANUAL">Manual Entry</SelectItem>
-                      <SelectItem value="CASH">Cash</SelectItem>
-                      <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                      <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
-                      <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
-                      <SelectItem value="CHECK">Check</SelectItem>
-                      <SelectItem value="OTHER">Other</SelectItem>
+                      <SelectItem value="MANUAL">{t('pages.paymentMethodManual')}</SelectItem>
+                      <SelectItem value="CASH">{t('pages.paymentMethodCash')}</SelectItem>
+                      <SelectItem value="BANK_TRANSFER">{t('pages.paymentMethodBankTransfer')}</SelectItem>
+                      <SelectItem value="CREDIT_CARD">{t('pages.paymentMethodCreditCard')}</SelectItem>
+                      <SelectItem value="DEBIT_CARD">{t('pages.paymentMethodDebitCard')}</SelectItem>
+                      <SelectItem value="CHECK">{t('pages.paymentMethodCheck')}</SelectItem>
+                      <SelectItem value="OTHER">{t('pages.paymentMethodOther')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -437,7 +437,7 @@ export default function Payments() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="payment_date">Payment Date *</Label>
+                  <Label htmlFor="payment_date">{t('pages.paymentDateLabel')}</Label>
                   <Input
                     id="payment_date"
                     type="date"
@@ -449,21 +449,21 @@ export default function Payments() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">{t('pages.notesLabel')}</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Additional notes..."
+                  placeholder={t('pages.notesPlaceholder')}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('pages.cancel')}
               </Button>
               <Button type="submit" disabled={recordPaymentMutation.isPending}>
-                Record
+                {t('pages.record')}
               </Button>
             </DialogFooter>
           </form>
@@ -474,42 +474,42 @@ export default function Payments() {
       <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Process Refund</DialogTitle>
-            <DialogDescription>Process a refund for this payment</DialogDescription>
+            <DialogTitle>{t('pages.processRefundTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.processRefundDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="refund_amount">Refund Amount *</Label>
+              <Label htmlFor="refund_amount">{t('pages.refundAmountLabel')}</Label>
               <Input
                 id="refund_amount"
                 type="number"
                 step="0.01"
                 value={refundData.amount}
                 onChange={(e) => setRefundData({ ...refundData, amount: e.target.value })}
-                placeholder="0.00"
+                placeholder={t('pages.amountPlaceholder')}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="refund_reason">Reason</Label>
+              <Label htmlFor="refund_reason">{t('pages.reasonLabel')}</Label>
               <Textarea
                 id="refund_reason"
                 value={refundData.reason}
                 onChange={(e) => setRefundData({ ...refundData, reason: e.target.value })}
-                placeholder="Optional refund reason"
+                placeholder={t('pages.refundReasonPlaceholder')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsRefundDialogOpen(false)}>
-              Cancel
+              {t('pages.cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleProcessRefund}
               disabled={refundMutation.isPending || !refundData.amount}
             >
-              Process Refund
+              {t('pages.processRefund')}
             </Button>
           </DialogFooter>
         </DialogContent>

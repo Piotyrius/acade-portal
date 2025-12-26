@@ -13,10 +13,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DiscountDto } from '@/api/endpoints/payments';
 import { usePaymentsAdmin } from '@/hooks/usePaymentsAdmin';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export default function PaymentsUnified() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
 
   const { data: invoices = [] } = useQuery({
     queryKey: ['invoices-dashboard'],
@@ -96,23 +98,21 @@ export default function PaymentsUnified() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Billing & Payments</h2>
-          <p className="text-muted-foreground">
-            See your outstanding invoices, recent payments, and manage billing settings.
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.billingPaymentsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.billingPaymentsDescription')}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={() => setBillDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Bill a Student
+            {t('pages.billAStudent')}
           </Button>
           <Button variant="outline" onClick={() => navigate('/payments/payments')}>
             <DollarSign className="mr-2 h-4 w-4" />
-            Record Payment
+            {t('pages.recordPayment')}
           </Button>
           <Button variant="outline" onClick={() => navigate('/payments/invoices')}>
             <FileText className="mr-2 h-4 w-4" />
-            View Invoices
+            {t('pages.viewInvoices')}
           </Button>
         </div>
       </div>
@@ -120,29 +120,25 @@ export default function PaymentsUnified() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Outstanding Invoices</CardTitle>
+            <CardTitle>{t('pages.outstandingInvoicesTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{outstandingCount}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Invoices that are issued or overdue.
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">{t('pages.outstandingInvoicesDescription')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>All Invoices</CardTitle>
+            <CardTitle>{t('pages.allInvoicesTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{invoices.length}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Total invoices in the system.
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">{t('pages.allInvoicesDescription')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Payments Received</CardTitle>
+            <CardTitle>{t('pages.paymentsReceivedTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">
@@ -151,21 +147,17 @@ export default function PaymentsUnified() {
                 currency: 'USD',
               })}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Total value of completed payments.
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">{t('pages.paymentsReceivedDescription')}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Bill a Student Wizard */}
       <Dialog open={billDialogOpen} onOpenChange={setBillDialogOpen}>
-        <DialogContent>
+          <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bill a Student</DialogTitle>
-            <DialogDescription>
-              Select an enrollment and payment plan to automatically create an invoice.
-            </DialogDescription>
+            <DialogTitle>{t('pages.billAStudent')}</DialogTitle>
+            <DialogDescription>{t('pages.billStudentDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -239,14 +231,14 @@ export default function PaymentsUnified() {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setBillDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleBillSubmit}
               disabled={createInvoiceFromEnrollment.isPending}
             >
-              Create Invoice
+              {t('pages.createInvoice')}
             </Button>
           </DialogFooter>
         </DialogContent>

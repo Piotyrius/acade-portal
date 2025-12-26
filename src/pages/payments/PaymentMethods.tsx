@@ -26,9 +26,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslation } from 'react-i18next'
 
 export default function PaymentMethods() {
   const { user } = useAuthStore();
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -50,7 +52,7 @@ export default function PaymentMethods() {
     mutationFn: createPaymentMethod,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentMethods'] });
-      toast({ title: 'Success', description: 'Payment method created successfully' });
+      toast({ title: t('success'), description: t('pages.paymentMethodCreateSuccess') });
       setIsDialogOpen(false);
       resetForm();
     },
@@ -64,7 +66,7 @@ export default function PaymentMethods() {
       updatePaymentMethod(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentMethods'] });
-      toast({ title: 'Success', description: 'Payment method updated successfully' });
+      toast({ title: t('success'), description: t('pages.paymentMethodUpdateSuccess') });
       setIsDialogOpen(false);
       setEditingMethod(null);
       resetForm();
@@ -78,10 +80,10 @@ export default function PaymentMethods() {
     mutationFn: deletePaymentMethod,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentMethods'] });
-      toast({ title: 'Success', description: 'Payment method deleted successfully' });
+      toast({ title: t('success'), description: t('pages.paymentMethodDeleteSuccess') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -114,8 +116,8 @@ export default function PaymentMethods() {
     e.preventDefault();
     if (!formData.name) {
       toast({
-        title: 'Error',
-        description: 'Name is required',
+        title: t('error'),
+        description: t('pages.nameRequired'),
         variant: 'destructive',
       });
       return;
@@ -136,17 +138,17 @@ export default function PaymentMethods() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this payment method?')) {
+    if (confirm(t('pages.paymentMethodDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
 
-  if (user?.role !== 'ADMIN') {
+    if (user?.role !== 'ADMIN') {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payment Methods</h2>
-          <p className="text-muted-foreground">You don't have permission to view payment methods</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.paymentMethodsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.noPermissionPaymentMethods')}</p>
         </div>
       </div>
     );
@@ -165,23 +167,23 @@ export default function PaymentMethods() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payment Methods</h2>
-          <p className="text-muted-foreground">Manage payment method configurations</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.paymentMethodsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.paymentMethodsDescription')}</p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Payment Method
+          {t('pages.createPaymentMethod')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Payment Methods</CardTitle>
+          <CardTitle>{t('pages.paymentMethodsTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {paymentMethods.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No payment methods found</p>
+              <p className="text-muted-foreground text-center py-8">{t('pages.noPaymentMethodsFound')}</p>
             ) : (
               paymentMethods.map((method: PaymentMethodDto) => (
                 <div
@@ -230,30 +232,34 @@ export default function PaymentMethods() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingMethod ? 'Edit Payment Method' : 'Create Payment Method'}</DialogTitle>
+            <DialogTitle>
+              {editingMethod ? t('pages.editPaymentMethod') : t('pages.createPaymentMethod')}
+            </DialogTitle>
             <DialogDescription>
-              {editingMethod ? 'Update payment method details' : 'Create a new payment method'}
+              {editingMethod
+                ? t('pages.editPaymentMethodDescription')
+                : t('pages.createPaymentMethodDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">{t('pages.nameLabel')}</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Payment method name"
+                  placeholder={t('pages.paymentMethodNamePlaceholder')}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="code">Code</Label>
+                <Label htmlFor="code">{t('pages.codeLabel')}</Label>
                 <Input
                   id="code"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  placeholder="Optional code"
+                  placeholder={t('pages.paymentMethodCodePlaceholder')}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -265,7 +271,7 @@ export default function PaymentMethods() {
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  Active
+                  {t('pages.activeLabel')}
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -277,16 +283,16 @@ export default function PaymentMethods() {
                   }
                 />
                 <Label htmlFor="requires_receipt" className="cursor-pointer">
-                  Requires Receipt
+                  {t('pages.requiresReceiptLabel')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('pages.cancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingMethod ? 'Update' : 'Create'}
+                {editingMethod ? t('pages.update') : t('pages.create')}
               </Button>
             </DialogFooter>
           </form>

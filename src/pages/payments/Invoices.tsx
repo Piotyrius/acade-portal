@@ -115,12 +115,12 @@ export default function Invoices() {
     mutationFn: createInvoice,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Invoice created successfully' });
+      toast({ title: t('success'), description: t('pages.invoiceCreateSuccess') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -128,13 +128,13 @@ export default function Invoices() {
     mutationFn: ({ id, data }: { id: string; data: Partial<InvoiceRequest> }) => updateInvoice(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Invoice updated successfully' });
+      toast({ title: t('success'), description: t('pages.invoiceUpdateSuccess') });
       setIsDialogOpen(false);
       setEditingInvoice(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -142,10 +142,10 @@ export default function Invoices() {
     mutationFn: deleteInvoice,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Invoice deleted successfully' });
+      toast({ title: t('success'), description: t('pages.invoiceDeleteSuccess') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -153,10 +153,10 @@ export default function Invoices() {
     mutationFn: issueInvoice,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: 'Success', description: 'Invoice issued successfully' });
+      toast({ title: t('success'), description: t('pages.invoiceIssueSuccess') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -206,11 +206,7 @@ export default function Invoices() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.enrollment || !formData.pricing || !formData.total_amount || !formData.due_date) {
-      toast({
-        title: 'Error',
-        description: 'Enrollment, pricing, total amount, and due date are required',
-        variant: 'destructive',
-      });
+      toast({ title: t('error'), description: t('pages.invoiceFormRequired'), variant: 'destructive' });
       return;
     }
 
@@ -234,13 +230,13 @@ export default function Invoices() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this invoice?')) {
+    if (confirm(t('pages.invoiceDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
 
   const handleIssue = (id: string) => {
-    if (confirm('Are you sure you want to issue this invoice? This action cannot be undone.')) {
+    if (confirm(t('pages.invoiceIssueConfirm'))) {
       issueMutation.mutate(id);
     }
   };
@@ -265,11 +261,7 @@ export default function Invoices() {
   const handleRecordPaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedInvoiceForPayment || !paymentForm.amount) {
-      toast({
-        title: 'Error',
-        description: 'Amount is required',
-        variant: 'destructive',
-      });
+      toast({ title: t('error'), description: t('pages.amountRequired'), variant: 'destructive' });
       return;
     }
     const payload: RecordPaymentRequest = {
@@ -289,11 +281,7 @@ export default function Invoices() {
 
   const handleApplyDiscounts = () => {
     if (!selectedInvoiceForDiscounts || selectedDiscounts.length === 0) {
-      toast({
-        title: 'Error',
-        description: 'Please select at least one discount',
-        variant: 'destructive',
-      });
+      toast({ title: t('error'), description: t('pages.selectAtLeastOneDiscount'), variant: 'destructive' });
       return;
     }
     applyDiscountsMutation.mutate({
@@ -477,13 +465,13 @@ export default function Invoices() {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Student: {invoice.student_name || 'Unknown'}
+                          {t('pages.student')}: {invoice.student_name || t('pages.unknown')}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Enrollment: {getEnrollmentLabelById(invoice.enrollment) || 'Unknown'}
+                          {t('pages.enrollment')}: {getEnrollmentLabelById(invoice.enrollment) || t('pages.unknown')}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Cohort: {invoice.cohort_name || 'Unknown'}
+                          {t('pages.cohort')}: {invoice.cohort_name || t('pages.unknown')}
                         </p>
                         <p className="text-sm font-medium mt-1">
                           Total: {formatCurrencyString(invoice.total_amount, 'USD')}
@@ -507,7 +495,7 @@ export default function Invoices() {
                                 e.stopPropagation();
                                 handleOpenDialog(invoice);
                               }}
-                              title="Edit invoice"
+                              title={t('pages.editInvoice')}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -518,7 +506,7 @@ export default function Invoices() {
                                 e.stopPropagation();
                                 handleDelete(invoice.id);
                               }}
-                              title="Delete invoice"
+                              title={t('pages.deleteInvoice')}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -532,10 +520,10 @@ export default function Invoices() {
                               e.stopPropagation();
                               handleIssue(invoice.id);
                             }}
-                            title="Issue invoice"
+                            title={t('pages.issueInvoice')}
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
-                            Issue
+                            {t('pages.issue')}
                           </Button>
                         )}
                         {invoice.status === 'ISSUED' && (
@@ -546,10 +534,10 @@ export default function Invoices() {
                               e.stopPropagation();
                               handleOpenDiscountDialog(invoice);
                             }}
-                            title="Apply discounts"
+                            title={t('pages.applyDiscounts')}
                           >
                             <FileText className="h-4 w-4 mr-1" />
-                            Discounts
+                            {t('pages.applyDiscounts')}
                           </Button>
                         )}
                         {(invoice.status === 'ISSUED' ||
@@ -562,10 +550,10 @@ export default function Invoices() {
                               e.stopPropagation();
                               handleOpenRecordPayment(invoice);
                             }}
-                            title="Record payment"
+                            title={t('pages.recordPayment')}
                           >
                             <DollarSign className="h-4 w-4 mr-1" />
-                            Mark as paid
+                            {t('pages.markAsPaid')}
                           </Button>
                         )}
                       </div>
@@ -580,37 +568,37 @@ export default function Invoices() {
         <TabsContent value="detail">
           {selectedInvoice ? (
             <Card>
-              <CardHeader>
+                <CardHeader>
                 <CardTitle>
                   {selectedInvoice.invoice_number || `Invoice #${selectedInvoice.id.slice(0, 8)}`}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {selectedInvoice.student_name || 'Unknown student'} •{' '}
-                  {selectedInvoice.cohort_name || 'Unknown cohort'}
+                  {selectedInvoice.student_name || t('pages.unknown')} •{' '}
+                  {selectedInvoice.cohort_name || t('pages.unknown')}
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-4">
                   <div>
-                    <p className="text-xs uppercase text-muted-foreground">Status</p>
+                    <p className="text-xs uppercase text-muted-foreground">{t('pages.status')}</p>
                     <Badge variant={getStatusVariant(selectedInvoice.status)}>
                       {selectedInvoice.status_display || selectedInvoice.status}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-xs uppercase text-muted-foreground">Total</p>
+                    <p className="text-xs uppercase text-muted-foreground">{t('pages.total')}</p>
                     <p className="font-medium">
                       {formatCurrencyString(selectedInvoice.total_amount, 'USD')}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase text-muted-foreground">Outstanding</p>
+                    <p className="text-xs uppercase text-muted-foreground">{t('pages.outstanding')}</p>
                     <p className="font-medium">
                       {formatCurrencyString(selectedInvoice.outstanding_amount || '0', 'USD')}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase text-muted-foreground">Due date</p>
+                    <p className="text-xs uppercase text-muted-foreground">{t('pages.dueDate')}</p>
                     <p className="font-medium">
                       {new Date(selectedInvoice.due_date).toLocaleDateString()}
                     </p>
@@ -619,21 +607,20 @@ export default function Invoices() {
 
                 <details className="mt-2 rounded-md border bg-muted/40 p-3">
                   <summary className="cursor-pointer text-sm font-medium">
-                    Advanced billing details
+                    {t('pages.advancedBillingDetails')}
                   </summary>
                   <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                    <p>Pricing ID: {selectedInvoice.pricing || 'N/A'}</p>
-                    <p>Payment plan: {selectedInvoice.payment_plan_name || 'N/A'}</p>
-                    <p>Subtotal: {formatCurrencyString(selectedInvoice.subtotal, 'USD')}</p>
+                    <p>{t('pages.pricingId')}: {selectedInvoice.pricing || 'N/A'}</p>
+                    <p>{t('pages.paymentPlan')}: {selectedInvoice.payment_plan_name || 'N/A'}</p>
+                    <p>{t('pages.subtotal')}: {formatCurrencyString(selectedInvoice.subtotal, 'USD')}</p>
                     {selectedInvoice.discount_amount && (
                       <p>
-                        Discounts:{' '}
-                        {formatCurrencyString(selectedInvoice.discount_amount, 'USD')}
+                        {t('pages.discounts')}: {formatCurrencyString(selectedInvoice.discount_amount, 'USD')}
                       </p>
                     )}
-                    <p>Created at: {new Date(selectedInvoice.created_at).toLocaleString()}</p>
-                    <p>Updated at: {new Date(selectedInvoice.updated_at).toLocaleString()}</p>
-                    <p>Raw ID: {selectedInvoice.id}</p>
+                    <p>{t('pages.createdAt')}: {new Date(selectedInvoice.created_at).toLocaleString()}</p>
+                    <p>{t('pages.updatedAt')}: {new Date(selectedInvoice.updated_at).toLocaleString()}</p>
+                    <p>{t('pages.rawId')}: {selectedInvoice.id}</p>
                   </div>
                 </details>
 
@@ -643,13 +630,13 @@ export default function Invoices() {
                     selectedInvoice.status === 'OVERDUE') && (
                     <Button onClick={() => handleOpenRecordPayment(selectedInvoice)} size="sm">
                       <DollarSign className="mr-2 h-4 w-4" />
-                      Mark a payment
+                      {t('pages.markAsPaid')}
                     </Button>
                   )}
                   {selectedInvoice.status === 'DRAFT' && (
                     <Button onClick={() => handleIssue(selectedInvoice.id)} size="sm">
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      Issue invoice
+                      {t('pages.issueInvoice')}
                     </Button>
                   )}
                   <Button
@@ -658,7 +645,7 @@ export default function Invoices() {
                     onClick={() => handleOpenDiscountDialog(selectedInvoice)}
                   >
                     <FileText className="mr-2 h-4 w-4" />
-                    Apply discounts
+                    {t('pages.applyDiscounts')}
                   </Button>
                 </div>
               </CardContent>
@@ -666,7 +653,7 @@ export default function Invoices() {
           ) : (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
-                Select an invoice from the list to see its full details.
+                {t('pages.selectInvoiceFromList')}
               </CardContent>
             </Card>
           )}
@@ -677,17 +664,15 @@ export default function Invoices() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingInvoice ? 'Edit Invoice' : 'Create Invoice'}</DialogTitle>
+            <DialogTitle>{editingInvoice ? t('pages.editInvoice') : t('pages.createInvoice')}</DialogTitle>
             <DialogDescription>
-              {editingInvoice
-                ? 'Update invoice details. Only DRAFT invoices can be edited.'
-                : 'Create a new invoice for a student enrollment.'}
+              {editingInvoice ? t('pages.updateInvoiceDetails') : t('pages.createInvoiceDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="enrollment">Enrollment *</Label>
+                <Label htmlFor="enrollment">{t('pages.enrollment') + ' *'}</Label>
                 <Select
                   value={formData.enrollment}
                   onValueChange={(value) => setFormData({ ...formData, enrollment: value })}
@@ -696,7 +681,7 @@ export default function Invoices() {
                     {formData.enrollment ? (
                       <span className="line-clamp-1">{getEnrollmentLabelById(formData.enrollment)}</span>
                     ) : (
-                      <SelectValue placeholder="Select enrollment" />
+                      <SelectValue placeholder={t('pages.selectEnrollment')} />
                     )}
                   </SelectTrigger>
                   <SelectContent>
@@ -709,16 +694,16 @@ export default function Invoices() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="payment_plan">Payment Plan</Label>
+                <Label htmlFor="payment_plan">{t('pages.paymentPlan')}</Label>
                 <Select
                   value={formData.payment_plan || 'none'}
                   onValueChange={(value) => setFormData({ ...formData, payment_plan: value === 'none' ? '' : value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select payment plan (optional)" />
+                    <SelectValue placeholder={t('pages.selectPaymentPlanOptional')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="none">{t('pages.none')}</SelectItem>
                     {paymentPlans.map((plan: any) => (
                       <SelectItem key={plan.id} value={plan.id}>
                         {plan.name} ({plan.type_display || plan.type})
@@ -728,14 +713,14 @@ export default function Invoices() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pricing">Pricing *</Label>
+                <Label htmlFor="pricing">{t('pages.pricing') + ' *'}</Label>
                 <Select
                   value={formData.pricing || undefined}
                   onValueChange={(value) => setFormData({ ...formData, pricing: value })}
                   disabled={pricings.length === 0}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder={pricings.length === 0 ? "No active pricings available" : "Select pricing (required)"} />
+                    <SelectTrigger>
+                    <SelectValue placeholder={pricings.length === 0 ? t('pages.noActivePricings') : t('pages.selectPricingRequired')} />
                   </SelectTrigger>
                   <SelectContent>
                     {pricings.map((pricing: any) => (
@@ -747,14 +732,12 @@ export default function Invoices() {
                   </SelectContent>
                 </Select>
                 {pricings.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No active pricings available. Please create a pricing first.
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t('pages.noActivePricingsPleaseCreate')}</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="subtotal">Subtotal</Label>
+                  <Label htmlFor="subtotal">{t('pages.subtotal')}</Label>
                   <Input
                     id="subtotal"
                     type="number"
@@ -765,7 +748,7 @@ export default function Invoices() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="discount_amount">Discount Amount</Label>
+                  <Label htmlFor="discount_amount">{t('pages.discountAmount')}</Label>
                   <Input
                     id="discount_amount"
                     type="number"
@@ -777,7 +760,7 @@ export default function Invoices() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="total_amount">Total Amount *</Label>
+                <Label htmlFor="total_amount">{t('pages.totalAmount') + ' *'}</Label>
                 <Input
                   id="total_amount"
                   type="number"
@@ -789,7 +772,7 @@ export default function Invoices() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="due_date">Due Date *</Label>
+                <Label htmlFor="due_date">{t('pages.dueDate') + ' *'}</Label>
                 <Input
                   id="due_date"
                   type="date"
@@ -799,21 +782,21 @@ export default function Invoices() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">{t('pages.notes')}</Label>
                 <Input
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Additional notes..."
+                  placeholder={t('pages.additionalNotesPlaceholder')}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingInvoice ? 'Update' : 'Create'}
+                {editingInvoice ? t('pages.update') : t('pages.create')}
               </Button>
             </DialogFooter>
           </form>
@@ -824,12 +807,12 @@ export default function Invoices() {
       <Dialog open={isDiscountDialogOpen} onOpenChange={setIsDiscountDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Apply Discounts</DialogTitle>
-            <DialogDescription>Select discounts to apply to this invoice</DialogDescription>
+            <DialogTitle>{t('pages.applyDiscounts')}</DialogTitle>
+            <DialogDescription>{t('pages.applyDiscountsDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             {discounts.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No active discounts available</p>
+              <p className="text-muted-foreground text-center py-4">{t('pages.noActiveDiscounts')}</p>
             ) : (
               discounts.map((discount: DiscountDto) => (
                 <div key={discount.id} className="flex items-center space-x-2">
@@ -859,14 +842,14 @@ export default function Invoices() {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsDiscountDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleApplyDiscounts}
               disabled={applyDiscountsMutation.isPending || selectedDiscounts.length === 0}
             >
-              Apply Discounts
+              {t('pages.applyDiscounts')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -876,15 +859,12 @@ export default function Invoices() {
       <Dialog open={isCreateFromEnrollmentOpen} onOpenChange={setIsCreateFromEnrollmentOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bill student from enrollment</DialogTitle>
-            <DialogDescription>
-              Select the student’s enrollment, choose a payment plan, and optionally apply discounts.
-              The system will calculate tuition automatically from your pricing.
-            </DialogDescription>
+            <DialogTitle>{t('pages.billFromEnrollmentTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.billFromEnrollmentDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="enrollment-select">Enrollment *</Label>
+              <div className="space-y-2">
+              <Label htmlFor="enrollment-select">{t('pages.enrollment') + ' *'}</Label>
               <Select
                 value={formData.enrollment}
                 onValueChange={(value) => setFormData({ ...formData, enrollment: value })}
@@ -893,7 +873,7 @@ export default function Invoices() {
                   {formData.enrollment ? (
                     <span className="line-clamp-1">{getEnrollmentLabelById(formData.enrollment)}</span>
                   ) : (
-                    <SelectValue placeholder="Select enrollment" />
+                    <SelectValue placeholder={t('pages.selectEnrollment')} />
                   )}
                 </SelectTrigger>
                 <SelectContent>
@@ -906,13 +886,13 @@ export default function Invoices() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="payment-plan-select">Payment Plan *</Label>
+              <Label htmlFor="payment-plan-select">{t('pages.paymentPlan') + ' *'}</Label>
               <Select
                 value={formData.payment_plan || ''}
                 onValueChange={(value) => setFormData({ ...formData, payment_plan: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select payment plan" />
+                  <SelectValue placeholder={t('pages.selectPaymentPlan')} />
                 </SelectTrigger>
                 <SelectContent>
                   {paymentPlans.map((plan: any) => (
@@ -924,10 +904,10 @@ export default function Invoices() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Discounts (Optional)</Label>
+              <Label>{t('pages.discountsOptional')}</Label>
               <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-2">
                 {discounts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-2">No active discounts available</p>
+                  <p className="text-sm text-muted-foreground text-center py-2">{t('pages.noActiveDiscounts')}</p>
                 ) : (
                   discounts.map((discount: DiscountDto) => (
                     <div key={discount.id} className="flex items-center space-x-2">
@@ -954,14 +934,14 @@ export default function Invoices() {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsCreateFromEnrollmentOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleCreateFromEnrollment}
               disabled={createInvoiceFromEnrollment.isPending || !formData.enrollment || !formData.payment_plan}
             >
-              Create Invoice
+              {t('pages.createInvoice')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -970,14 +950,10 @@ export default function Invoices() {
       {/* Record Payment Dialog (invoice-driven) */}
       <Dialog open={isRecordPaymentOpen} onOpenChange={setIsRecordPaymentOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
+            <DialogHeader>
+            <DialogTitle>{t('pages.recordPayment')}</DialogTitle>
             <DialogDescription>
-              Record a payment for{' '}
-              {selectedInvoiceForPayment?.invoice_number ||
-                (selectedInvoiceForPayment && selectedInvoiceForPayment.id.slice(0, 8)) ||
-                'this invoice'}
-              .
+              {t('pages.recordPaymentFor', { invoice: selectedInvoiceForPayment?.invoice_number || (selectedInvoiceForPayment && selectedInvoiceForPayment.id.slice(0,8)) || t('pages.thisInvoice') })}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleRecordPaymentSubmit}>
@@ -985,25 +961,24 @@ export default function Invoices() {
               {selectedInvoiceForPayment && (
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>
-                    Student: {selectedInvoiceForPayment.student_name || 'Unknown'}
+                    {t('pages.student')}: {selectedInvoiceForPayment.student_name || t('pages.unknown')}
                   </p>
                   <p>
-                    Cohort: {selectedInvoiceForPayment.cohort_name || 'Unknown'}
+                    {t('pages.cohort')}: {selectedInvoiceForPayment.cohort_name || t('pages.unknown')}
                   </p>
                   <p>
-                    Total: {formatCurrencyString(selectedInvoiceForPayment.total_amount, 'USD')}
+                    {t('pages.total')}: {formatCurrencyString(selectedInvoiceForPayment.total_amount, 'USD')}
                   </p>
                   {selectedInvoiceForPayment.outstanding_amount && (
                     <p>
-                      Outstanding:{' '}
-                      {formatCurrencyString(selectedInvoiceForPayment.outstanding_amount, 'USD')}
+                      {t('pages.outstanding')}: {formatCurrencyString(selectedInvoiceForPayment.outstanding_amount, 'USD')}
                     </p>
                   )}
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="payment-amount">Amount *</Label>
+                  <Label htmlFor="payment-amount">{t('pages.amount') + ' *'}</Label>
                   <Input
                     id="payment-amount"
                     type="number"
@@ -1017,7 +992,7 @@ export default function Invoices() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="payment-method">Payment Method *</Label>
+                  <Label htmlFor="payment-method">{t('pages.paymentMethod') + ' *'}</Label>
                   <Select
                     value={paymentForm.payment_method}
                     onValueChange={(value: RecordPaymentRequest['payment_method']) =>
@@ -1028,20 +1003,20 @@ export default function Invoices() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="MANUAL">Manual Entry</SelectItem>
-                      <SelectItem value="CASH">Cash</SelectItem>
-                      <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                      <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
-                      <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
-                      <SelectItem value="CHECK">Check</SelectItem>
-                      <SelectItem value="OTHER">Other</SelectItem>
+                      <SelectItem value="MANUAL">{t('pages.paymentMethodManual')}</SelectItem>
+                      <SelectItem value="CASH">{t('pages.paymentMethodCash')}</SelectItem>
+                      <SelectItem value="BANK_TRANSFER">{t('pages.paymentMethodBankTransfer')}</SelectItem>
+                      <SelectItem value="CREDIT_CARD">{t('pages.paymentMethodCreditCard')}</SelectItem>
+                      <SelectItem value="DEBIT_CARD">{t('pages.paymentMethodDebitCard')}</SelectItem>
+                      <SelectItem value="CHECK">{t('pages.paymentMethodCheck')}</SelectItem>
+                      <SelectItem value="OTHER">{t('pages.paymentMethodOther')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="payment-date">Payment Date *</Label>
+                  <Label htmlFor="payment-date">{t('pages.paymentDate') + ' *'}</Label>
                   <Input
                     id="payment-date"
                     type="date"
@@ -1054,14 +1029,14 @@ export default function Invoices() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="payment-notes">Notes</Label>
+                <Label htmlFor="payment-notes">{t('pages.notes')}</Label>
                 <Input
                   id="payment-notes"
                   value={paymentForm.notes}
                   onChange={(e) =>
                     setPaymentForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
-                  placeholder="Additional notes..."
+                  placeholder={t('pages.additionalNotesPlaceholder')}
                 />
               </div>
             </div>
@@ -1071,10 +1046,10 @@ export default function Invoices() {
                 variant="outline"
                 onClick={() => setIsRecordPaymentOpen(false)}
               >
-                Cancel
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={recordPaymentMutation.isPending}>
-                Record Payment
+                {t('pages.recordPayment')}
               </Button>
             </DialogFooter>
           </form>

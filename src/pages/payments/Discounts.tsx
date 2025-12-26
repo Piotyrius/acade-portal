@@ -27,9 +27,11 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslation } from 'react-i18next';
 
 export default function Discounts() {
   const { user } = useAuthStore();
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -57,12 +59,12 @@ export default function Discounts() {
     mutationFn: createDiscount,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['discounts'] });
-      toast({ title: 'Success', description: 'Discount created successfully' });
+      toast({ title: t('success'), description: t('pages.discountCreateSuccess') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -70,7 +72,7 @@ export default function Discounts() {
     mutationFn: ({ id, data }: { id: string; data: Partial<DiscountRequest> }) => updateDiscount(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['discounts'] });
-      toast({ title: 'Success', description: 'Discount updated successfully' });
+      toast({ title: t('success'), description: t('pages.discountUpdateSuccess') });
       setIsDialogOpen(false);
       setEditingDiscount(null);
       resetForm();
@@ -84,10 +86,10 @@ export default function Discounts() {
     mutationFn: deleteDiscount,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['discounts'] });
-      toast({ title: 'Success', description: 'Discount deleted successfully' });
+      toast({ title: t('success'), description: t('pages.discountDeleteSuccess') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -132,8 +134,8 @@ export default function Discounts() {
     e.preventDefault();
     if (!formData.name || !formData.value || !formData.valid_from) {
       toast({
-        title: 'Error',
-        description: 'Name, value, and valid from date are required',
+        title: t('error'),
+        description: t('pages.discountFormRequired'),
         variant: 'destructive',
       });
       return;
@@ -160,7 +162,7 @@ export default function Discounts() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this discount?')) {
+    if (confirm(t('pages.discountDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -177,8 +179,8 @@ export default function Discounts() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Discounts</h2>
-          <p className="text-muted-foreground">You don't have permission to view discounts</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.discountsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.noPermissionDiscounts')}</p>
         </div>
       </div>
     );
@@ -197,23 +199,24 @@ export default function Discounts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Discounts</h2>
-          <p className="text-muted-foreground">Manage discount codes and promotions</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.discountsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.discountsDescription')}</p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Discount
+          {t('pages.createDiscount')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Discounts</CardTitle>
+          <CardTitle>{t('pages.discountsTitle')}</CardTitle>
         </CardHeader>
+                    { /* UI strings inside omitted sections will be localized in a follow-up if needed */ }
         <CardContent>
           <div className="space-y-4">
             {discounts.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No discounts found</p>
+              <p className="text-muted-foreground text-center py-8">{t('pages.discountsNoneFound')}</p>
             ) : (
               discounts.map((discount: DiscountDto) => (
                 <div
@@ -269,26 +272,30 @@ export default function Discounts() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingDiscount ? 'Edit Discount' : 'Create Discount'}</DialogTitle>
+            <DialogTitle>
+              {editingDiscount ? t('pages.editDiscount') : t('pages.createDiscount')}
+            </DialogTitle>
             <DialogDescription>
-              {editingDiscount ? 'Update discount details' : 'Create a new discount code or promotion'}
+              {editingDiscount
+                ? t('pages.editDiscountDescription')
+                : t('pages.createDiscountDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">{t('pages.discountNameLabel')}</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Discount name"
+                  placeholder={t('pages.discountNamePlaceholder')}
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="type">Type *</Label>
+                  <Label htmlFor="type">{t('pages.discountTypeLabel')}</Label>
                   <Select
                     value={formData.type}
                     onValueChange={(value: 'PERCENTAGE' | 'FIXED_AMOUNT') =>
@@ -299,26 +306,30 @@ export default function Discounts() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PERCENTAGE">Percentage</SelectItem>
-                      <SelectItem value="FIXED_AMOUNT">Fixed Amount</SelectItem>
+                      <SelectItem value="PERCENTAGE">{t('pages.discountTypePercentage')}</SelectItem>
+                      <SelectItem value="FIXED_AMOUNT">{t('pages.discountTypeFixedAmount')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="value">Value *</Label>
+                  <Label htmlFor="value">{t('pages.discountValueLabel')}</Label>
                   <Input
                     id="value"
                     type="number"
                     step="0.01"
                     value={formData.value}
                     onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                    placeholder={formData.type === 'PERCENTAGE' ? '0-100' : '0.00'}
+                    placeholder={
+                      formData.type === 'PERCENTAGE'
+                        ? t('pages.discountValuePlaceholderPercentage')
+                        : t('pages.discountValuePlaceholderAmount')
+                    }
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="applicable_to">Applicable To *</Label>
+                <Label htmlFor="applicable_to">{t('pages.discountApplicableToLabel')}</Label>
                 <Select
                   value={formData.applicable_to}
                   onValueChange={(value: 'FULL_PAYMENT' | 'SIBLING' | 'CUSTOM') =>
@@ -329,48 +340,48 @@ export default function Discounts() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="FULL_PAYMENT">Full Payment</SelectItem>
-                    <SelectItem value="SIBLING">Sibling Discount</SelectItem>
-                    <SelectItem value="CUSTOM">Custom</SelectItem>
+                    <SelectItem value="FULL_PAYMENT">{t('pages.discountApplicableFullPayment')}</SelectItem>
+                    <SelectItem value="SIBLING">{t('pages.discountApplicableSibling')}</SelectItem>
+                    <SelectItem value="CUSTOM">{t('pages.discountApplicableCustom')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="code">Discount Code</Label>
+                <Label htmlFor="code">{t('pages.discountCodeLabel')}</Label>
                 <Input
                   id="code"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  placeholder="Optional discount code"
+                  placeholder={t('pages.discountCodePlaceholder')}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="min_amount">Minimum Amount</Label>
+                  <Label htmlFor="min_amount">{t('pages.discountMinAmountLabel')}</Label>
                   <Input
                     id="min_amount"
                     type="number"
                     step="0.01"
                     value={formData.min_amount}
                     onChange={(e) => setFormData({ ...formData, min_amount: e.target.value })}
-                    placeholder="0.00"
+                    placeholder={t('pages.discountMinAmountPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="max_discount">Maximum Discount</Label>
+                  <Label htmlFor="max_discount">{t('pages.discountMaxDiscountLabel')}</Label>
                   <Input
                     id="max_discount"
                     type="number"
                     step="0.01"
                     value={formData.max_discount}
                     onChange={(e) => setFormData({ ...formData, max_discount: e.target.value })}
-                    placeholder="0.00"
+                    placeholder={t('pages.discountMaxDiscountPlaceholder')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="valid_from">Valid From *</Label>
+                  <Label htmlFor="valid_from">{t('pages.discountValidFromLabel')}</Label>
                   <Input
                     id="valid_from"
                     type="date"
@@ -380,7 +391,7 @@ export default function Discounts() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="valid_to">Valid To</Label>
+                  <Label htmlFor="valid_to">{t('pages.discountValidToLabel')}</Label>
                   <Input
                     id="valid_to"
                     type="date"
@@ -398,16 +409,16 @@ export default function Discounts() {
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  Active
+                  {t('pages.activeLabel')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('pages.cancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingDiscount ? 'Update' : 'Create'}
+                {editingDiscount ? t('pages.update') : t('pages.create')}
               </Button>
             </DialogFooter>
           </form>

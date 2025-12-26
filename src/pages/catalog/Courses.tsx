@@ -48,7 +48,7 @@ export default function Courses() {
     mutationFn: createCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: 'Success', description: 'Course created successfully' });
+      toast({ title: t('success'), description: t('pages.catalogCoursesCreateSuccess') });
       setIsDialogOpen(false);
       setFormData({ program: '', title: '', code: '', hours: 1, credits: '', description: '' });
     },
@@ -61,7 +61,7 @@ export default function Courses() {
     mutationFn: ({ id, data }: { id: string; data: Partial<CourseDto> }) => updateCourse(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: 'Success', description: 'Course updated successfully' });
+      toast({ title: t('success'), description: t('pages.catalogCoursesUpdateSuccess') });
       setIsDialogOpen(false);
       setEditingCourse(null);
       setFormData({ program: '', title: '', code: '', hours: 1, credits: '', description: '' });
@@ -75,7 +75,7 @@ export default function Courses() {
     mutationFn: deleteCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: 'Success', description: 'Course deleted successfully' });
+      toast({ title: t('success'), description: t('pages.catalogCoursesDeleteSuccess') });
     },
     onError: (error) => {
       toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
@@ -122,7 +122,7 @@ export default function Courses() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm(t('catalogCoursesDeleteConfirm'))) {
+    if (confirm(t('pages.catalogCoursesDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
