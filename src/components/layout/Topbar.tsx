@@ -90,7 +90,10 @@ const handleLogout = async () => {
           {t("layout.welcomeBack", { name: user?.firstName ?? "" })}
         </h1>
         <Badge variant="secondary" className="topbar_user_role">
-          {user?.role}
+          {user?.role === 'ADMIN' ? t('layout.userRoleAdmin') : 
+           user?.role === 'LECTURER' ? t('layout.userRoleLecturer') : 
+           user?.role === 'STUDENT' ? t('layout.userRoleStudent') : 
+           user?.role}
         </Badge>
       </div>
 

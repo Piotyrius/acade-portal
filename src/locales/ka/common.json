@@ -74,7 +74,17 @@
     "notificationCenterLoading": "შეტყობინებების ჩატვირთვა...",
     "notificationCenterEmpty": "შეტყობინებები არ არის",
     "notificationCenterCohort": "კურსი",
-    "activityTimelineTitle": "ბოლო აქტივობა"
+    "activityTimelineTitle": "ბოლო აქტივობა",
+    "admissionsTabApplications": "განაცხადები",
+    "admissionsTabEnrollments": "ჩარიცხვები",
+    "admissionsTabRecruitStudents": "სტუდენტების მოზიდვა",
+    "userRoleAdmin": "ადმინისტრატორი",
+    "userRoleLecturer": "ლექტორი",
+    "userRoleStudent": "სტუდენტი",
+    "mobileNavDashboard": "დაფა",
+    "mobileNavAssessment": "შეფასება",
+    "mobileNavSessions": "სესიები",
+    "mobileNavProfile": "პროფილი"
   },
   "dashboard": {
     "title": "დაფა",

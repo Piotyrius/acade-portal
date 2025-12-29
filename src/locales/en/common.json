@@ -74,7 +74,17 @@
     "notificationCenterLoading": "Loading notifications...",
     "notificationCenterEmpty": "No notifications",
     "notificationCenterCohort": "Cohort",
-    "activityTimelineTitle": "Recent Activity"
+    "activityTimelineTitle": "Recent Activity",
+    "admissionsTabApplications": "Applications",
+    "admissionsTabEnrollments": "Enrollments",
+    "admissionsTabRecruitStudents": "Recruit Students",
+    "userRoleAdmin": "ADMIN",
+    "userRoleLecturer": "LECTURER",
+    "userRoleStudent": "STUDENT",
+    "mobileNavDashboard": "Dashboard",
+    "mobileNavAssessment": "Assessment",
+    "mobileNavSessions": "Sessions",
+    "mobileNavProfile": "Profile"
   },
   "dashboard": {
     "title": "Dashboard",

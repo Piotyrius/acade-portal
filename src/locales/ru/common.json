@@ -74,7 +74,17 @@
     "notificationCenterLoading": "Загрузка уведомлений...",
     "notificationCenterEmpty": "Нет уведомлений",
     "notificationCenterCohort": "Курс",
-    "activityTimelineTitle": "Последняя активность"
+    "activityTimelineTitle": "Последняя активность",
+    "admissionsTabApplications": "Заявки",
+    "admissionsTabEnrollments": "Зачисления",
+    "admissionsTabRecruitStudents": "Привлечение студентов",
+    "userRoleAdmin": "АДМИНИСТРАТОР",
+    "userRoleLecturer": "ЛЕКТОР",
+    "userRoleStudent": "СТУДЕНТ",
+    "mobileNavDashboard": "Панель",
+    "mobileNavAssessment": "Оценка",
+    "mobileNavSessions": "Занятия",
+    "mobileNavProfile": "Профиль"
   },
   "dashboard": {
     "title": "Главная",

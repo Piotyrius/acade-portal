@@ -7,16 +7,18 @@ import {
   Calendar,
   User,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const mobileNavItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Assessment', href: '/assessment', icon: FileCheck },
-  { name: 'Sessions', href: '/catalog/sessions', icon: Calendar },
-  { name: 'Profile', href: '/profile', icon: User },
+  { nameKey: 'layout.mobileNavDashboard', href: '/dashboard', icon: LayoutDashboard },
+  { nameKey: 'layout.mobileNavAssessment', href: '/assessment', icon: FileCheck },
+  { nameKey: 'layout.mobileNavSessions', href: '/catalog/sessions', icon: Calendar },
+  { nameKey: 'layout.mobileNavProfile', href: '/profile', icon: User },
 ];
 
 export function BottomNav() {
   const { user } = useAuthStore();
+  const { t } = useTranslation('common');
 
   // Only show on mobile screens
   return (
@@ -26,7 +28,7 @@ export function BottomNav() {
           const Icon = item.icon;
           return (
             <NavLink
-              key={item.name}
+              key={item.nameKey}
               to={item.href}
               className={({ isActive }) =>
                 cn(
@@ -38,7 +40,7 @@ export function BottomNav() {
               }
             >
               <Icon className="h-5 w-5 mb-1" />
-              <span className="text-xs font-medium">{item.name}</span>
+              <span className="text-xs font-medium">{t(item.nameKey)}</span>
             </NavLink>
           );
         })}

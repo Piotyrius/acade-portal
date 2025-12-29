@@ -145,7 +145,7 @@ export default function Profile() {
     },
     onError: (error) => {
       toast({
-        title: 'Error',
+        title: t('pages.profileToastErrorTitle'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -216,7 +216,7 @@ export default function Profile() {
     },
     onError: (error) => {
       toast({
-        title: 'Error',
+        title: t('pages.profileToastErrorTitle'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -248,7 +248,7 @@ export default function Profile() {
     },
     onError: (error) => {
       toast({
-        title: 'Error',
+        title: t('pages.profileToastErrorTitle'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -315,7 +315,10 @@ export default function Profile() {
                     </h3>
                     <p className="text-sm text-muted-foreground">{displayUser?.email}</p>
                     <Badge variant="secondary" className="mt-2">
-                      {displayUser?.role}
+                      {displayUser?.role === 'ADMIN' ? t('layout.userRoleAdmin') : 
+                       displayUser?.role === 'LECTURER' ? t('layout.userRoleLecturer') : 
+                       displayUser?.role === 'STUDENT' ? t('layout.userRoleStudent') : 
+                       displayUser?.role}
                     </Badge>
                   </div>
                 </div>
@@ -339,7 +342,12 @@ export default function Profile() {
                   <Shield className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">{t('pages.profileFieldRole')}</p>
-                    <p className="text-sm text-muted-foreground">{displayUser?.role}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {displayUser?.role === 'ADMIN' ? t('layout.userRoleAdmin') : 
+                       displayUser?.role === 'LECTURER' ? t('layout.userRoleLecturer') : 
+                       displayUser?.role === 'STUDENT' ? t('layout.userRoleStudent') : 
+                       displayUser?.role}
+                    </p>
                   </div>
                 </div>
                 <Button onClick={() => setIsEditing(true)}>{t('pages.profileButtonEdit')}</Button>
