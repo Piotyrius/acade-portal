@@ -1049,7 +1049,7 @@
     "documentsUploadFileRequired": "File is required",
     "documentsUploadFileSizeError": "Max file size is 5MB.",
     "exampleBannerTitle": "📋 Example Data:",
-    "exampleBannerMessage": "These are sample items to demonstrate the interface. Create your own items to see real data."
+    "exampleBannerMessage": "These are sample items to demonstrate the interface. Create your own items to see real data.",
 
     "certificatesTitle": "Certificates",
     "certificatesSubtitle": "Issue and manage course completion certificates.",
