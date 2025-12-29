@@ -19,7 +19,7 @@ import { exampleCohorts } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCohorts, createCohort, updateCohort, deleteCohort, generateSessions, getCourses, getCohortsReadyToStart, startCohort } from '@/api/endpoints/catalog';
-import { getEnrollments } from '@/api/endpoints/admissions';
+import { getEnrollments, getApplications } from '@/api/endpoints/admissions';
 import { CohortDto, EnrollmentDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +38,8 @@ import { format } from 'date-fns';
 import { getInvoices, getPayments, PaymentDto } from '@/api/endpoints/payments';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Phone, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { getUsersPaginated } from '@/api/endpoints/auth';
 
 function isPaidThisMonth(payments: PaymentDto[] | undefined): boolean {
   if (!payments || payments.length === 0) return false;
@@ -60,6 +62,9 @@ function EnrollmentRow({
     getEnrollmentStatusColor: (status: EnrollmentDto['status']) =>
       'default' | 'destructive' | 'outline' | 'secondary';
   }) {
+  const { t } = useTranslation('common');
+  const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
     queryKey: ['invoices', enrollment.id],
@@ -74,32 +79,163 @@ function EnrollmentRow({
     enabled: !!invoice,
   });
 
+  // Fetch student user data to get email for application lookup
+  const { data: studentUser } = useQuery({
+    queryKey: ['studentUser', enrollment.student],
+    queryFn: async () => {
+      const data = await getUsersPaginated({ search: enrollment.student_name || '' });
+      return data.results?.find((u: any) => u.id === enrollment.student);
+    },
+    enabled: !!enrollment.student,
+  });
+
+  // Fetch application data to get parent phones and notes
+  const { data: applications } = useQuery({
+    queryKey: ['studentApplications', studentUser?.email],
+    queryFn: () => getApplications(),
+    enabled: !!studentUser?.email,
+    select: (apps) => apps.filter((app: any) => app.email === studentUser?.email),
+  });
+
+  const application = applications?.[0];
+  const parentPhones = application?.phones?.filter((p: any) => 
+    p.name?.toLowerCase().includes('parent') || 
+    p.name?.toLowerCase().includes('guardian') ||
+    p.name?.toLowerCase().includes('მშობელი') ||
+    p.name?.toLowerCase().includes('родитель')
+  ) || [];
+
   const paid = isPaidThisMonth(payments);
 
+  const handleStudentClick = () => {
+    if (enrollment.student) {
+      navigate(`/users?search=${encodeURIComponent(enrollment.student_name || '')}`);
+    }
+  };
+
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-      <div>
-        <p className="font-medium text-sm">{enrollment.student_name}</p>
-        <p className="text-xs text-muted-foreground">
-          Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
-        </p>
-      </div>
+    <div className="space-y-0">
+      <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+        <div className="flex-1">
+          <button
+            onClick={handleStudentClick}
+            className="font-medium text-sm hover:text-primary hover:underline cursor-pointer text-left"
+          >
+            {enrollment.student_name}
+          </button>
+          <p className="text-xs text-muted-foreground">
+            {t('pages.enrollmentsEnrolledOnLabel')}: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+          </p>
+          {studentUser?.phone && (
+            <div className="flex items-center gap-1 mt-1">
+              <Phone className="h-3 w-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{studentUser.phone}</span>
+            </div>
+          )}
+          {parentPhones.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-1">
+              {parentPhones.map((p: any, idx: number) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium"
+                >
+                  <Phone className="h-3 w-3" />
+                  {p.name}: {p.phone}
+                </span>
+              ))}
+            </div>
+          )}
+          {application?.notes && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{application.notes}</p>
+          )}
+        </div>
 
-      {/* Payment Badge */}
-      <div className="flex items-center gap-2">
-        {loadingInvoices || loadingPayments ? (
-          <Badge variant="outline">{t('pages.catalogCohortsBadgeChecking')}</Badge>
-        ) : paid ? (
-          <Badge className="bg-green-600 text-white">{t('pages.catalogCohortsBadgePaid')}</Badge>
-        ) : (
-          <Badge variant="destructive">{t('pages.catalogCohortsBadgeNotPaid')}</Badge>
-        )}
+        {/* Payment Badge */}
+        <div className="flex items-center gap-2">
+          {loadingInvoices || loadingPayments ? (
+            <Badge variant="outline">{t('pages.catalogCohortsBadgeChecking')}</Badge>
+          ) : paid ? (
+            <Badge className="bg-green-600 text-white">{t('pages.catalogCohortsBadgePaid')}</Badge>
+          ) : (
+            <Badge variant="destructive">{t('pages.catalogCohortsBadgeNotPaid')}</Badge>
+          )}
 
-        {/* Enrollment Status Badge */}
-        <Badge variant={getEnrollmentStatusColor(enrollment.status)}>
-          {enrollment.status}
-        </Badge>
+          {/* Enrollment Status Badge */}
+          <Badge variant={getEnrollmentStatusColor(enrollment.status)}>
+            {enrollment.status}
+          </Badge>
+
+          {/* Expand button for more details */}
+          {(parentPhones.length > 0 || application?.notes || application?.phones?.length > 0) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
+      {isExpanded && (parentPhones.length > 0 || application?.notes || application?.phones?.length > 0) && (
+        <div className="px-3 pb-3 border-l border-r border-b rounded-b-lg bg-muted/30">
+          <div className="pt-3 space-y-2">
+            {studentUser?.phone && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs font-medium">{t('pages.usersDetailsPhone')}</span>
+                </div>
+                <p className="text-xs text-muted-foreground pl-5">{studentUser.phone}</p>
+              </div>
+            )}
+            {parentPhones.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-3 w-3 text-primary" />
+                  <span className="text-xs font-medium">{t('pages.usersDetailsParentPhone')}</span>
+                </div>
+                <div className="space-y-1 pl-5">
+                  {parentPhones.map((p: any, idx: number) => (
+                    <p key={idx} className="text-xs font-medium text-primary">
+                      {p.name}: {p.phone}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {application?.phones && application.phones.length > 0 && parentPhones.length === 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs font-medium">{t('pages.usersDetailsAdditionalPhones')}</span>
+                </div>
+                <div className="space-y-1 pl-5">
+                  {application.phones.map((p: any, idx: number) => (
+                    <p key={idx} className="text-xs text-muted-foreground">
+                      {p.name ? `${p.name}: ${p.phone}` : p.phone}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {application?.notes && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs font-medium">{t('pages.usersDetailsNotes')}</span>
+                </div>
+                <p className="text-xs text-muted-foreground pl-5">{application.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -526,7 +662,7 @@ export default function Cohorts() {
                   ) : cohortEnrollments.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">{t('pages.catalogCohortsNoStudentsEnrolled')}</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-0">
                       {cohortEnrollments.map((enrollment: EnrollmentDto) => (
                         <EnrollmentRow
                           key={enrollment.id}

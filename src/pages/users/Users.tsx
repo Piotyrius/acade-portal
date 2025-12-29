@@ -30,8 +30,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { UserDto } from '@/api/types';
 import { getUsersPaginated, createUser, updateUser, deleteUser } from '@/api/endpoints/auth';
-import { getEnrollmentsPaginated } from '@/api/endpoints/admissions';
-import { Plus, Pencil, Trash2, Search, UserCheck, UserX } from 'lucide-react';
+import { getEnrollmentsPaginated, getApplications } from '@/api/endpoints/admissions';
+import { Plus, Pencil, Trash2, Search, UserCheck, UserX, Phone, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +55,7 @@ export default function Users() {
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
   // Form state
   const [formData, setFormData] = useState({
@@ -214,6 +215,89 @@ export default function Users() {
     return <>-</>;
   };
 
+  const UserDetailsCell = ({ user }: { user: UserDto }) => {
+    if (user.role !== 'STUDENT') return null;
+
+    const { data: applications } = useQuery({
+      queryKey: ['studentApplications', user.email],
+      queryFn: () => getApplications(),
+      enabled: Boolean(user.email),
+      select: (apps) => apps.filter((app: any) => app.email === user.email),
+    });
+
+    const application = applications?.[0];
+    const parentPhones = application?.phones?.filter((p: any) => 
+      p.name?.toLowerCase().includes('parent') || 
+      p.name?.toLowerCase().includes('guardian') ||
+      p.name?.toLowerCase().includes('მშობელი') ||
+      p.name?.toLowerCase().includes('родитель')
+    ) || [];
+
+    if (!application && !user.phone) return null;
+
+    return (
+      <div className="py-4 space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {user.phone && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{t('pages.usersDetailsPhone')}</span>
+              </div>
+              <p className="text-sm text-muted-foreground pl-6">{user.phone}</p>
+            </div>
+          )}
+          {parentPhones.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Phone className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">{t('pages.usersDetailsParentPhone')}</span>
+              </div>
+              <div className="space-y-1 pl-6">
+                {parentPhones.map((p: any, idx: number) => (
+                  <p key={idx} className="text-sm font-medium text-primary">
+                    {p.name}: {p.phone}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+          {application?.phones && application.phones.length > 0 && parentPhones.length === 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{t('pages.usersDetailsAdditionalPhones')}</span>
+              </div>
+              <div className="space-y-1 pl-6">
+                {application.phones.map((p: any, idx: number) => (
+                  <p key={idx} className="text-sm text-muted-foreground">
+                    {p.name ? `${p.name}: ${p.phone}` : p.phone}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+          {application?.notes && (
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Info className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{t('pages.usersDetailsNotes')}</span>
+              </div>
+              <p className="text-sm text-muted-foreground pl-6">{application.notes}</p>
+            </div>
+          )}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Info className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">{t('pages.usersDetailsEmail')}</span>
+            </div>
+            <p className="text-sm text-muted-foreground pl-6">{user.email}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'ADMIN':
@@ -276,56 +360,102 @@ export default function Users() {
                 </TableCell>
               </TableRow>
             ) : users.length > 0 ? (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.email}</TableCell>
-                  <TableCell>
-                    {user.first_name} {user.last_name}
-                  </TableCell>
-                  <TableCell>
-                    <UserCohortCell user={user} />
-                  </TableCell>
-                  <TableCell>{user.phone || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {user.is_active ? (
-                      <Badge variant="outline" className="gap-1">
-                        <UserCheck className="h-3 w-3" />
-                        {t('pages.usersStatusActive')}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="gap-1">
-                        <UserX className="h-3 w-3" />
-                        {t('pages.usersStatusInactive')}
-                      </Badge>
+              users.map((user) => {
+                const isExpanded = expandedUsers.has(user.id);
+                return (
+                  <>
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.email}</TableCell>
+                      <TableCell>
+                        {user.first_name} {user.last_name}
+                      </TableCell>
+                      <TableCell>
+                        <UserCohortCell user={user} />
+                      </TableCell>
+                      <TableCell>
+                        {user.phone ? (
+                          <div className="flex items-center gap-1">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-medium">{user.phone}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getRoleBadgeVariant(user.role)}>
+                          {user.role === 'ADMIN' ? t('layout.userRoleAdmin') : 
+                           user.role === 'LECTURER' ? t('layout.userRoleLecturer') : 
+                           user.role === 'STUDENT' ? t('layout.userRoleStudent') : 
+                           user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {user.is_active ? (
+                          <Badge variant="outline" className="gap-1">
+                            <UserCheck className="h-3 w-3" />
+                            {t('pages.usersStatusActive')}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="gap-1">
+                            <UserX className="h-3 w-3" />
+                            {t('pages.usersStatusInactive')}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const newExpanded = new Set(expandedUsers);
+                              if (isExpanded) {
+                                newExpanded.delete(user.id);
+                              } else {
+                                newExpanded.add(user.id);
+                              }
+                              setExpandedUsers(newExpanded);
+                            }}
+                            title={isExpanded ? t('pages.usersHideDetails') : t('pages.usersShowDetails')}
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Edit user"
+                            title="Edit"
+                            onClick={() => openEditDialog(user)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Delete user"
+                            title="Delete"
+                            onClick={() => openDeleteDialog(user)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {isExpanded && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="bg-muted/50">
+                          <UserDetailsCell user={user} />
+                        </TableCell>
+                      </TableRow>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Edit user"
-                        title="Edit"
-                        onClick={() => openEditDialog(user)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Delete user"
-                        title="Delete"
-                        onClick={() => openDeleteDialog(user)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                  </>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
