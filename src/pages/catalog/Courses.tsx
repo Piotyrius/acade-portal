@@ -48,12 +48,12 @@ export default function Courses() {
     mutationFn: createCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: 'Success', description: 'Course created successfully' });
+      toast({ title: t('pages.catalogCoursesToastCreateTitle'), description: t('pages.catalogCoursesToastCreateDescription') });
       setIsDialogOpen(false);
       setFormData({ program: '', title: '', code: '', hours: 1, credits: '', description: '' });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCoursesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -61,13 +61,13 @@ export default function Courses() {
     mutationFn: ({ id, data }: { id: string; data: Partial<CourseDto> }) => updateCourse(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: 'Success', description: 'Course updated successfully' });
+      toast({ title: t('pages.catalogCoursesToastUpdateTitle'), description: t('pages.catalogCoursesToastUpdateDescription') });
       setIsDialogOpen(false);
       setEditingCourse(null);
       setFormData({ program: '', title: '', code: '', hours: 1, credits: '', description: '' });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCoursesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -75,10 +75,10 @@ export default function Courses() {
     mutationFn: deleteCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: 'Success', description: 'Course deleted successfully' });
+      toast({ title: t('pages.catalogCoursesToastDeleteTitle'), description: t('pages.catalogCoursesToastDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCoursesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -122,7 +122,7 @@ export default function Courses() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this course?')) {
+    if (confirm(t('pages.catalogCoursesDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -150,12 +150,12 @@ export default function Courses() {
     <div className="space-y-6">
       <div className="flex items-center justify-between courses_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Courses</h2>
-          <p className="text-muted-foreground">Browse and manage courses</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.catalogCoursesTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.catalogCoursesSubtitle')}</p>
         </div>
         <Button onClick={handleOpenCreate} className='courses_plus_btn'>
           <Plus className="mr-2 h-4 w-4" />
-          Add Course
+          {t('pages.catalogCoursesAddCourse')}
         </Button>
       </div>
 
@@ -163,7 +163,7 @@ export default function Courses() {
         <div className="relative flex-1 max-w-sm courses_search">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search courses..."
+            placeholder={t('pages.catalogCoursesSearchPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -186,14 +186,14 @@ export default function Courses() {
                     <div>
                       <CardTitle>{course.title}</CardTitle>
                       <CardDescription className="mt-1">
-                        {course.code} • {program?.name || 'Unknown Program'}
+                        {course.code} • {program?.name || t('pages.catalogCoursesUnknownProgram')}
                       </CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <p className="text-sm font-medium">{course.hours}h</p>
-                      <p className="text-xs text-muted-foreground">Hours</p>
+                      <p className="text-xs text-muted-foreground">{t('pages.catalogCoursesHoursLabel')}</p>
                     </div>
                     <div className="flex gap-1">
                       <Button variant="ghost" className='edit_icon' size="sm" onClick={() => handleOpenEdit(course)}>
@@ -214,7 +214,7 @@ export default function Courses() {
       {filteredCourses.length === 0 && courses.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            {searchTerm ? 'No courses found matching your search' : 'No courses yet. Create your first course!'}
+            {searchTerm ? t('pages.catalogCoursesNoResultsSearch') : t('pages.catalogCoursesNoResultsDefault')}
           </CardContent>
         </Card>
       )}
@@ -222,18 +222,18 @@ export default function Courses() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingCourse ? 'Edit Course' : 'Create Course'}</DialogTitle>
+            <DialogTitle>{editingCourse ? t('pages.catalogCoursesDialogEditTitle') : t('pages.catalogCoursesDialogCreateTitle')}</DialogTitle>
             <DialogDescription>
-              {editingCourse ? 'Update course details' : 'Add a new course'}
+              {editingCourse ? t('pages.catalogCoursesDialogEditDescription') : t('pages.catalogCoursesDialogCreateDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="program">Program *</Label>
+                <Label htmlFor="program">{t('pages.catalogCoursesFieldProgram')} *</Label>
                 <Select value={formData.program} onValueChange={(value) => setFormData({ ...formData, program: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select program" />
+                    <SelectValue placeholder={t('pages.catalogCoursesFieldProgramPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {programs.map((p) => (
@@ -245,7 +245,7 @@ export default function Courses() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="title">{t('pages.catalogCoursesFieldTitle')} *</Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -254,7 +254,7 @@ export default function Courses() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="code">Code *</Label>
+                <Label htmlFor="code">{t('pages.catalogCoursesFieldCode')} *</Label>
                 <Input
                   id="code"
                   value={formData.code}
@@ -264,7 +264,7 @@ export default function Courses() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="hours">Hours *</Label>
+                  <Label htmlFor="hours">{t('pages.catalogCoursesFieldHours')} *</Label>
                   <Input
                     id="hours"
                     type="number"
@@ -275,7 +275,7 @@ export default function Courses() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="credits">Credits</Label>
+                  <Label htmlFor="credits">{t('pages.catalogCoursesFieldCredits')}</Label>
                   <Input
                     id="credits"
                     type="number"
@@ -286,7 +286,7 @@ export default function Courses() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('pages.catalogCoursesFieldDescription')}</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -297,10 +297,10 @@ export default function Courses() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('pages.catalogCoursesCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingCourse ? 'Update' : 'Create'}
+                {editingCourse ? t('pages.catalogCoursesButtonUpdate') : t('pages.catalogCoursesButtonCreate')}
               </Button>
             </DialogFooter>
           </form>

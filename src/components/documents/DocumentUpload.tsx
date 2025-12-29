@@ -26,6 +26,7 @@ import { createDocument } from '@/api/endpoints/documents';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '@/lib/errors';
 import { useAuthStore } from '@/store/authStore';
+import { useTranslation } from 'react-i18next';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = {
@@ -37,12 +38,12 @@ const ACCEPTED_FILE_TYPES = {
     'text/plain': ['.txt'],
 };
 
-const formSchema = z.object({
-    category: z.string().min(1, 'Category is required'),
-    description: z.string().min(1, 'Description is required'),
+const getFormSchema = (t: (key: string) => string) => z.object({
+    category: z.string().min(1, t('pages.documentsUploadCategoryRequired')),
+    description: z.string().min(1, t('pages.documentsUploadDescriptionRequired')),
     visibility: z.enum(['PRIVATE', 'LECTURER', 'ADMIN']),
-    file: z.instanceof(File, { message: 'File is required' })
-        .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    file: z.instanceof(File, { message: t('pages.documentsUploadFileRequired') })
+        .refine((file) => file.size <= MAX_FILE_SIZE, t('pages.documentsUploadFileSizeError'))
 });
 
 interface DocumentUploadProps {
@@ -50,10 +51,13 @@ interface DocumentUploadProps {
 }
 
 export function DocumentUpload({ onSuccess }: DocumentUploadProps) {
+    const { t } = useTranslation('common');
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
     const [preview, setPreview] = useState<string | null>(null);
+
+    const formSchema = getFormSchema(t);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -134,13 +138,13 @@ export function DocumentUpload({ onSuccess }: DocumentUploadProps) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['documents'] });
-            toast({ title: 'Success', description: 'Document uploaded successfully' });
+            toast({ title: t('pages.documentsUploadSuccess'), description: t('pages.documentsUploadSuccess') });
             form.reset();
             setPreview(null);
             onSuccess?.();
         },
         onError: (error) => {
-            toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+            toast({ title: t('pages.documentsUploadError'), description: getErrorMessage(error), variant: 'destructive' });
         },
     });
 
@@ -158,21 +162,21 @@ export function DocumentUpload({ onSuccess }: DocumentUploadProps) {
                     name="category"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Category</FormLabel>
+                            <FormLabel>{t('pages.documentsUploadCategory')}</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select category" />
+                                        <SelectValue placeholder={t('pages.documentsUploadCategoryPlaceholder')} />
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                    <SelectItem value="STUDENT_DOC">Student Document</SelectItem>
-                                    <SelectItem value="COURSE_MATERIAL">Course Material</SelectItem>
-                                    <SelectItem value="ADMINISTRATIVE">Administrative</SelectItem>
-                                    <SelectItem value="CERTIFICATE">Certificate</SelectItem>
-                                    <SelectItem value="CONSENT">Consent Form</SelectItem>
-                                    <SelectItem value="ID">ID Document</SelectItem>
-                                    <SelectItem value="OTHER">Other</SelectItem>
+                                    <SelectItem value="STUDENT_DOC">{t('pages.documentsCategoryStudentDoc')}</SelectItem>
+                                    <SelectItem value="COURSE_MATERIAL">{t('pages.documentsCategoryCourseMaterial')}</SelectItem>
+                                    <SelectItem value="ADMINISTRATIVE">{t('pages.documentsCategoryAdministrative')}</SelectItem>
+                                    <SelectItem value="CERTIFICATE">{t('pages.documentsCategoryCertificate')}</SelectItem>
+                                    <SelectItem value="CONSENT">{t('pages.documentsCategoryConsent')}</SelectItem>
+                                    <SelectItem value="ID">{t('pages.documentsCategoryId')}</SelectItem>
+                                    <SelectItem value="OTHER">{t('pages.documentsCategoryOther')}</SelectItem>
                                 </SelectContent>
                             </Select>
                             <FormMessage />
@@ -185,9 +189,9 @@ export function DocumentUpload({ onSuccess }: DocumentUploadProps) {
                     name="description"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>{t('pages.documentsUploadDescription')}</FormLabel>
                             <FormControl>
-                                <Textarea placeholder="Enter document description..." {...field} />
+                                <Textarea placeholder={t('pages.documentsUploadDescriptionPlaceholder')} {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -199,17 +203,17 @@ export function DocumentUpload({ onSuccess }: DocumentUploadProps) {
                     name="visibility"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Visibility</FormLabel>
+                            <FormLabel>{t('pages.documentsUploadVisibility')}</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select visibility" />
+                                        <SelectValue placeholder={t('pages.documentsUploadVisibilityPlaceholder')} />
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                    <SelectItem value="PRIVATE">Private</SelectItem>
-                                    <SelectItem value="LECTURER">Lecturer</SelectItem>
-                                    <SelectItem value="ADMIN">Admin</SelectItem>
+                                    <SelectItem value="PRIVATE">{t('pages.documentsVisibilityPrivate')}</SelectItem>
+                                    <SelectItem value="LECTURER">{t('pages.documentsVisibilityLecturer')}</SelectItem>
+                                    <SelectItem value="ADMIN">{t('pages.documentsVisibilityAdmin')}</SelectItem>
                                 </SelectContent>
                             </Select>
                             <FormMessage />
@@ -241,9 +245,9 @@ export function DocumentUpload({ onSuccess }: DocumentUploadProps) {
                             </div>
                         ) : (
                             <div className="text-sm text-muted-foreground">
-                                <p className="font-medium">Drag & drop a file here, or click to select</p>
+                                <p className="font-medium">{t('pages.documentsUploadDragDrop')}</p>
                                 <p className="text-xs mt-1">
-                                    PDF, DOCX, JPG, PNG up to 5MB
+                                    {t('pages.documentsUploadFileTypes')}
                                 </p>
                             </div>
                         )}
@@ -266,11 +270,11 @@ export function DocumentUpload({ onSuccess }: DocumentUploadProps) {
                                 setPreview(null);
                             }}
                         >
-                            Remove File
+                            {t('pages.documentsUploadRemoveFile')}
                         </Button>
                     )}
                     <Button type="submit" disabled={createMutation.isPending}>
-                        {createMutation.isPending ? 'Uploading...' : 'Upload Document'}
+                        {createMutation.isPending ? t('pages.documentsUploadButtonUploading') : t('pages.documentsUploadButton')}
                     </Button>
                 </div>
             </form>

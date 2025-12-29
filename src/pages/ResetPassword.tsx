@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { confirmPasswordReset } from '@/api/endpoints/auth';
 import { Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ResetPassword() {
+  const { t } = useTranslation('common');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
@@ -22,8 +24,8 @@ export default function ResetPassword() {
     const tokenParam = searchParams.get('token');
     if (!tokenParam) {
       toast({
-        title: 'Invalid link',
-        description: 'Password reset link is missing or invalid.',
+        title: t('pages.resetPasswordErrorInvalidLinkTitle'),
+        description: t('pages.resetPasswordErrorInvalidLinkDescription'),
         variant: 'destructive',
       });
       navigate('/forgot-password');
@@ -37,8 +39,8 @@ export default function ResetPassword() {
 
     if (password !== confirmPassword) {
       toast({
-        title: 'Passwords do not match',
-        description: 'Please make sure both passwords are the same.',
+        title: t('pages.resetPasswordErrorPasswordsNotMatchTitle'),
+        description: t('pages.resetPasswordErrorPasswordsNotMatchDescription'),
         variant: 'destructive',
       });
       return;
@@ -46,8 +48,8 @@ export default function ResetPassword() {
 
     if (password.length < 8) {
       toast({
-        title: 'Password too short',
-        description: 'Password must be at least 8 characters long.',
+        title: t('pages.resetPasswordErrorPasswordTooShortTitle'),
+        description: t('pages.resetPasswordErrorPasswordTooShortDescription'),
         variant: 'destructive',
       });
       return;
@@ -55,8 +57,8 @@ export default function ResetPassword() {
 
     if (!token) {
       toast({
-        title: 'Invalid token',
-        description: 'Password reset link is invalid.',
+        title: t('pages.resetPasswordErrorInvalidTokenTitle'),
+        description: t('pages.resetPasswordErrorInvalidTokenDescription'),
         variant: 'destructive',
       });
       return;
@@ -68,16 +70,16 @@ export default function ResetPassword() {
       await confirmPasswordReset(token, password);
       setIsSuccess(true);
       toast({
-        title: 'Password reset successful',
-        description: 'Your password has been reset. You can now login with your new password.',
+        title: t('pages.resetPasswordToastSuccessTitle'),
+        description: t('pages.resetPasswordToastSuccessDescription'),
       });
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to reset password';
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || t('pages.resetPasswordErrorFallback');
       toast({
-        title: 'Error',
+        title: t('pages.resetPasswordToastErrorTitle'),
         description: errorMessage,
         variant: 'destructive',
       });
@@ -96,17 +98,17 @@ export default function ResetPassword() {
                 <CheckCircle2 className="h-6 w-6 text-green-600" />
               </div>
             </div>
-            <CardTitle className="text-2xl">Password Reset Successful</CardTitle>
+            <CardTitle className="text-2xl">{t('pages.resetPasswordSuccessTitle')}</CardTitle>
             <CardDescription>
-              Your password has been reset successfully
+              {t('pages.resetPasswordSuccessDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              You can now login with your new password. Redirecting to login page...
+              {t('pages.resetPasswordSuccessRedirectMessage')}
             </p>
             <Button asChild className="w-full">
-              <Link to="/login">Go to Login</Link>
+              <Link to="/login">{t('pages.resetPasswordButtonGoToLogin')}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -125,34 +127,34 @@ export default function ResetPassword() {
           <div className="flex justify-center">
             <img src="/logo.svg" alt="Cyber Academy" className="h-16 w-auto" />
           </div>
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
+          <CardTitle className="text-2xl">{t('pages.resetPasswordTitle')}</CardTitle>
           <CardDescription>
-            Enter your new password below
+            {t('pages.resetPasswordSubtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password">{t('pages.resetPasswordFieldNewPassword')}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter new password"
+                placeholder={t('pages.resetPasswordFieldNewPasswordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
               />
               <p className="text-xs text-muted-foreground">
-                Password must be at least 8 characters long
+                {t('pages.resetPasswordFieldNewPasswordHelper')}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t('pages.resetPasswordFieldConfirmPassword')}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="Confirm new password"
+                placeholder={t('pages.resetPasswordFieldConfirmPasswordPlaceholder')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -160,13 +162,13 @@ export default function ResetPassword() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Resetting...' : 'Reset Password'}
+              {isLoading ? t('pages.resetPasswordButtonResetting') : t('pages.resetPasswordButtonReset')}
             </Button>
             <div className="text-center">
               <Button asChild variant="link" className="text-sm">
                 <Link to="/login">
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to login
+                  {t('pages.resetPasswordButtonBackToLogin')}
                 </Link>
               </Button>
             </div>

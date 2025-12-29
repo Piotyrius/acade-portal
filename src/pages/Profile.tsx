@@ -15,9 +15,11 @@ import { getErrorMessage } from '@/lib/errors';
 import { User, Mail, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import { MfaSetup } from '@/components/MfaSetup';
 import { uploadProfilePicture } from '@/api/endpoints/gallery';
+import { useTranslation } from 'react-i18next';
 
 
 export default function Profile() {
+  const { t } = useTranslation('common');
   const { user, setAuth } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -93,11 +95,11 @@ export default function Profile() {
         );
       }
       qc.invalidateQueries({ queryKey: ['me'] });
-      toast({ title: 'Success', description: 'Profile updated successfully' });
+      toast({ title: t('pages.profileToastUpdateSuccessTitle'), description: t('pages.profileToastUpdateSuccessDescription') });
       setIsEditing(false);
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.profileToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -132,8 +134,8 @@ export default function Profile() {
       const secret = (data as any).mfa_secret || (data as any).secret || (data as any).totp_secret || '';
       if (!secret) {
         toast({
-          title: 'Error',
-          description: 'Failed to retrieve MFA secret. Please try again.',
+          title: t('pages.profileToastErrorTitle'),
+          description: t('pages.profileMfaErrorSecretRetrieval'),
           variant: 'destructive',
         });
         return;
@@ -168,8 +170,8 @@ export default function Profile() {
       }
       qc.invalidateQueries({ queryKey: ['me'] });
       toast({
-        title: 'Success',
-        description: 'MFA has been enabled successfully',
+        title: t('pages.profileToastMfaEnabledTitle'),
+        description: t('pages.profileToastMfaEnabledDescription'),
       });
       setMfaSetupOpen(false);
       setMfaSecret(null);
@@ -208,8 +210,8 @@ export default function Profile() {
       }
 
       toast({
-        title: 'Success',
-        description: 'Profile picture updated!',
+        title: t('pages.profileToastPictureUpdateTitle'),
+        description: t('pages.profileToastPictureUpdateDescription'),
       });
     },
     onError: (error) => {
@@ -239,8 +241,8 @@ export default function Profile() {
       }
       qc.invalidateQueries({ queryKey: ['me'] });
       toast({
-        title: 'Success',
-        description: 'MFA has been disabled',
+        title: t('pages.profileToastMfaDisabledTitle'),
+        description: t('pages.profileToastMfaDisabledDescription'),
       });
       setMfaDisableOpen(false);
     },
@@ -270,7 +272,7 @@ export default function Profile() {
     : 'U';
 
   if (isLoading && !displayUser) {
-    return <div className="p-6">Loading profile...</div>;
+    return <div className="p-6">{t('pages.profileLoading')}</div>;
   }
 
   
@@ -278,15 +280,15 @@ export default function Profile() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Profile</h2>
-        <p className="text-muted-foreground">Manage your account settings and preferences</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t('pages.profileTitle')}</h2>
+        <p className="text-muted-foreground">{t('pages.profileSubtitle')}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>Your personal details and account information</CardDescription>
+            <CardTitle>{t('pages.profileCardInfoTitle')}</CardTitle>
+            <CardDescription>{t('pages.profileCardInfoDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
 
@@ -320,7 +322,7 @@ export default function Profile() {
                 <div className="flex items-center gap-3">
                   <User className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm font-medium">Full Name</p>
+                    <p className="text-sm font-medium">{t('pages.profileFieldFullName')}</p>
                     <p className="text-sm text-muted-foreground">
                       {firstName} {lastName}
                     </p>
@@ -329,18 +331,18 @@ export default function Profile() {
                 <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm font-medium">Email</p>
+                    <p className="text-sm font-medium">{t('pages.profileFieldEmail')}</p>
                     <p className="text-sm text-muted-foreground">{displayUser?.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Shield className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm font-medium">Role</p>
+                    <p className="text-sm font-medium">{t('pages.profileFieldRole')}</p>
                     <p className="text-sm text-muted-foreground">{displayUser?.role}</p>
                   </div>
                 </div>
-                <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+                <Button onClick={() => setIsEditing(true)}>{t('pages.profileButtonEdit')}</Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -364,7 +366,7 @@ export default function Profile() {
                       htmlFor="profile-upload"
                       className="cursor-pointer text-sm font-medium underline"
                     >
-                      Change Picture
+                      {t('pages.profileButtonChangePicture')}
                     </Label>
                     <input
                       id="profile-upload"
@@ -379,14 +381,14 @@ export default function Profile() {
                     />
                     {pendingProfilePictureFile ? (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Selected: {pendingProfilePictureFile.name}
+                        {t('pages.profilePictureSelected', { name: pendingProfilePictureFile.name })}
                       </p>
                     ) : null}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="first_name">First Name</Label>
+                  <Label htmlFor="first_name">{t('pages.profileFieldFirstName')}</Label>
                   <Input
                     id="first_name"
                     value={formData.first_name}
@@ -395,7 +397,7 @@ export default function Profile() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="last_name">Last Name</Label>
+                  <Label htmlFor="last_name">{t('pages.profileFieldLastName')}</Label>
                   <Input
                     id="last_name"
                     value={formData.last_name}
@@ -404,7 +406,7 @@ export default function Profile() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('pages.profileFieldEmail')}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -412,11 +414,11 @@ export default function Profile() {
                     disabled
                     className="bg-muted"
                   />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                  <p className="text-xs text-muted-foreground">{t('pages.profileEmailCannotChange')}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit" disabled={updateMutation.isPending || uploadPictureMutation.isPending}>
-                    {updateMutation.isPending || uploadPictureMutation.isPending ? 'Saving...' : 'Save Changes'}
+                    {updateMutation.isPending || uploadPictureMutation.isPending ? t('pages.profileButtonSaving') : t('pages.profileButtonSaveChanges')}
                   </Button>
                   <Button
                     type="button"
@@ -426,7 +428,7 @@ export default function Profile() {
                       setPendingProfilePictureFile(null);
                     }}
                   >
-                    Cancel
+                    {t('pages.profileButtonCancel')}
                   </Button>
                 </div>
               </form>
@@ -436,30 +438,30 @@ export default function Profile() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Account Security</CardTitle>
-            <CardDescription>Manage your password and security settings</CardDescription>
+            <CardTitle>{t('pages.profileCardSecurityTitle')}</CardTitle>
+            <CardDescription>{t('pages.profileCardSecurityDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Password</Label>
-              <p className="text-sm text-muted-foreground">Last changed: Never</p>
-              <Button variant="outline">Change Password</Button>
+              <Label>{t('pages.profileFieldPassword')}</Label>
+              <p className="text-sm text-muted-foreground">{t('pages.profilePasswordLastChanged')}</p>
+              <Button variant="outline">{t('pages.profileButtonChangePassword')}</Button>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Two-Factor Authentication</Label>
-                  <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                  <Label>{t('pages.profileFieldMfa')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('pages.profileMfaDescription')}</p>
                 </div>
                 {mfaEnabled ? (
                   <Badge variant="default" className="flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3" />
-                    Enabled
+                    {t('pages.profileMfaStatusEnabled')}
                   </Badge>
                 ) : (
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <XCircle className="h-3 w-3" />
-                    Disabled
+                    {t('pages.profileMfaStatusDisabled')}
                   </Badge>
                 )}
               </div>
@@ -469,7 +471,7 @@ export default function Profile() {
                   onClick={() => setMfaDisableOpen(true)}
                   disabled={mfaDisableMutation.isPending}
                 >
-                  {mfaDisableMutation.isPending ? 'Disabling...' : 'Disable MFA'}
+                  {mfaDisableMutation.isPending ? t('pages.profileButtonDisabling') : t('pages.profileButtonDisableMfa')}
                 </Button>
               ) : (
                 <Button
@@ -477,7 +479,7 @@ export default function Profile() {
                   onClick={handleStartMfaSetup}
                   disabled={mfaSetupMutation.isPending}
                 >
-                  {mfaSetupMutation.isPending ? 'Setting up...' : 'Enable MFA'}
+                  {mfaSetupMutation.isPending ? t('pages.profileButtonSettingUp') : t('pages.profileButtonEnableMfa')}
                 </Button>
               )}
             </div>
@@ -489,9 +491,9 @@ export default function Profile() {
       <Dialog open={mfaSetupOpen} onOpenChange={setMfaSetupOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Set Up Two-Factor Authentication</DialogTitle>
+            <DialogTitle>{t('pages.profileMfaDialogSetupTitle')}</DialogTitle>
             <DialogDescription>
-              Follow the steps below to enable MFA for your account
+              {t('pages.profileMfaDialogSetupDescription')}
             </DialogDescription>
           </DialogHeader>
           {mfaSecret && (
@@ -512,19 +514,18 @@ export default function Profile() {
       <AlertDialog open={mfaDisableOpen} onOpenChange={setMfaDisableOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disable Two-Factor Authentication?</AlertDialogTitle>
+            <AlertDialogTitle>{t('pages.profileMfaDialogDisableTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to disable MFA? This will make your account less secure. 
-              You can re-enable it at any time.
+              {t('pages.profileMfaDialogDisableDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('pages.profileButtonCancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDisableMfa}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Disable MFA
+              {t('pages.profileButtonDisableMfa')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

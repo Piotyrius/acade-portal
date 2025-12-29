@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Users, FileCheck, DollarSign, Award, UserPlus, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface Activity {
   id: string;
@@ -100,12 +101,13 @@ const getActivityColor = (type: Activity['type']) => {
 };
 
 export function ActivityTimeline({ activities = mockActivities, maxItems = 10 }: ActivityTimelineProps) {
+  const { t } = useTranslation('common');
   const displayedActivities = activities.slice(0, maxItems);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+        <CardTitle>{t('layout.activityTimelineTitle')}</CardTitle>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px]">

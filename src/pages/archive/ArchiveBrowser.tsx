@@ -41,6 +41,7 @@ import {
   FileObjectRequest,
 } from '@/api/endpoints/archive';
 import { getUsers } from '@/api/endpoints/auth';
+import { useTranslation } from 'react-i18next';
 
 // Helper function to format file size
 function formatFileSize(bytes: number | null): string {
@@ -51,6 +52,7 @@ function formatFileSize(bytes: number | null): string {
 }
 
 export default function ArchiveBrowser() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -93,12 +95,12 @@ export default function ArchiveBrowser() {
       restoreArchivedFile(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['archivedFiles'] });
-      toast({ title: 'Success', description: 'File restored successfully' });
+      toast({ title: t('pages.archiveBrowserToastRestoreSuccessTitle'), description: t('pages.archiveBrowserToastRestoreSuccessDescription') });
       setRestoreDialogOpen(false);
       setSelectedFile(null);
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.archiveBrowserToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -107,9 +109,9 @@ export default function ArchiveBrowser() {
       setIsDownloading(file.id);
       const blob = await downloadArchivedFile(file.id);
       downloadBlob(blob, file.original_name);
-      toast({ title: 'Success', description: 'File downloaded successfully' });
+      toast({ title: t('pages.archiveBrowserToastDownloadSuccessTitle'), description: t('pages.archiveBrowserToastDownloadSuccessDescription') });
     } catch (error) {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.archiveBrowserToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     } finally {
       setIsDownloading(null);
     }
@@ -140,8 +142,8 @@ export default function ArchiveBrowser() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Archive Browser</h2>
-          <p className="text-muted-foreground">You don't have permission to view archived files</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.archiveBrowserTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.archiveBrowserNoPermission')}</p>
         </div>
       </div>
     );
@@ -160,14 +162,14 @@ export default function ArchiveBrowser() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Archive Browser</h2>
-          <p className="text-muted-foreground">Browse and restore deleted files</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.archiveBrowserTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.archiveBrowserSubtitle')}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Archived Files</CardTitle>
+          <CardTitle>{t('pages.archiveBrowserCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -176,7 +178,7 @@ export default function ArchiveBrowser() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search files..."
+                  placeholder={t('pages.archiveBrowserSearchPlaceholder')}
                   className="pl-9"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
@@ -184,21 +186,21 @@ export default function ArchiveBrowser() {
               </div>
               <Select value={ownerTypeFilter} onValueChange={setOwnerTypeFilter}>
                 <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Owner Type" />
+                  <SelectValue placeholder={t('pages.archiveBrowserFilterOwnerTypePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="DOCUMENT">Document</SelectItem>
-                  <SelectItem value="GALLERY_WORK">Gallery Work</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
+                  <SelectItem value="all">{t('pages.archiveBrowserFilterAllTypes')}</SelectItem>
+                  <SelectItem value="DOCUMENT">{t('pages.archiveBrowserFilterTypeDocument')}</SelectItem>
+                  <SelectItem value="GALLERY_WORK">{t('pages.archiveBrowserFilterTypeGalleryWork')}</SelectItem>
+                  <SelectItem value="OTHER">{t('pages.archiveBrowserFilterTypeOther')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={deletedByFilter} onValueChange={setDeletedByFilter}>
                 <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Deleted By" />
+                  <SelectValue placeholder={t('pages.archiveBrowserFilterDeletedByPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="all">{t('pages.archiveBrowserFilterAllUsers')}</SelectItem>
                   {users.map((u: any) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.first_name} {u.last_name}
@@ -211,26 +213,26 @@ export default function ArchiveBrowser() {
             {/* Table */}
             {isFetching && (
               <p className="text-xs text-muted-foreground">
-                Searching…
+                {t('pages.archiveBrowserSearching')}
               </p>
             )}
             {archivedFiles.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Archive className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No archived files found</p>
+                <p>{t('pages.archiveBrowserNoneFound')}</p>
               </div>
             ) : (
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>File Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>MIME Type</TableHead>
-                      <TableHead>Deleted At</TableHead>
-                      <TableHead>Visibility</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t('pages.archiveBrowserColumnFileName')}</TableHead>
+                      <TableHead>{t('pages.archiveBrowserColumnType')}</TableHead>
+                      <TableHead>{t('pages.archiveBrowserColumnSize')}</TableHead>
+                      <TableHead>{t('pages.archiveBrowserColumnMimeType')}</TableHead>
+                      <TableHead>{t('pages.archiveBrowserColumnDeletedAt')}</TableHead>
+                      <TableHead>{t('pages.archiveBrowserColumnVisibility')}</TableHead>
+                      <TableHead className="text-right">{t('pages.archiveBrowserColumnActions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -245,7 +247,7 @@ export default function ArchiveBrowser() {
                         <TableCell>
                           {file.deleted_at
                             ? new Date(file.deleted_at).toLocaleDateString()
-                            : 'Unknown'}
+                            : t('pages.archiveBrowserUnknown')}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -269,7 +271,7 @@ export default function ArchiveBrowser() {
                               disabled={isDownloading === file.id}
                             >
                               <Download className="h-4 w-4 mr-2" />
-                              {isDownloading === file.id ? 'Downloading...' : 'Download'}
+                              {isDownloading === file.id ? t('pages.archiveBrowserButtonDownloading') : t('pages.archiveBrowserButtonDownload')}
                             </Button>
                             <Button
                               variant="outline"
@@ -277,7 +279,7 @@ export default function ArchiveBrowser() {
                               onClick={() => handleRestore(file)}
                             >
                               <RotateCcw className="h-4 w-4 mr-2" />
-                              Restore
+                              {t('pages.archiveBrowserButtonRestore')}
                             </Button>
                           </div>
                         </TableCell>
@@ -295,36 +297,36 @@ export default function ArchiveBrowser() {
       <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Restore File</DialogTitle>
+            <DialogTitle>{t('pages.archiveBrowserDialogRestoreTitle')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to restore this file? It will be moved back from the archive.
+              {t('pages.archiveBrowserDialogRestoreDescription')}
             </DialogDescription>
           </DialogHeader>
           {selectedFile && (
             <div className="space-y-2 py-4">
               <div>
-                <Label>File Name</Label>
+                <Label>{t('pages.archiveBrowserDialogFieldFileName')}</Label>
                 <p className="text-sm font-medium">{selectedFile.original_name}</p>
               </div>
               <div>
-                <Label>Type</Label>
+                <Label>{t('pages.archiveBrowserDialogFieldType')}</Label>
                 <p className="text-sm text-muted-foreground">{selectedFile.owner_type}</p>
               </div>
               <div>
-                <Label>Size</Label>
+                <Label>{t('pages.archiveBrowserDialogFieldSize')}</Label>
                 <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
               </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setRestoreDialogOpen(false)}>
-              Cancel
+              {t('pages.archiveBrowserDialogCancel')}
             </Button>
             <Button
               onClick={handleRestoreConfirm}
               disabled={restoreMutation.isPending}
             >
-              {restoreMutation.isPending ? 'Restoring...' : 'Restore'}
+              {restoreMutation.isPending ? t('pages.archiveBrowserDialogButtonRestoring') : t('pages.archiveBrowserDialogButtonRestore')}
             </Button>
           </DialogFooter>
         </DialogContent>
