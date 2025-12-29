@@ -27,35 +27,17 @@ export default defineConfig(({ mode }) => ({
         manualChunks: (id) => {
           // Split vendor libraries into separate chunks
           if (id.includes('node_modules')) {
-            // React and React DOM
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-react';
-            }
-            // Chart libraries (recharts)
+            // Keep React core together - don't split React/ReactDOM as they need to load first
+            // Chart libraries (recharts) - large and can be lazy loaded
             if (id.includes('recharts')) {
               return 'vendor-charts';
             }
-            // Date libraries
-            if (id.includes('date-fns')) {
-              return 'vendor-dates';
-            }
-            // React Query
-            if (id.includes('@tanstack/react-query')) {
-              return 'vendor-query';
-            }
-            // i18n libraries
-            if (id.includes('i18next') || id.includes('react-i18next')) {
-              return 'vendor-i18n';
-            }
-            // UI component libraries (lucide-react, etc.)
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-            // Other large vendor libraries
+            // React Big Calendar - large and can be lazy loaded
             if (id.includes('react-big-calendar')) {
               return 'vendor-calendar';
             }
-            // All other node_modules
+            // All other node_modules stay in main vendor chunk
+            // This ensures React loads properly
             return 'vendor';
           }
           // Split Reporting page into its own chunk (it's large with charts)
