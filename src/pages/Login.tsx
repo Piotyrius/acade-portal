@@ -13,6 +13,7 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { login } from "@/api/endpoints/auth";
+import { validateAuth } from "@/utils/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -32,12 +33,10 @@ export default function Login() {
   useEffect(() => {
     if (isAuthenticated) {
       // Validate token before redirecting
-      import('@/utils/auth').then(({ validateAuth }) => {
-        validateAuth().then((isValid) => {
-          if (isValid) {
-            navigate('/dashboard', { replace: true });
-          }
-        });
+      validateAuth().then((isValid) => {
+        if (isValid) {
+          navigate('/dashboard', { replace: true });
+        }
       });
     }
   }, [isAuthenticated, navigate]);
