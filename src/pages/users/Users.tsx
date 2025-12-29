@@ -245,7 +245,6 @@ export default function Users() {
     setIsDeleteOpen(true);
   };
 
-  const users = usersPage?.results ?? [];
   const canGoPrev = page > 1;
   const canGoNext = Boolean(usersPage?.next);
 

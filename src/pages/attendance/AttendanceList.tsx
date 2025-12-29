@@ -341,12 +341,12 @@ export default function AttendanceList() {
                       <tr key={record.id}>
 
                         <td>
-                          {(record.student || record.student_id) ? (
+                          {record.student ? (
                             <button
-                              onClick={() => navigate(`/users/${record.student || record.student_id}`)}
+                              onClick={() => navigate(`/users/${record.student}`)}
                               className="font-medium hover:text-primary hover:underline cursor-pointer text-left"
                             >
-                              {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student || record.student_id}
+                              {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student}
                             </button>
                           ) : (
                             <p className="font-medium"> {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student} </p>
