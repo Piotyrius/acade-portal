@@ -53,7 +53,7 @@ export default function ForgotPassword() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <img src="/logo.svg" alt="Cyber Academy" className="h-16 w-auto" />
+            <img src="/logo.svg" alt={t("app.appLogoAlt")} className="h-16 w-auto" />
           </div>
           <CardTitle className="text-2xl">
             {t("auth.resetPasswordTitle")}

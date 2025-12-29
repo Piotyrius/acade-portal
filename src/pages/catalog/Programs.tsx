@@ -1065,7 +1065,7 @@ export default function Programs() {
                 <Label htmlFor="program">Program *</Label>
                 <Select value={courseForm.program} onValueChange={(value) => setCourseForm({ ...courseForm, program: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select program" />
+                    <SelectValue placeholder={t('pages.catalogProgramsSelectProgramPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {programList.map((p) => (
@@ -1157,7 +1157,7 @@ export default function Programs() {
                   onValueChange={(value) => setCohortForm({ ...cohortForm, course: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select course" />
+                    <SelectValue placeholder={t('pages.catalogProgramsSelectCoursePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {courseList.map((c) => (

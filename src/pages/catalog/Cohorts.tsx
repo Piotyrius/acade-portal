@@ -545,7 +545,7 @@ export default function Cohorts() {
                   onValueChange={(value) => setFormData({ ...formData, course: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select course" />
+                    <SelectValue placeholder={t('pages.catalogCohortsSelectCoursePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {courses.map((c) => (

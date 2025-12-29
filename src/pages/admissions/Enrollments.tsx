@@ -442,7 +442,7 @@ export default function Enrollments() {
                       )}
                       <div className="space-y-1">
                         <p className="font-medium">
-                          {enrollment.student_name || enrollment.student || 'Unknown Student'}
+                          {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
                         </p>
                         {enrollment.student_email && (
                           <p className="text-sm text-muted-foreground">
@@ -450,14 +450,14 @@ export default function Enrollments() {
                           </p>
                         )}
                         <p className="text-sm text-muted-foreground">
-                          Cohort: {cohort?.name || enrollment.cohort_name || 'Unknown'}
+                          {t('pages.enrollmentsCohortLabel')} {cohort?.name || enrollment.cohort_name || t('pages.enrollmentsUnknownCohort')}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Enrolled on {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                          {t('pages.enrollmentsEnrolledOnLabel')} {new Date(enrollment.enrolled_at).toLocaleDateString()}
                         </p>
                         {enrollment.notes && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            Notes: {enrollment.notes}
+                            {t('pages.enrollmentsNotesLabel')} {enrollment.notes}
                           </p>
                         )}
                       </div>
@@ -474,7 +474,7 @@ export default function Enrollments() {
                               size="sm"
                               onClick={() => handleActivate(enrollment)}
                               disabled={activateMutation.isPending}
-                              title="Activate Enrollment"
+                              title={t('pages.enrollmentsButtonActivateTitle')}
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -486,7 +486,7 @@ export default function Enrollments() {
                                 size="sm"
                                 onClick={() => handleComplete(enrollment)}
                                 disabled={completeMutation.isPending}
-                                title="Complete Enrollment"
+                                title={t('pages.enrollmentsButtonCompleteTitle')}
                               >
                                 <CheckCircle className="h-4 w-4" />
                               </Button>
@@ -495,7 +495,7 @@ export default function Enrollments() {
                                 size="sm"
                                 onClick={() => handleWithdraw(enrollment)}
                                 disabled={withdrawMutation.isPending}
-                                title="Withdraw Enrollment"
+                                title={t('pages.enrollmentsButtonWithdrawTitle')}
                               >
                                 <XCircle className="h-4 w-4" />
                               </Button>
@@ -507,7 +507,7 @@ export default function Enrollments() {
                               size="sm"
                               onClick={() => handleActivate(enrollment)}
                               disabled={activateMutation.isPending}
-                              title="Reactivate Enrollment"
+                              title={t('pages.enrollmentsButtonReactivateTitle')}
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -526,7 +526,7 @@ export default function Enrollments() {
       {!showExample && totalEnrollments > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Page {page} 
+            {t('pages.enrollmentsPaginationPage')} {page} 
           </p>
           <div className="flex gap-2">
             <Button
@@ -535,7 +535,7 @@ export default function Enrollments() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={!canGoPrev}
             >
-              Previous
+              {t('pages.enrollmentsPaginationPrevious')}
             </Button>
             <Button
               type="button"
@@ -543,7 +543,7 @@ export default function Enrollments() {
               onClick={() => setPage((p) => p + 1)}
               disabled={!canGoNext}
             >
-              Next
+              {t('pages.enrollmentsPaginationNext')}
             </Button>
           </div>
         </div>
@@ -552,7 +552,7 @@ export default function Enrollments() {
       {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && waitlist.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Waitlist</CardTitle>
+            <CardTitle>{t('pages.enrollmentsWaitlistTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -565,10 +565,10 @@ export default function Enrollments() {
                   >
                     <div>
                       <p className="font-medium">
-                        {enrollment.student_name || enrollment.student || 'Unknown Student'}
+                        {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Cohort: {cohort?.name || enrollment.cohort_name || 'Unknown'}
+                        {t('pages.enrollmentsCohortLabel')} {cohort?.name || enrollment.cohort_name || t('pages.enrollmentsUnknownCohort')}
                       </p>
                     </div>
                     <Button
@@ -578,7 +578,7 @@ export default function Enrollments() {
                       disabled={activateMutation.isPending}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      Activate
+                      {t('pages.enrollmentsButtonActivate')}
                     </Button>
                   </div>
                 );
@@ -591,8 +591,8 @@ export default function Enrollments() {
       <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bulk Activate Enrollments</DialogTitle>
-            <DialogDescription>Select enrollments to activate</DialogDescription>
+            <DialogTitle>{t('pages.enrollmentsBulkDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.enrollmentsBulkDialogDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4 max-h-96 overflow-y-auto">
             {filteredEnrollments

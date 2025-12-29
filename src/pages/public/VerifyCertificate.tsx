@@ -205,7 +205,7 @@ export default function VerifyCertificate() {
                 <div className="flex justify-center pt-4">
                   <img
                     src={certificate.qr_code}
-                    alt="Certificate QR Code"
+                    alt={t('pages.qrCodeAlt')}
                     className="h-32 w-32 rounded border"
                   />
                 </div>
