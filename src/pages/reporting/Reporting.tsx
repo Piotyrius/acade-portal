@@ -41,6 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTranslation } from 'react-i18next';
 
 const coerceNumber = (value: unknown): number | undefined => {
   if (value === null || value === undefined) return undefined;
