@@ -12,6 +12,7 @@ import './Recruiting.css';
 import { IoMdClose } from 'react-icons/io';
 import { GoPlus } from 'react-icons/go';
 import { FaArrowLeft } from 'react-icons/fa6';
+import { useTranslation } from 'react-i18next';
 
 type PhoneEntry = {
   name: string;
@@ -19,6 +20,7 @@ type PhoneEntry = {
 };
 
 export default function Recruiting() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -50,7 +52,7 @@ export default function Recruiting() {
   const mutation = useMutation({
     mutationFn: createApplication,
     onSuccess: () => {
-      toast({ title: 'Success', description: 'Student recruited successfully' });
+      toast({ title: t('pages.admissionsRecruitingToastSuccessTitle'), description: t('pages.admissionsRecruitingToastSuccessDescription') });
       setForm({
         firstName: '',
         lastName: '',
@@ -63,7 +65,7 @@ export default function Recruiting() {
       qc.invalidateQueries({ queryKey: ['applications'] });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.admissionsRecruitingToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -80,8 +82,8 @@ export default function Recruiting() {
 
     if (cleanedPhones.length === 0) {
       toast({
-        title: 'Phone required',
-        description: 'Please enter at least one phone number.',
+        title: t('pages.admissionsRecruitingErrorPhoneRequiredTitle'),
+        description: t('pages.admissionsRecruitingErrorPhoneRequiredDescription'),
         variant: 'destructive',
       });
       return;
@@ -115,27 +117,27 @@ export default function Recruiting() {
           )}
 
           <CardHeader className="recruiting_card_header">
-            <CardTitle className="recruit_student_title">Recruit Student</CardTitle>
+            <CardTitle className="recruit_student_title">{t('pages.admissionsRecruitingTitle')}</CardTitle>
           </CardHeader>
 
           <CardContent>
             <form className="recruiting_form" onSubmit={handleSubmit}>
               <div className="name-fields-wrapper">
                 <div className="name-field">
-                  <label> First Name * </label>
+                  <label> {t('pages.admissionsRecruitingFieldFirstName')} * </label>
                   <Input
                     className="recruiting_input_name__lastname"
-                    placeholder="Enter first name"
+                    placeholder={t('pages.admissionsRecruitingFieldFirstNamePlaceholder')}
                     value={form.firstName}
                     onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                     required
                   />
                 </div>
                 <div className="name-field">
-                  <label> Last Name * </label>
+                  <label> {t('pages.admissionsRecruitingFieldLastName')} * </label>
                   <Input
                     className="recruiting_input_name__lastname"
-                    placeholder="Enter last name"
+                    placeholder={t('pages.admissionsRecruitingFieldLastNamePlaceholder')}
                     value={form.lastName}
                     onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                     required
@@ -144,11 +146,11 @@ export default function Recruiting() {
               </div>
 
               <div>
-                <label> Email * </label>
+                <label> {t('pages.admissionsRecruitingFieldEmail')} * </label>
                 <Input
                   type="email"
                   className="recruiting_input"
-                  placeholder="Enter email"
+                  placeholder={t('pages.admissionsRecruitingFieldEmailPlaceholder')}
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
@@ -157,14 +159,14 @@ export default function Recruiting() {
               </div>
 
               <div>
-                <label> Phone * </label>
+                <label> {t('pages.admissionsRecruitingFieldPhone')} * </label>
 
                 {form.phones.map((p, index) => (
                   <div className="recruiting_phone_wrapper" key={index}>
                     {/* Phone number */}
                     <input
                       className="recruiting_phone_input"
-                      placeholder="Enter phone"
+                      placeholder={t('pages.admissionsRecruitingFieldPhonePlaceholder')}
                       value={p.phone}
                       inputMode="numeric"
                       maxLength={9}
@@ -182,7 +184,7 @@ export default function Recruiting() {
                     {/* Phone name */}
                     <Input
                       type="text"
-                      placeholder="Phone name (e.g. Mom, Work)"
+                      placeholder={t('pages.admissionsRecruitingFieldPhoneNamePlaceholder')}
                       value={p.name}
                       onChange={(e) => {
                         const updated = [...form.phones];
@@ -227,13 +229,13 @@ export default function Recruiting() {
               </div>
 
               <div>
-                <label> Program * </label>
+                <label> {t('pages.admissionsRecruitingFieldProgram')} * </label>
                 <Select
                   value={form.program}
                   onValueChange={(val) => setForm({ ...form, program: val })}
                 >
                   <SelectTrigger className="recruiting_select">
-                    <SelectValue placeholder="Select program" />
+                    <SelectValue placeholder={t('pages.admissionsRecruitingFieldProgramPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {(programs as any[]).map((p) => (
@@ -246,17 +248,17 @@ export default function Recruiting() {
               </div>
 
               <div>
-                <label> Additional info </label>
+                <label> {t('pages.admissionsRecruitingFieldAdditionalInfo')} </label>
                 <Input
                   className="recruiting_input"
-                  placeholder="Enter additional info"
+                  placeholder={t('pages.admissionsRecruitingFieldAdditionalInfoPlaceholder')}
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
               </div>
 
               <Button className="recruiting_btn" type="submit" disabled={mutation.isPending}>
-                Recruit
+                {mutation.isPending ? t('pages.admissionsRecruitingButtonSubmitting') : t('pages.admissionsRecruitingButtonSubmit')}
               </Button>
             </form>
           </CardContent>
