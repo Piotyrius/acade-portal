@@ -665,6 +665,7 @@ function AnalyticsDashboard() {
 
 // Reports & Exports Component (existing functionality)
 function ReportsExports() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
 

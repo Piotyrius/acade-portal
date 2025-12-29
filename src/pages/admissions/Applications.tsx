@@ -309,26 +309,36 @@ export default function Applications() {
                   <p className="font-medium text-base">{app.name}</p>
                   <p className="text-sm text-muted-foreground">{app.email}</p>
 
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+                  <div className="flex flex-wrap items-center gap-2 text-xs mt-1">
                     {/* Primary phone, but only if it isn't already present in additional phones */}
                     {(!app.phones ||
                       !app.phones.some((p) => p.phone === app.phone)) && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
                         <Phone className="h-3 w-3" />
                         {app.phone}
                       </span>
                     )}
                     {app.phones && app.phones.length > 0 && (
                       <span className="inline-flex flex-wrap gap-1">
-                        {app.phones.map((p, idx) => (
-                          <span
-                            key={p.id ?? `${p.phone}-${idx}`}
-                            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5"
-                          >
-                            <Phone className="h-3 w-3" />
-                            {p.name ? `${p.name}: ${p.phone}` : p.phone}
-                          </span>
-                        ))}
+                        {app.phones.map((p, idx) => {
+                          const isParent = p.name?.toLowerCase().includes('parent') || 
+                                          p.name?.toLowerCase().includes('guardian') ||
+                                          p.name?.toLowerCase().includes('მშობელი') ||
+                                          p.name?.toLowerCase().includes('родитель');
+                          return (
+                            <span
+                              key={p.id ?? `${p.phone}-${idx}`}
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
+                                isParent 
+                                  ? 'bg-primary/10 text-primary font-medium' 
+                                  : 'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              <Phone className="h-3 w-3" />
+                              {p.name ? `${p.name}: ${p.phone}` : p.phone}
+                            </span>
+                          );
+                        })}
                       </span>
                     )}
                   </div>
@@ -370,10 +380,12 @@ export default function Applications() {
                         </span>
                       )}
                       {app.notes && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 max-w-xs truncate">
-                          <Info className="h-3 w-3" />
-                          {app.notes}
-                        </span>
+                        <div className="w-full">
+                          <div className="inline-flex items-start gap-1 rounded-md bg-muted px-2 py-1.5 text-xs">
+                            <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                            <span className="break-words">{app.notes}</span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
