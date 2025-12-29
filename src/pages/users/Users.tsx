@@ -43,11 +43,16 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 
 export default function Users() {
   const { t } = useTranslation('common');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { id: userIdParam } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
+  const userRowRef = useRef<HTMLTableRowElement>(null);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -78,6 +83,61 @@ export default function Users() {
         search: search || undefined,
       }),
   });
+
+  const users = usersPage?.results ?? [];
+
+  // Handle user ID parameter - auto-expand and scroll to user
+  useEffect(() => {
+    if (userIdParam) {
+      // First check if user is on current page
+      const user = users.find((u) => u.id === userIdParam);
+      if (user) {
+        // Expand the user
+        setExpandedUsers((prev) => new Set(prev).add(userIdParam));
+        // Scroll to user after a short delay to ensure DOM is updated
+        setTimeout(() => {
+          const element = document.getElementById(`user-row-${userIdParam}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Remove the ID from URL after showing (keep it clean)
+            navigate('/users', { replace: true });
+          }
+        }, 200);
+      } else if (users.length > 0 && !isLoading) {
+        // User not found on current page - fetch them directly
+        queryClient.fetchQuery({
+          queryKey: ['users', 'STUDENT', 1, userIdParam],
+          queryFn: () =>
+            getUsersPaginated({
+              role: 'STUDENT',
+              page: 1,
+              search: userIdParam,
+            }),
+        }).then((data: any) => {
+          const foundUser = data?.results?.find((u: UserDto) => u.id === userIdParam);
+          if (foundUser) {
+            // Set search to find the user
+            setSearchQuery(foundUser.email || `${foundUser.first_name} ${foundUser.last_name}`);
+            setPage(1);
+            // Expand will happen in next render
+            setTimeout(() => {
+              setExpandedUsers((prev) => new Set(prev).add(userIdParam));
+              setTimeout(() => {
+                const element = document.getElementById(`user-row-${userIdParam}`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  navigate('/users', { replace: true });
+                }
+              }, 200);
+            }, 100);
+          } else {
+            // User not found at all
+            navigate('/users', { replace: true });
+          }
+        });
+      }
+    }
+  }, [userIdParam, users, isLoading, queryClient, navigate]);
 
   // Mutations
   const createMutation = useMutation({
@@ -364,7 +424,11 @@ export default function Users() {
                 const isExpanded = expandedUsers.has(user.id);
                 return (
                   <>
-                    <TableRow key={user.id}>
+                    <TableRow 
+                      key={user.id}
+                      id={`user-row-${user.id}`}
+                      ref={userIdParam === user.id ? userRowRef : null}
+                    >
                       <TableCell className="font-medium">{user.email}</TableCell>
                       <TableCell>
                         {user.first_name} {user.last_name}

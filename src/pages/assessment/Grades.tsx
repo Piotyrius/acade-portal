@@ -26,12 +26,14 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 export default function Grades() {
   const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGrade, setEditingGrade] = useState<GradeDto | null>(null);
   const [selectedAssessment, setSelectedAssessment] = useState<string>('all');
@@ -352,7 +354,16 @@ export default function Grades() {
                       <div>
                         <p className="font-medium">{assessment?.title || t('pages.gradesUnknownAssessment')}</p>
                         <p className="text-sm text-muted-foreground">
-                          {t('pages.gradesStudentLabel')}: {student ? `${student.first_name} ${student.last_name}` : grade.student_name || grade.student}
+                          {t('pages.gradesStudentLabel')}: {grade.student ? (
+                            <button
+                              onClick={() => navigate(`/users/${grade.student}`)}
+                              className="hover:text-primary hover:underline cursor-pointer"
+                            >
+                              {student ? `${student.first_name} ${student.last_name}` : grade.student_name || grade.student}
+                            </button>
+                          ) : (
+                            <span>{student ? `${student.first_name} ${student.last_name}` : grade.student_name || grade.student}</span>
+                          )}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {t('pages.gradesScoreLabel')}: {grade.score} / {grade.max_score}

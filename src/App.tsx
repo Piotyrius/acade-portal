@@ -225,6 +225,11 @@ const App = () => (
                 <Users />
               </Suspense>
             } />
+            <Route path="users/:id" element={
+              <Suspense fallback={<PageSkeleton />}>
+                <Users />
+              </Suspense>
+            } />
             <Route path="lecturer/dashboard" element={
               <Suspense fallback={<PageSkeleton />}>
                 <LecturerDashboard />

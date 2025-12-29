@@ -109,7 +109,7 @@ function EnrollmentRow({
 
   const handleStudentClick = () => {
     if (enrollment.student) {
-      navigate(`/users?search=${encodeURIComponent(enrollment.student_name || '')}`);
+      navigate(`/users/${enrollment.student}`);
     }
   };
 

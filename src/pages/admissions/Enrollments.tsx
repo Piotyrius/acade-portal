@@ -33,11 +33,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import ManualEnrollment from './ManualEnrollment';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 export default function Enrollments() {
   const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -441,9 +443,18 @@ export default function Enrollments() {
                         />
                       )}
                       <div className="space-y-1">
-                        <p className="font-medium">
-                          {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
-                        </p>
+                        {enrollment.student ? (
+                          <button
+                            onClick={() => navigate(`/users/${enrollment.student}`)}
+                            className="font-medium text-left hover:text-primary hover:underline cursor-pointer"
+                          >
+                            {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
+                          </button>
+                        ) : (
+                          <p className="font-medium">
+                            {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
+                          </p>
+                        )}
                         {enrollment.student_email && (
                           <p className="text-sm text-muted-foreground">
                             {enrollment.student_email}
@@ -564,9 +575,18 @@ export default function Enrollments() {
                     className="flex items-center justify-between p-4 border border-border rounded-lg"
                   >
                     <div>
-                      <p className="font-medium">
-                        {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
-                      </p>
+                      {enrollment.student ? (
+                        <button
+                          onClick={() => navigate(`/users/${enrollment.student}`)}
+                          className="font-medium text-left hover:text-primary hover:underline cursor-pointer"
+                        >
+                          {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
+                        </button>
+                      ) : (
+                        <p className="font-medium">
+                          {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
+                        </p>
+                      )}
                       <p className="text-sm text-muted-foreground">
                         {t('pages.enrollmentsCohortLabel')} {cohort?.name || enrollment.cohort_name || t('pages.enrollmentsUnknownCohort')}
                       </p>

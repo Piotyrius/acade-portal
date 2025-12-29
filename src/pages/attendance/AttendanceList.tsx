@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 export default function AttendanceList() {
@@ -39,6 +39,7 @@ export default function AttendanceList() {
   const { toast } = useToast();
   const { t } = useTranslation('common');
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -340,7 +341,16 @@ export default function AttendanceList() {
                       <tr key={record.id}>
 
                         <td>
-                          <p className="font-medium"> {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student} </p>
+                          {(record.student || record.student_id) ? (
+                            <button
+                              onClick={() => navigate(`/users/${record.student || record.student_id}`)}
+                              className="font-medium hover:text-primary hover:underline cursor-pointer text-left"
+                            >
+                              {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student || record.student_id}
+                            </button>
+                          ) : (
+                            <p className="font-medium"> {student ? `${student.first_name} ${student.last_name}` : record.student_name || record.student} </p>
+                          )}
                         </td>
 
                         <td>

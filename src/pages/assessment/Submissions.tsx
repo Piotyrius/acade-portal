@@ -24,12 +24,14 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 export default function Submissions() {
   const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<string>('all');
   const [dragActive, setDragActive] = useState(false);
@@ -192,7 +194,16 @@ export default function Submissions() {
                       <div>
                         <p className="font-medium">{assessment?.title || t('pages.submissionsUnknownAssessment')}</p>
                         <p className="text-sm text-muted-foreground">
-                          {t('pages.submissionsStudentLabel')}: {submission.student_name || submission.student}
+                          {t('pages.submissionsStudentLabel')}: {submission.student ? (
+                            <button
+                              onClick={() => navigate(`/users/${submission.student}`)}
+                              className="hover:text-primary hover:underline cursor-pointer"
+                            >
+                              {submission.student_name || submission.student}
+                            </button>
+                          ) : (
+                            <span>{submission.student_name || submission.student}</span>
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {t('pages.submissionsSubmittedLabel')}: {new Date(submission.submitted_at).toLocaleString()}
