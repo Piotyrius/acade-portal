@@ -26,10 +26,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslation } from 'react-i18next';
 
 export default function PaymentMethods() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState<PaymentMethodDto | null>(null);
@@ -50,12 +52,19 @@ export default function PaymentMethods() {
     mutationFn: createPaymentMethod,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentMethods'] });
-      toast({ title: 'Success', description: 'Payment method created successfully' });
+      toast({
+        title: t('common:pages.paymentMethodsToastCreateTitle'),
+        description: t('common:pages.paymentMethodsToastCreateDescription'),
+      });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentMethodsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -64,13 +73,20 @@ export default function PaymentMethods() {
       updatePaymentMethod(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentMethods'] });
-      toast({ title: 'Success', description: 'Payment method updated successfully' });
+      toast({
+        title: t('common:pages.paymentMethodsToastUpdateTitle'),
+        description: t('common:pages.paymentMethodsToastUpdateDescription'),
+      });
       setIsDialogOpen(false);
       setEditingMethod(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentMethodsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -78,10 +94,17 @@ export default function PaymentMethods() {
     mutationFn: deletePaymentMethod,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentMethods'] });
-      toast({ title: 'Success', description: 'Payment method deleted successfully' });
+      toast({
+        title: t('common:pages.paymentMethodsToastDeleteTitle'),
+        description: t('common:pages.paymentMethodsToastDeleteDescription'),
+      });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentMethodsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -114,8 +137,8 @@ export default function PaymentMethods() {
     e.preventDefault();
     if (!formData.name) {
       toast({
-        title: 'Error',
-        description: 'Name is required',
+        title: t('common:pages.paymentMethodsToastErrorTitle'),
+        description: t('common:pages.paymentMethodsErrorNameRequired'),
         variant: 'destructive',
       });
       return;
@@ -136,7 +159,7 @@ export default function PaymentMethods() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this payment method?')) {
+    if (confirm(t('common:pages.paymentMethodsDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -145,8 +168,8 @@ export default function PaymentMethods() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payment Methods</h2>
-          <p className="text-muted-foreground">You don't have permission to view payment methods</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.paymentMethodsTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.paymentMethodsNoPermission')}</p>
         </div>
       </div>
     );
@@ -165,23 +188,25 @@ export default function PaymentMethods() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payment Methods</h2>
-          <p className="text-muted-foreground">Manage payment method configurations</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.paymentMethodsTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.paymentMethodsSubtitle')}</p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Payment Method
+          {t('common:pages.paymentMethodsCreate')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Payment Methods</CardTitle>
+          <CardTitle>{t('common:pages.paymentMethodsCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {paymentMethods.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No payment methods found</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t('common:pages.paymentMethodsNoneFound')}
+              </p>
             ) : (
               paymentMethods.map((method: PaymentMethodDto) => (
                 <div
@@ -192,14 +217,20 @@ export default function PaymentMethods() {
                     <div className="flex items-center gap-2 mb-2">
                       <p className="font-medium">{method.name}</p>
                       <Badge variant={method.is_active ? 'default' : 'outline'}>
-                        {method.is_active ? 'Active' : 'Inactive'}
+                        {method.is_active
+                          ? t('common:pages.paymentMethodsStatusActive')
+                          : t('common:pages.paymentMethodsStatusInactive')}
                       </Badge>
                       {method.requires_receipt && (
-                        <Badge variant="secondary">Requires Receipt</Badge>
+                        <Badge variant="secondary">
+                          {t('common:pages.paymentMethodsRequiresReceiptBadge')}
+                        </Badge>
                       )}
                     </div>
                     {method.code && (
-                      <p className="text-sm text-muted-foreground">Code: {method.code}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t('common:pages.paymentMethodsCodeLabel')}: {method.code}
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -207,7 +238,7 @@ export default function PaymentMethods() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenDialog(method)}
-                      title="Edit Payment Method"
+                      title={t('common:pages.paymentMethodsEditTooltip')}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -215,7 +246,7 @@ export default function PaymentMethods() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(method.id)}
-                      title="Delete Payment Method"
+                      title={t('common:pages.paymentMethodsDeleteTooltip')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -230,30 +261,36 @@ export default function PaymentMethods() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingMethod ? 'Edit Payment Method' : 'Create Payment Method'}</DialogTitle>
+            <DialogTitle>
+              {editingMethod
+                ? t('common:pages.paymentMethodsDialogTitleEdit')
+                : t('common:pages.paymentMethodsDialogTitleCreate')}
+            </DialogTitle>
             <DialogDescription>
-              {editingMethod ? 'Update payment method details' : 'Create a new payment method'}
+              {editingMethod
+                ? t('common:pages.paymentMethodsDialogDescriptionEdit')
+                : t('common:pages.paymentMethodsDialogDescriptionCreate')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">{t('common:pages.paymentMethodsFieldName')} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Payment method name"
+                  placeholder={t('common:pages.paymentMethodsFieldNamePlaceholder')}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="code">Code</Label>
+                <Label htmlFor="code">{t('common:pages.paymentMethodsFieldCode')}</Label>
                 <Input
                   id="code"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  placeholder="Optional code"
+                  placeholder={t('common:pages.paymentMethodsFieldCodePlaceholder')}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -265,7 +302,7 @@ export default function PaymentMethods() {
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  Active
+                  {t('common:pages.paymentMethodsFieldActive')}
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -277,16 +314,18 @@ export default function PaymentMethods() {
                   }
                 />
                 <Label htmlFor="requires_receipt" className="cursor-pointer">
-                  Requires Receipt
+                  {t('common:pages.paymentMethodsFieldRequiresReceipt')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('common:pages.paymentMethodsCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingMethod ? 'Update' : 'Create'}
+                {editingMethod
+                  ? t('common:pages.paymentMethodsButtonUpdate')
+                  : t('common:pages.paymentMethodsButtonCreate')}
               </Button>
             </DialogFooter>
           </form>

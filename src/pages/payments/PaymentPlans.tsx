@@ -27,10 +27,12 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslation } from 'react-i18next';
 
 export default function PaymentPlans() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<PaymentPlanDto | null>(null);
@@ -51,12 +53,19 @@ export default function PaymentPlans() {
     mutationFn: createPaymentPlan,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentPlans'] });
-      toast({ title: 'Success', description: 'Payment plan created successfully' });
+      toast({
+        title: t('common:pages.paymentPlansToastCreateTitle'),
+        description: t('common:pages.paymentPlansToastCreateDescription'),
+      });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentPlansToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -65,13 +74,20 @@ export default function PaymentPlans() {
       updatePaymentPlan(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentPlans'] });
-      toast({ title: 'Success', description: 'Payment plan updated successfully' });
+      toast({
+        title: t('common:pages.paymentPlansToastUpdateTitle'),
+        description: t('common:pages.paymentPlansToastUpdateDescription'),
+      });
       setIsDialogOpen(false);
       setEditingPlan(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentPlansToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -79,10 +95,17 @@ export default function PaymentPlans() {
     mutationFn: deletePaymentPlan,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentPlans'] });
-      toast({ title: 'Success', description: 'Payment plan deleted successfully' });
+      toast({
+        title: t('common:pages.paymentPlansToastDeleteTitle'),
+        description: t('common:pages.paymentPlansToastDeleteDescription'),
+      });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentPlansToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -115,8 +138,8 @@ export default function PaymentPlans() {
     e.preventDefault();
     if (!formData.name) {
       toast({
-        title: 'Error',
-        description: 'Name is required',
+        title: t('common:pages.paymentPlansToastErrorTitle'),
+        description: t('common:pages.paymentPlansErrorNameRequired'),
         variant: 'destructive',
       });
       return;
@@ -137,7 +160,7 @@ export default function PaymentPlans() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this payment plan?')) {
+    if (confirm(t('common:pages.paymentPlansDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -146,8 +169,8 @@ export default function PaymentPlans() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payment Plans</h2>
-          <p className="text-muted-foreground">You don't have permission to view payment plans</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.paymentPlansTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.paymentPlansNoPermission')}</p>
         </div>
       </div>
     );
@@ -166,23 +189,25 @@ export default function PaymentPlans() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payment Plans</h2>
-          <p className="text-muted-foreground">Manage payment plan configurations</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.paymentPlansTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.paymentPlansSubtitle')}</p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Payment Plan
+          {t('common:pages.paymentPlansCreate')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Payment Plans</CardTitle>
+          <CardTitle>{t('common:pages.paymentPlansCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {paymentPlans.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No payment plans found</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t('common:pages.paymentPlansNoneFound')}
+              </p>
             ) : (
               paymentPlans.map((plan: PaymentPlanDto) => (
                 <div
@@ -193,13 +218,17 @@ export default function PaymentPlans() {
                     <div className="flex items-center gap-2 mb-2">
                       <p className="font-medium">{plan.name}</p>
                       <Badge variant={plan.is_active ? 'default' : 'outline'}>
-                        {plan.is_active ? 'Active' : 'Inactive'}
+                        {plan.is_active
+                          ? t('common:pages.paymentPlansStatusActive')
+                          : t('common:pages.paymentPlansStatusInactive')}
                       </Badge>
                       <Badge variant="secondary">{plan.type_display || plan.type}</Badge>
                     </div>
                     {plan.installment_count && (
                       <p className="text-sm text-muted-foreground">
-                        Installments: {plan.installment_count}
+                        {t('common:pages.paymentPlansInstallmentsLabel', {
+                          count: plan.installment_count,
+                        })}
                       </p>
                     )}
                   </div>
@@ -208,7 +237,7 @@ export default function PaymentPlans() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenDialog(plan)}
-                      title="Edit Payment Plan"
+                      title={t('common:pages.paymentPlansEditTooltip')}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -216,7 +245,7 @@ export default function PaymentPlans() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(plan.id)}
-                      title="Delete Payment Plan"
+                      title={t('common:pages.paymentPlansDeleteTooltip')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -231,25 +260,31 @@ export default function PaymentPlans() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingPlan ? 'Edit Payment Plan' : 'Create Payment Plan'}</DialogTitle>
+            <DialogTitle>
+              {editingPlan
+                ? t('common:pages.paymentPlansDialogTitleEdit')
+                : t('common:pages.paymentPlansDialogTitleCreate')}
+            </DialogTitle>
             <DialogDescription>
-              {editingPlan ? 'Update payment plan details' : 'Create a new payment plan'}
+              {editingPlan
+                ? t('common:pages.paymentPlansDialogDescriptionEdit')
+                : t('common:pages.paymentPlansDialogDescriptionCreate')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">{t('common:pages.paymentPlansFieldName')} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Payment plan name"
+                  placeholder={t('common:pages.paymentPlansFieldNamePlaceholder')}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">Type *</Label>
+                <Label htmlFor="type">{t('common:pages.paymentPlansFieldType')} *</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value: 'MONTHLY' | 'FULL' | 'CUSTOM') =>
@@ -257,25 +292,33 @@ export default function PaymentPlans() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder={t('common:pages.paymentPlansFieldTypePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MONTHLY">Monthly Installments</SelectItem>
-                    <SelectItem value="FULL">Full Payment</SelectItem>
-                    <SelectItem value="CUSTOM">Custom Plan</SelectItem>
+                    <SelectItem value="MONTHLY">
+                      {t('common:pages.paymentPlansTypeMonthly')}
+                    </SelectItem>
+                    <SelectItem value="FULL">
+                      {t('common:pages.paymentPlansTypeFull')}
+                    </SelectItem>
+                    <SelectItem value="CUSTOM">
+                      {t('common:pages.paymentPlansTypeCustom')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {(formData.type === 'MONTHLY' || formData.type === 'CUSTOM') && (
                 <div className="space-y-2">
-                  <Label htmlFor="installment_count">Number of Installments</Label>
+                  <Label htmlFor="installment_count">
+                    {t('common:pages.paymentPlansFieldInstallments')}
+                  </Label>
                   <Input
                     id="installment_count"
                     type="number"
                     min="1"
                     value={formData.installment_count}
                     onChange={(e) => setFormData({ ...formData, installment_count: e.target.value })}
-                    placeholder="e.g., 12"
+                    placeholder={t('common:pages.paymentPlansFieldInstallmentsPlaceholder')}
                   />
                 </div>
               )}
@@ -288,16 +331,18 @@ export default function PaymentPlans() {
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  Active
+                  {t('common:pages.paymentPlansFieldActive')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('common:pages.paymentPlansCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingPlan ? 'Update' : 'Create'}
+                {editingPlan
+                  ? t('common:pages.paymentPlansButtonUpdate')
+                  : t('common:pages.paymentPlansButtonCreate')}
               </Button>
             </DialogFooter>
           </form>

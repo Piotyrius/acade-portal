@@ -8,7 +8,12 @@ import { Search, ClipboardCheck, Plus, Edit, Users, Eye } from 'lucide-react';
 import { exampleAttendance } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAttendanceRecords, createAttendanceRecord, updateAttendanceRecord, bulkMarkAttendance } from '@/api/endpoints/attendance';
+import {
+  getAttendanceRecords,
+  createAttendanceRecord,
+  updateAttendanceRecord,
+  bulkMarkAttendance,
+} from '@/api/endpoints/attendance';
 import { getSessions } from '@/api/endpoints/catalog';
 import { getEnrollments } from '@/api/endpoints/admissions';
 import { getUsers } from '@/api/endpoints/auth';
@@ -27,10 +32,12 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function AttendanceList() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,12 +85,19 @@ export default function AttendanceList() {
     mutationFn: createAttendanceRecord,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance'] });
-      toast({ title: 'Success', description: 'Attendance record created successfully' });
+      toast({
+        title: t('common:pages.attendanceToastCreateTitle'),
+        description: t('common:pages.attendanceToastCreateDescription'),
+      });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.attendanceToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -91,13 +105,20 @@ export default function AttendanceList() {
     mutationFn: ({ id, data }: { id: string; data: any }) => updateAttendanceRecord(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance'] });
-      toast({ title: 'Success', description: 'Attendance record updated successfully' });
+      toast({
+        title: t('common:pages.attendanceToastUpdateTitle'),
+        description: t('common:pages.attendanceToastUpdateDescription'),
+      });
       setIsDialogOpen(false);
       setEditingRecord(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.attendanceToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -106,14 +127,21 @@ export default function AttendanceList() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['attendance'] });
       toast({
-        title: 'Success',
-        description: `Created ${data.created} and updated ${data.updated} attendance records`,
+        title: t('common:pages.attendanceBulkToastTitle'),
+        description: t('common:pages.attendanceBulkToastDescription', {
+          created: data.created,
+          updated: data.updated,
+        }),
       });
       setIsBulkDialogOpen(false);
       setBulkFormData({ session: '', records: [] });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.attendanceToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -173,8 +201,8 @@ export default function AttendanceList() {
     e.preventDefault();
     if (!formData.session || !formData.student) {
       toast({
-        title: 'Error',
-        description: 'Session and student are required',
+        title: t('common:pages.attendanceToastErrorTitle'),
+        description: t('common:pages.attendanceErrorSessionStudentRequired'),
         variant: 'destructive',
       });
       return;
@@ -198,8 +226,8 @@ export default function AttendanceList() {
     e.preventDefault();
     if (!bulkFormData.session || bulkFormData.records.length === 0) {
       toast({
-        title: 'Error',
-        description: 'Session and at least one student record are required',
+        title: t('common:pages.attendanceToastErrorTitle'),
+        description: t('common:pages.attendanceErrorBulkRequired'),
         variant: 'destructive',
       });
       return;
@@ -250,19 +278,19 @@ export default function AttendanceList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between attendance_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Attendance</h2>
-          <p className="text-muted-foreground">Track student attendance records</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.attendanceTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.attendanceSubtitle')}</p>
         </div>
         <div className="flex gap-2 attendance_btn_wrapper">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
             <>
               <Button className='attendance_button' variant="outline" onClick={handleOpenBulkDialog}>
                 <Users className="mr-2 h-4 w-4" />
-                Bulk Mark
+                {t('common:pages.attendanceBulkMark')}
               </Button>
               <Button className='attendance_button' onClick={() => handleOpenDialog()}>
                 <Plus className="mr-2 h-4 w-4" />
-                Mark Attendance
+                {t('common:pages.attendanceMarkSingle')}
               </Button>
             </>
           )}
@@ -273,7 +301,7 @@ export default function AttendanceList() {
         <div className="relative flex-1 max-w-sm attendance_input_wrapper">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search attendance..."
+            placeholder={t('common:pages.attendanceSearchPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -284,7 +312,7 @@ export default function AttendanceList() {
       {records.length === 0 && <ExampleBanner />}
       <Card>
         <CardHeader>
-          <CardTitle>Attendance Records</CardTitle>
+          <CardTitle>{t('common:pages.attendanceCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4 attendance_table_wrapper">
@@ -293,11 +321,11 @@ export default function AttendanceList() {
                 <thead>
                   <tr>
 
-                    <th> Student </th>
-                    <th> Sessions </th>
-                    <th> Status </th>
-                    <th> Note </th>
-                    <th> Action </th>
+                    <th>{t('common:pages.attendanceColumnStudent')}</th>
+                    <th>{t('common:pages.attendanceColumnSession')}</th>
+                    <th>{t('common:pages.attendanceColumnStatus')}</th>
+                    <th>{t('common:pages.attendanceColumnNote')}</th>
+                    <th>{t('common:pages.attendanceColumnAction')}</th>
 
                   </tr>
                 </thead>
@@ -317,18 +345,29 @@ export default function AttendanceList() {
 
                         <td>
                           <p className="text-sm text-muted-foreground">
-                           Session: {session ? new Date(session.start_at).toLocaleString() : 'Unknown'} •{' '}
+                           {t('common:pages.attendanceSessionLabel')}:{' '}
+                           {session ? new Date(session.start_at).toLocaleString() : t('common:pages.attendanceSessionUnknown')}{' '}
+                           •{' '}
                            {new Date(record.marked_at).toLocaleDateString()}
                           </p>
                         </td>
 
                         <td>
-                          <Badge variant={getStatusVariant(record.status)}>{record.status_display || record.status}</Badge>
+                          <Badge variant={getStatusVariant(record.status)}>
+                            {record.status_display ||
+                              t(
+                                `common:pages.attendanceStatus_${record.status as 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED'}`,
+                              )}
+                          </Badge>
                         </td>
 
                         
                         <td>
-                            {record.note && <p className="text-xs text-muted-foreground mt-1">Note: {record.note}</p>}
+                            {record.note && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {t('common:pages.attendanceNoteLabel')}: {record.note}
+                              </p>
+                            )}
                         </td>
 
                         <td>
@@ -350,7 +389,9 @@ export default function AttendanceList() {
           </div>
           {filteredRecords.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
-              {searchTerm ? 'No attendance records found' : 'No attendance records yet'}
+              {searchTerm
+                ? t('common:pages.attendanceNoneFoundSearch')
+                : t('common:pages.attendanceNoneFoundDefault')}
             </div>
           )}
         </CardContent>
@@ -361,22 +402,28 @@ export default function AttendanceList() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingRecord ? 'Edit Attendance' : 'Mark Attendance'}</DialogTitle>
+                <DialogTitle>
+                  {editingRecord
+                    ? t('common:pages.attendanceDialogTitleEdit')
+                    : t('common:pages.attendanceDialogTitleCreate')}
+                </DialogTitle>
                 <DialogDescription>
-                  {editingRecord ? 'Update attendance record' : 'Create a new attendance record'}
+                  {editingRecord
+                    ? t('common:pages.attendanceDialogDescriptionEdit')
+                    : t('common:pages.attendanceDialogDescriptionCreate')}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="session">Session *</Label>
+                    <Label htmlFor="session">{t('common:pages.attendanceFieldSession')} *</Label>
                     <Select
                       value={formData.session}
                       onValueChange={(value) => setFormData({ ...formData, session: value })}
                       disabled={!!editingRecord}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select session" />
+                        <SelectValue placeholder={t('common:pages.attendanceFieldSessionPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {sessions.map((session: any) => (
@@ -388,14 +435,14 @@ export default function AttendanceList() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="student">Student *</Label>
+                    <Label htmlFor="student">{t('common:pages.attendanceFieldStudent')} *</Label>
                     <Select
                       value={formData.student}
                       onValueChange={(value) => setFormData({ ...formData, student: value })}
                       disabled={!!editingRecord}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select student" />
+                        <SelectValue placeholder={t('common:pages.attendanceFieldStudentPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {students.map((student: any) => (
@@ -407,7 +454,7 @@ export default function AttendanceList() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="status">Status *</Label>
+                    <Label htmlFor="status">{t('common:pages.attendanceFieldStatus')} *</Label>
                     <Select
                       value={formData.status}
                       onValueChange={(value: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED') =>
@@ -418,30 +465,44 @@ export default function AttendanceList() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="PRESENT">Present</SelectItem>
-                        <SelectItem value="LATE">Late</SelectItem>
-                        <SelectItem value="ABSENT">Absent</SelectItem>
-                        <SelectItem value="EXCUSED">Excused</SelectItem>
+                        <SelectItem value="PRESENT">
+                          {t('common:pages.attendanceStatus_PRESENT')}
+                        </SelectItem>
+                        <SelectItem value="LATE">
+                          {t('common:pages.attendanceStatus_LATE')}
+                        </SelectItem>
+                        <SelectItem value="ABSENT">
+                          {t('common:pages.attendanceStatus_ABSENT')}
+                        </SelectItem>
+                        <SelectItem value="EXCUSED">
+                          {t('common:pages.attendanceStatus_EXCUSED')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="note">Note</Label>
+                    <Label htmlFor="note">{t('common:pages.attendanceFieldNote')}</Label>
                     <Textarea
                       id="note"
                       value={formData.note}
                       onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                       rows={3}
-                      placeholder="Optional note"
+                      placeholder={t('common:pages.attendanceFieldNotePlaceholder')}
                     />
                   </div>
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
+                    {t('common:pages.attendanceCancel')}
                   </Button>
                   <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                    {editingRecord ? (updateMutation.isPending ? 'Updating...' : 'Update') : createMutation.isPending ? 'Creating...' : 'Create'}
+                    {editingRecord
+                      ? updateMutation.isPending
+                        ? t('common:pages.attendanceButtonUpdating')
+                        : t('common:pages.attendanceButtonUpdate')
+                      : createMutation.isPending
+                        ? t('common:pages.attendanceButtonCreating')
+                        : t('common:pages.attendanceButtonCreate')}
                   </Button>
                 </DialogFooter>
               </form>
@@ -451,16 +512,20 @@ export default function AttendanceList() {
           <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Bulk Mark Attendance</DialogTitle>
-                <DialogDescription>Mark attendance for multiple students at once</DialogDescription>
+                <DialogTitle>{t('common:pages.attendanceBulkDialogTitle')}</DialogTitle>
+                <DialogDescription>
+                  {t('common:pages.attendanceBulkDialogDescription')}
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleBulkSubmit}>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bulk_session">Session *</Label>
+                    <Label htmlFor="bulk_session">
+                      {t('common:pages.attendanceFieldSession')} *
+                    </Label>
                     <Select value={bulkFormData.session} onValueChange={handleBulkSessionChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select session" />
+                        <SelectValue placeholder={t('common:pages.attendanceFieldSessionPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {sessions.map((session: any) => (
@@ -473,7 +538,7 @@ export default function AttendanceList() {
                   </div>
                   {bulkFormData.session && (
                     <div className="space-y-2 max-h-96 overflow-y-auto">
-                      <Label>Students</Label>
+                      <Label>{t('common:pages.attendanceBulkStudentsLabel')}</Label>
                       <div className="space-y-2">
                         {bulkFormData.records.map((record) => {
                           const student = students.find((s: any) => s.id === record.student_id);
@@ -493,10 +558,18 @@ export default function AttendanceList() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="PRESENT">Present</SelectItem>
-                                  <SelectItem value="LATE">Late</SelectItem>
-                                  <SelectItem value="ABSENT">Absent</SelectItem>
-                                  <SelectItem value="EXCUSED">Excused</SelectItem>
+                                  <SelectItem value="PRESENT">
+                                    {t('common:pages.attendanceStatus_PRESENT')}
+                                  </SelectItem>
+                                  <SelectItem value="LATE">
+                                    {t('common:pages.attendanceStatus_LATE')}
+                                  </SelectItem>
+                                  <SelectItem value="ABSENT">
+                                    {t('common:pages.attendanceStatus_ABSENT')}
+                                  </SelectItem>
+                                  <SelectItem value="EXCUSED">
+                                    {t('common:pages.attendanceStatus_EXCUSED')}
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -508,10 +581,12 @@ export default function AttendanceList() {
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsBulkDialogOpen(false)}>
-                    Cancel
+                    {t('common:pages.attendanceCancel')}
                   </Button>
                   <Button type="submit" disabled={bulkMutation.isPending || !bulkFormData.session}>
-                    {bulkMutation.isPending ? 'Marking...' : 'Mark Attendance'}
+                    {bulkMutation.isPending
+                      ? t('common:pages.attendanceBulkButtonMarking')
+                      : t('common:pages.attendanceBulkButtonMark')}
                   </Button>
                 </DialogFooter>
               </form>

@@ -17,8 +17,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState } from 'react';
 import { Loader2, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 export default function CohortPayments() {
+  const { t } = useTranslation('common');
   const [selectedCohortId, setSelectedCohortId] = useState<string>('');
 
   const { data: cohorts = [], isLoading: cohortsLoading } = useQuery({
@@ -56,26 +58,28 @@ export default function CohortPayments() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Cohort Payment Summary</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {t('pages.cohortPaymentsTitle')}
+        </h2>
         <p className="text-muted-foreground">
-          View payment status for all students in a cohort
+          {t('pages.cohortPaymentsSubtitle')}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Select Cohort</CardTitle>
-          <CardDescription>Choose a cohort to view payment summary</CardDescription>
+          <CardTitle>{t('pages.cohortPaymentsSelectTitle')}</CardTitle>
+          <CardDescription>{t('pages.cohortPaymentsSelectDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Select value={selectedCohortId} onValueChange={setSelectedCohortId}>
             <SelectTrigger className="w-full max-w-md">
-              <SelectValue placeholder="Select a cohort" />
+              <SelectValue placeholder={t('pages.cohortPaymentsSelectPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {cohorts.map((cohort) => (
                 <SelectItem key={cohort.id} value={cohort.id}>
-                  {cohort.name} - {cohort.course_title || 'Course'}
+                  {cohort.name} - {cohort.course_title || t('pages.cohortPaymentsSelectCourseFallback')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -89,7 +93,9 @@ export default function CohortPayments() {
             <Card>
               <CardContent className="py-8 text-center">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-                <p className="text-muted-foreground mt-2">Loading payment summary...</p>
+                <p className="text-muted-foreground mt-2">
+                  {t('pages.cohortPaymentsLoadingSummary')}
+                </p>
               </CardContent>
             </Card>
           ) : paymentSummary ? (
@@ -97,7 +103,9 @@ export default function CohortPayments() {
               <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm font-medium">Total Expected</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      {t('pages.cohortPaymentsCardTotalExpected')}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold">
@@ -107,7 +115,9 @@ export default function CohortPayments() {
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      {t('pages.cohortPaymentsCardTotalPaid')}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold text-green-600">
@@ -117,7 +127,9 @@ export default function CohortPayments() {
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      {t('pages.cohortPaymentsCardOutstanding')}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold text-destructive">
@@ -129,25 +141,31 @@ export default function CohortPayments() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Student Payments</CardTitle>
+                  <CardTitle>{t('pages.cohortPaymentsStudentListTitle')}</CardTitle>
                   <CardDescription>
-                    Payment status for all students in {paymentSummary.cohort_name}
+                    {t('pages.cohortPaymentsStudentListDescription', {
+                      cohort: paymentSummary.cohort_name,
+                    })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {paymentSummary.students && paymentSummary.students.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No students found</p>
+                    <p className="text-center text-muted-foreground py-8">
+                      {t('pages.cohortPaymentsStudentsNone')}
+                    </p>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Student Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Invoice #</TableHead>
-                          <TableHead>Total Amount</TableHead>
-                          <TableHead>Paid</TableHead>
-                          <TableHead>Outstanding</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead>{t('pages.cohortPaymentsStudentColumnName')}</TableHead>
+                          <TableHead>{t('pages.cohortPaymentsStudentColumnEmail')}</TableHead>
+                          <TableHead>{t('pages.cohortPaymentsStudentColumnInvoice')}</TableHead>
+                          <TableHead>{t('pages.cohortPaymentsStudentColumnTotal')}</TableHead>
+                          <TableHead>{t('pages.cohortPaymentsStudentColumnPaid')}</TableHead>
+                          <TableHead>
+                            {t('pages.cohortPaymentsStudentColumnOutstanding')}
+                          </TableHead>
+                          <TableHead>{t('pages.cohortPaymentsStudentColumnStatus')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -155,10 +173,23 @@ export default function CohortPayments() {
                           <TableRow key={index}>
                             <TableCell className="font-medium">{student.student_name}</TableCell>
                             <TableCell>{student.student_email}</TableCell>
-                            <TableCell>{student.invoice_number || 'N/A'}</TableCell>
-                            <TableCell>{formatCurrencyString(student.total_amount?.toString() || '0')}</TableCell>
-                            <TableCell>{formatCurrencyString(student.total_paid?.toString() || '0')}</TableCell>
-                            <TableCell className={parseFloat(student.outstanding?.toString() || '0') > 0 ? 'text-destructive font-medium' : ''}>
+                            <TableCell>
+                              {student.invoice_number ||
+                                t('pages.cohortPaymentsStudentInvoiceFallback')}
+                            </TableCell>
+                            <TableCell>
+                              {formatCurrencyString(student.total_amount?.toString() || '0')}
+                            </TableCell>
+                            <TableCell>
+                              {formatCurrencyString(student.total_paid?.toString() || '0')}
+                            </TableCell>
+                            <TableCell
+                              className={
+                                parseFloat(student.outstanding?.toString() || '0') > 0
+                                  ? 'text-destructive font-medium'
+                                  : ''
+                              }
+                            >
                               {formatCurrencyString(student.outstanding?.toString() || '0')}
                             </TableCell>
                             <TableCell>{getPaymentStatusBadge(student.payment_status)}</TableCell>
@@ -173,7 +204,7 @@ export default function CohortPayments() {
           ) : (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
-                No payment data available for this cohort
+                {t('pages.cohortPaymentsNoData')}
               </CardContent>
             </Card>
           )}
@@ -183,7 +214,7 @@ export default function CohortPayments() {
       {!selectedCohortId && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            Please select a cohort to view payment summary
+            {t('pages.cohortPaymentsPromptSelect')}
           </CardContent>
         </Card>
       )}

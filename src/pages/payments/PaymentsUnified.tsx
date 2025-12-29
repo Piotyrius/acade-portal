@@ -3,20 +3,21 @@ import { Button } from '@/components/ui/button';
 import { DollarSign, FileText, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getInvoices, getPayments, getPaymentPlans, getDiscounts } from '@/api/endpoints/payments';
+import { getInvoices, getPayments, getPaymentPlans, getDiscounts, DiscountDto } from '@/api/endpoints/payments';
 import { getEnrollments } from '@/api/endpoints/admissions';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DiscountDto } from '@/api/endpoints/payments';
 import { usePaymentsAdmin } from '@/hooks/usePaymentsAdmin';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export default function PaymentsUnified() {
   const navigate = useNavigate();
   const { toast } = useToast();
+   const { t } = useTranslation('common');
 
   const { data: invoices = [] } = useQuery({
     queryKey: ['invoices-dashboard'],
@@ -72,8 +73,8 @@ export default function PaymentsUnified() {
   const handleBillSubmit = () => {
     if (!billForm.enrollment || !billForm.payment_plan) {
       toast({
-        title: 'Missing information',
-        description: 'Please select an enrollment and payment plan.',
+        title: t('pages.billingWizardErrorTitle'),
+        description: t('pages.billingWizardErrorDescription'),
         variant: 'destructive',
       });
       return;
@@ -96,23 +97,25 @@ export default function PaymentsUnified() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Billing & Payments</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.billingTitle')}
+          </h2>
           <p className="text-muted-foreground">
-            See your outstanding invoices, recent payments, and manage billing settings.
+            {t('pages.billingSubtitle')}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={() => setBillDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Bill a Student
+            {t('pages.billingCtaBillStudent')}
           </Button>
           <Button variant="outline" onClick={() => navigate('/payments/payments')}>
             <DollarSign className="mr-2 h-4 w-4" />
-            Record Payment
+            {t('pages.billingCtaRecordPayment')}
           </Button>
           <Button variant="outline" onClick={() => navigate('/payments/invoices')}>
             <FileText className="mr-2 h-4 w-4" />
-            View Invoices
+            {t('pages.billingCtaViewInvoices')}
           </Button>
         </div>
       </div>
@@ -120,29 +123,29 @@ export default function PaymentsUnified() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Outstanding Invoices</CardTitle>
+            <CardTitle>{t('pages.billingCardOutstandingTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{outstandingCount}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Invoices that are issued or overdue.
+              {t('pages.billingCardOutstandingSubtitle')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>All Invoices</CardTitle>
+            <CardTitle>{t('pages.billingCardAllInvoicesTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{invoices.length}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Total invoices in the system.
+              {t('pages.billingCardAllInvoicesSubtitle')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Payments Received</CardTitle>
+            <CardTitle>{t('pages.billingCardPaymentsReceivedTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">
@@ -152,7 +155,7 @@ export default function PaymentsUnified() {
               })}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Total value of completed payments.
+              {t('pages.billingCardPaymentsReceivedSubtitle')}
             </p>
           </CardContent>
         </Card>
@@ -162,20 +165,20 @@ export default function PaymentsUnified() {
       <Dialog open={billDialogOpen} onOpenChange={setBillDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bill a Student</DialogTitle>
+            <DialogTitle>{t('pages.billingWizardTitle')}</DialogTitle>
             <DialogDescription>
-              Select an enrollment and payment plan to automatically create an invoice.
+              {t('pages.billingWizardDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Enrollment *</Label>
+              <Label>{t('pages.billingWizardEnrollmentLabel')}</Label>
               <Select
                 value={billForm.enrollment}
                 onValueChange={(value) => setBillForm((prev) => ({ ...prev, enrollment: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select enrollment" />
+                  <SelectValue placeholder={t('pages.billingWizardEnrollmentPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {enrollments.map((enrollment: any) => (
@@ -188,7 +191,7 @@ export default function PaymentsUnified() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Payment Plan *</Label>
+              <Label>{t('pages.billingWizardPaymentPlanLabel')}</Label>
               <Select
                 value={billForm.payment_plan}
                 onValueChange={(value) =>
@@ -196,7 +199,7 @@ export default function PaymentsUnified() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select payment plan" />
+                  <SelectValue placeholder={t('pages.billingWizardPaymentPlanPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {paymentPlans.map((plan: any) => (
@@ -208,11 +211,11 @@ export default function PaymentsUnified() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Discounts (Optional)</Label>
+              <Label>{t('pages.billingWizardDiscountsLabel')}</Label>
               <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-2">
                 {discounts.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-2">
-                    No active discounts available
+                    {t('pages.billingWizardNoDiscounts')}
                   </p>
                 ) : (
                   discounts.map((discount: DiscountDto) => (
@@ -239,14 +242,14 @@ export default function PaymentsUnified() {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setBillDialogOpen(false)}>
-              Cancel
+              {t('pages.billingWizardCancel')}
             </Button>
             <Button
               type="button"
               onClick={handleBillSubmit}
               disabled={createInvoiceFromEnrollment.isPending}
             >
-              Create Invoice
+              {t('pages.billingWizardSubmit')}
             </Button>
           </DialogFooter>
         </DialogContent>

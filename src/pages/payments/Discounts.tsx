@@ -27,10 +27,12 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslation } from 'react-i18next';
 
 export default function Discounts() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDiscount, setEditingDiscount] = useState<DiscountDto | null>(null);
@@ -57,12 +59,19 @@ export default function Discounts() {
     mutationFn: createDiscount,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['discounts'] });
-      toast({ title: 'Success', description: 'Discount created successfully' });
+      toast({
+        title: t('common:pages.discountsToastCreateTitle'),
+        description: t('common:pages.discountsToastCreateDescription'),
+      });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.discountsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -70,13 +79,20 @@ export default function Discounts() {
     mutationFn: ({ id, data }: { id: string; data: Partial<DiscountRequest> }) => updateDiscount(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['discounts'] });
-      toast({ title: 'Success', description: 'Discount updated successfully' });
+      toast({
+        title: t('common:pages.discountsToastUpdateTitle'),
+        description: t('common:pages.discountsToastUpdateDescription'),
+      });
       setIsDialogOpen(false);
       setEditingDiscount(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.discountsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -84,10 +100,17 @@ export default function Discounts() {
     mutationFn: deleteDiscount,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['discounts'] });
-      toast({ title: 'Success', description: 'Discount deleted successfully' });
+      toast({
+        title: t('common:pages.discountsToastDeleteTitle'),
+        description: t('common:pages.discountsToastDeleteDescription'),
+      });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.discountsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -132,8 +155,8 @@ export default function Discounts() {
     e.preventDefault();
     if (!formData.name || !formData.value || !formData.valid_from) {
       toast({
-        title: 'Error',
-        description: 'Name, value, and valid from date are required',
+        title: t('common:pages.discountsToastErrorTitle'),
+        description: t('common:pages.discountsErrorRequired'),
         variant: 'destructive',
       });
       return;
@@ -160,7 +183,7 @@ export default function Discounts() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this discount?')) {
+    if (confirm(t('common:pages.discountsDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -177,8 +200,8 @@ export default function Discounts() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Discounts</h2>
-          <p className="text-muted-foreground">You don't have permission to view discounts</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.discountsTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.discountsNoPermission')}</p>
         </div>
       </div>
     );
@@ -197,23 +220,25 @@ export default function Discounts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Discounts</h2>
-          <p className="text-muted-foreground">Manage discount codes and promotions</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.discountsTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.discountsSubtitle')}</p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Discount
+          {t('common:pages.discountsCreate')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Discounts</CardTitle>
+          <CardTitle>{t('common:pages.discountsCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {discounts.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No discounts found</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t('common:pages.discountsNoneFound')}
+              </p>
             ) : (
               discounts.map((discount: DiscountDto) => (
                 <div
@@ -224,21 +249,34 @@ export default function Discounts() {
                     <div className="flex items-center gap-2 mb-2">
                       <p className="font-medium">{discount.name}</p>
                       <Badge variant={discount.is_active ? 'default' : 'outline'}>
-                        {discount.is_active ? 'Active' : 'Inactive'}
+                        {discount.is_active
+                          ? t('common:pages.discountsStatusActive')
+                          : t('common:pages.discountsStatusInactive')}
                       </Badge>
                       <Badge variant="secondary">
-                        {discount.type === 'PERCENTAGE' ? `${discount.value}%` : formatCurrency(discount.value)}
+                        {discount.type === 'PERCENTAGE'
+                          ? t('common:pages.discountsBadgePercentage', { value: discount.value })
+                          : t('common:pages.discountsBadgeFixed', {
+                              value: formatCurrency(discount.value),
+                            })}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Applicable to: {discount.applicable_to_display || discount.applicable_to}
+                      {t('common:pages.discountsApplicableToLabel')}{' '}
+                      {discount.applicable_to_display || discount.applicable_to}
                     </p>
                     {discount.code && (
-                      <p className="text-sm text-muted-foreground">Code: {discount.code}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t('common:pages.discountsCodeLabel')}: {discount.code}
+                      </p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      Valid from: {new Date(discount.valid_from).toLocaleDateString()}
-                      {discount.valid_to && ` to ${new Date(discount.valid_to).toLocaleDateString()}`}
+                      {t('common:pages.discountsValidFromLabel')}:{' '}
+                      {new Date(discount.valid_from).toLocaleDateString()}
+                      {discount.valid_to &&
+                        ` ${t('common:pages.discountsValidToSeparator')} ${new Date(
+                          discount.valid_to,
+                        ).toLocaleDateString()}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -246,7 +284,7 @@ export default function Discounts() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenDialog(discount)}
-                      title="Edit Discount"
+                      title={t('common:pages.discountsEditTooltip')}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -254,7 +292,7 @@ export default function Discounts() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(discount.id)}
-                      title="Delete Discount"
+                      title={t('common:pages.discountsDeleteTooltip')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -269,26 +307,32 @@ export default function Discounts() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingDiscount ? 'Edit Discount' : 'Create Discount'}</DialogTitle>
+            <DialogTitle>
+              {editingDiscount
+                ? t('common:pages.discountsDialogTitleEdit')
+                : t('common:pages.discountsDialogTitleCreate')}
+            </DialogTitle>
             <DialogDescription>
-              {editingDiscount ? 'Update discount details' : 'Create a new discount code or promotion'}
+              {editingDiscount
+                ? t('common:pages.discountsDialogDescriptionEdit')
+                : t('common:pages.discountsDialogDescriptionCreate')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">{t('common:pages.discountsFieldName')} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Discount name"
+                  placeholder={t('common:pages.discountsFieldNamePlaceholder')}
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="type">Type *</Label>
+                  <Label htmlFor="type">{t('common:pages.discountsFieldType')} *</Label>
                   <Select
                     value={formData.type}
                     onValueChange={(value: 'PERCENTAGE' | 'FIXED_AMOUNT') =>
@@ -296,29 +340,39 @@ export default function Discounts() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder={t('common:pages.discountsFieldTypePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PERCENTAGE">Percentage</SelectItem>
-                      <SelectItem value="FIXED_AMOUNT">Fixed Amount</SelectItem>
+                      <SelectItem value="PERCENTAGE">
+                        {t('common:pages.discountsTypePercentage')}
+                      </SelectItem>
+                      <SelectItem value="FIXED_AMOUNT">
+                        {t('common:pages.discountsTypeFixed')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="value">Value *</Label>
+                  <Label htmlFor="value">{t('common:pages.discountsFieldValue')} *</Label>
                   <Input
                     id="value"
                     type="number"
                     step="0.01"
                     value={formData.value}
                     onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                    placeholder={formData.type === 'PERCENTAGE' ? '0-100' : '0.00'}
+                    placeholder={
+                      formData.type === 'PERCENTAGE'
+                        ? t('common:pages.discountsFieldValuePlaceholderPercentage')
+                        : t('common:pages.discountsFieldValuePlaceholderFixed')
+                    }
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="applicable_to">Applicable To *</Label>
+                <Label htmlFor="applicable_to">
+                  {t('common:pages.discountsFieldApplicableTo')} *
+                </Label>
                 <Select
                   value={formData.applicable_to}
                   onValueChange={(value: 'FULL_PAYMENT' | 'SIBLING' | 'CUSTOM') =>
@@ -326,51 +380,63 @@ export default function Discounts() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder={t('common:pages.discountsFieldApplicableToPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="FULL_PAYMENT">Full Payment</SelectItem>
-                    <SelectItem value="SIBLING">Sibling Discount</SelectItem>
-                    <SelectItem value="CUSTOM">Custom</SelectItem>
+                    <SelectItem value="FULL_PAYMENT">
+                      {t('common:pages.discountsApplicableFullPayment')}
+                    </SelectItem>
+                    <SelectItem value="SIBLING">
+                      {t('common:pages.discountsApplicableSibling')}
+                    </SelectItem>
+                    <SelectItem value="CUSTOM">
+                      {t('common:pages.discountsApplicableCustom')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="code">Discount Code</Label>
+                <Label htmlFor="code">{t('common:pages.discountsFieldCode')}</Label>
                 <Input
                   id="code"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  placeholder="Optional discount code"
+                  placeholder={t('common:pages.discountsFieldCodePlaceholder')}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="min_amount">Minimum Amount</Label>
+                  <Label htmlFor="min_amount">
+                    {t('common:pages.discountsFieldMinAmount')}
+                  </Label>
                   <Input
                     id="min_amount"
                     type="number"
                     step="0.01"
                     value={formData.min_amount}
                     onChange={(e) => setFormData({ ...formData, min_amount: e.target.value })}
-                    placeholder="0.00"
+                    placeholder={t('common:pages.discountsFieldMinAmountPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="max_discount">Maximum Discount</Label>
+                  <Label htmlFor="max_discount">
+                    {t('common:pages.discountsFieldMaxDiscount')}
+                  </Label>
                   <Input
                     id="max_discount"
                     type="number"
                     step="0.01"
                     value={formData.max_discount}
                     onChange={(e) => setFormData({ ...formData, max_discount: e.target.value })}
-                    placeholder="0.00"
+                    placeholder={t('common:pages.discountsFieldMaxDiscountPlaceholder')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="valid_from">Valid From *</Label>
+                  <Label htmlFor="valid_from">
+                    {t('common:pages.discountsFieldValidFrom')} *
+                  </Label>
                   <Input
                     id="valid_from"
                     type="date"
@@ -380,7 +446,7 @@ export default function Discounts() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="valid_to">Valid To</Label>
+                  <Label htmlFor="valid_to">{t('common:pages.discountsFieldValidTo')}</Label>
                   <Input
                     id="valid_to"
                     type="date"
@@ -398,16 +464,18 @@ export default function Discounts() {
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  Active
+                  {t('common:pages.discountsFieldActive')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('common:pages.discountsCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingDiscount ? 'Update' : 'Create'}
+                {editingDiscount
+                  ? t('common:pages.discountsButtonUpdate')
+                  : t('common:pages.discountsButtonCreate')}
               </Button>
             </DialogFooter>
           </form>
