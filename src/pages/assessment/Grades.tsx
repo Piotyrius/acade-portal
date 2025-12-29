@@ -25,8 +25,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
 
 export default function Grades() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -103,12 +105,12 @@ export default function Grades() {
     mutationFn: createGrade,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['grades'] });
-      toast({ title: 'Success', description: 'Grade created successfully' });
+      toast({ title: t('pages.gradesToastCreateTitle'), description: t('pages.gradesToastCreateDescription') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.gradesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -116,13 +118,13 @@ export default function Grades() {
     mutationFn: ({ id, data }: { id: string; data: Partial<GradeDto> }) => updateGrade(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['grades'] });
-      toast({ title: 'Success', description: 'Grade updated successfully' });
+      toast({ title: t('pages.gradesToastUpdateTitle'), description: t('pages.gradesToastUpdateDescription') });
       setIsDialogOpen(false);
       setEditingGrade(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.gradesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -132,15 +134,15 @@ export default function Grades() {
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['grades'] });
       toast({
-        title: 'Success',
-        description: `Grade ${variables.approved ? 'approved' : 'rejected'} successfully`,
+        title: t('pages.gradesToastModerateTitle'),
+        description: variables.approved ? t('pages.gradesToastModerateApproved') : t('pages.gradesToastModerateRejected'),
       });
       setIsModerationDialogOpen(false);
       setSelectedGradeForModeration(null);
       setModerationComment('');
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.gradesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -185,8 +187,8 @@ export default function Grades() {
     e.preventDefault();
     if (!formData.assessment || !formData.student || !formData.score || !formData.max_score) {
       toast({
-        title: 'Error',
-        description: 'All fields are required',
+        title: t('pages.gradesToastErrorTitle'),
+        description: t('pages.gradesErrorAllFieldsRequired'),
         variant: 'destructive',
       });
       return;
@@ -221,18 +223,18 @@ export default function Grades() {
 
   const getModerationStatusBadge = (grade: any) => {
     if (!grade.is_moderated) {
-      return <Badge variant="secondary">Pending</Badge>;
+      return <Badge variant="secondary">{t('pages.gradesModerationPending')}</Badge>;
     }
     if (grade.moderation_status === 'APPROVED') {
       return <Badge variant="default" className="flex items-center gap-1">
         <CheckCircle className="h-3 w-3" />
-        Approved
+        {t('pages.gradesModerationApproved')}
       </Badge>;
     }
     if (grade.moderation_status === 'REJECTED') {
       return <Badge variant="destructive" className="flex items-center gap-1">
         <XCircle className="h-3 w-3" />
-        Rejected
+        {t('pages.gradesModerationRejected')}
       </Badge>;
     }
     return null;
@@ -243,17 +245,17 @@ export default function Grades() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">My Grades</h2>
-          <p className="text-muted-foreground">View your assessment grades</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.gradesMyTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.gradesMySubtitle')}</p>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Grades</CardTitle>
+            <CardTitle>{t('pages.gradesTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {studentGrades.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No grades found</p>
+                <p className="text-muted-foreground text-center py-8">{t('pages.gradesNoneFound')}</p>
               ) : (
                 studentGrades.map((grade: any) => {
                   const assessment = assessments.find((a: any) => a.id === grade.assessment);
@@ -261,9 +263,9 @@ export default function Grades() {
                   return (
                     <div key={grade.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div>
-                        <p className="font-medium">{assessment?.title || 'Unknown Assessment'}</p>
+                        <p className="font-medium">{assessment?.title || t('pages.gradesUnknownAssessment')}</p>
                         <p className="text-sm text-muted-foreground">
-                          Score: {grade.score} / {grade.max_score}
+                          {t('pages.gradesScoreLabel')}: {grade.score} / {grade.max_score}
                         </p>
                         {grade.feedback && <p className="text-sm text-muted-foreground mt-1">{grade.feedback}</p>}
                       </div>
@@ -288,16 +290,16 @@ export default function Grades() {
     <div className="space-y-6">
       <div className="flex items-center justify-between grade_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Grades</h2>
-          <p className="text-muted-foreground">Manage assessment grades</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.gradesTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.gradesSubtitle')}</p>
         </div>
         <div className="flex gap-2 grade_btn_wrapper">
           <Select value={selectedAssessment} onValueChange={setSelectedAssessment}>
             <SelectTrigger className="grade_select">
-              <SelectValue placeholder="Filter by assessment" />
+              <SelectValue placeholder={t('pages.gradesFilterAssessment')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Assessments</SelectItem>
+              <SelectItem value="all">{t('pages.gradesFilterAll')}</SelectItem>
               {assessments.map((assessment: any) => (
                 <SelectItem key={assessment.id} value={assessment.id}>
                   {assessment.title}
@@ -308,20 +310,20 @@ export default function Grades() {
           {user?.role === 'ADMIN' && (
             <Select value={moderationStatusFilter} onValueChange={setModerationStatusFilter}>
               <SelectTrigger className="grade_select">
-                <SelectValue placeholder="Moderation status" />
+                <SelectValue placeholder={t('pages.gradesFilterModeration')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="all">{t('pages.gradesModerationAll')}</SelectItem>
+                <SelectItem value="pending">{t('pages.gradesModerationPending')}</SelectItem>
+                <SelectItem value="approved">{t('pages.gradesModerationApproved')}</SelectItem>
+                <SelectItem value="rejected">{t('pages.gradesModerationRejected')}</SelectItem>
               </SelectContent>
             </Select>
           )}
           <div className="flex gap-2 add_grade_btn_wrapper">
             <Button onClick={() => handleOpenDialog()} className='add_grade_btn'>
               <Plus className="mr-2 h-4 w-4" />
-              Add Grade
+              {t('pages.gradesButtonAdd')}
             </Button>
           </div>
         </div>
@@ -348,12 +350,12 @@ export default function Grades() {
                         <GraduationCap className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{assessment?.title || 'Unknown Assessment'}</p>
+                        <p className="font-medium">{assessment?.title || t('pages.gradesUnknownAssessment')}</p>
                         <p className="text-sm text-muted-foreground">
-                          Student: {student ? `${student.first_name} ${student.last_name}` : grade.student_name || grade.student}
+                          {t('pages.gradesStudentLabel')}: {student ? `${student.first_name} ${student.last_name}` : grade.student_name || grade.student}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Score: {grade.score} / {grade.max_score}
+                          {t('pages.gradesScoreLabel')}: {grade.score} / {grade.max_score}
                         </p>
                         {grade.feedback && <p className="text-xs text-muted-foreground mt-1">{grade.feedback}</p>}
                         {user?.role === 'ADMIN' && (
@@ -361,13 +363,13 @@ export default function Grades() {
                             {getModerationStatusBadge(grade)}
                             {grade.moderated_by_name && (
                               <p className="text-xs text-muted-foreground mt-1">
-                                Moderated by {grade.moderated_by_name}
-                                {grade.moderated_at && ` on ${new Date(grade.moderated_at).toLocaleDateString()}`}
+                                {t('pages.gradesModeratedBy')} {grade.moderated_by_name}
+                                {grade.moderated_at && ` ${t('pages.gradesModeratedOn')} ${new Date(grade.moderated_at).toLocaleDateString()}`}
                               </p>
                             )}
                             {grade.moderation_comment && (
                               <p className="text-xs text-muted-foreground mt-1 italic">
-                                Comment: {grade.moderation_comment}
+                                {t('pages.gradesModerationComment')}: {grade.moderation_comment}
                               </p>
                             )}
                           </div>
@@ -391,7 +393,7 @@ export default function Grades() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleOpenModerationDialog(grade, 'approve')}
-                              title="Approve grade"
+                              title={t('pages.gradesModerationApproveTitle')}
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -401,7 +403,7 @@ export default function Grades() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleOpenModerationDialog(grade, 'reject')}
-                              title="Reject grade"
+                              title={t('pages.gradesModerationRejectTitle')}
                             >
                               <XCircle className="h-4 w-4" />
                             </Button>
@@ -420,15 +422,15 @@ export default function Grades() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingGrade ? 'Edit Grade' : 'Add Grade'}</DialogTitle>
+            <DialogTitle>{editingGrade ? t('pages.gradesDialogEditTitle') : t('pages.gradesDialogCreateTitle')}</DialogTitle>
             <DialogDescription>
-              {editingGrade ? 'Update the grade details' : 'Create a new grade for a student'}
+              {editingGrade ? t('pages.gradesDialogEditDescription') : t('pages.gradesDialogCreateDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="assessment">Assessment *</Label>
+                <Label htmlFor="assessment">{t('pages.gradesDialogFieldAssessment')}</Label>
                 <Select
                   value={formData.assessment}
                   onValueChange={(value) => {
@@ -438,7 +440,7 @@ export default function Grades() {
                   disabled={!!editingGrade}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select assessment" />
+                      <SelectValue placeholder={t('pages.gradesDialogFieldAssessmentPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {assessments.map((assessment: any) => (
@@ -450,18 +452,18 @@ export default function Grades() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="student">Student *</Label>
+                <Label htmlFor="student">{t('pages.gradesDialogFieldStudent')}</Label>
                 {!formData.assessment ? (
                   <div className="text-sm text-muted-foreground p-2 border rounded-md">
-                    Please select an assessment first to see enrolled students
+                    {t('pages.gradesDialogSelectAssessmentFirst')}
                   </div>
                 ) : enrollmentsLoading ? (
                   <div className="text-sm text-muted-foreground p-2 border rounded-md">
-                    Loading enrolled students...
+                    {t('pages.gradesDialogLoadingStudents')}
                   </div>
                 ) : availableStudents.length === 0 ? (
                   <div className="text-sm text-muted-foreground p-2 border rounded-md">
-                    No enrolled students found for this assessment's cohort
+                    {t('pages.gradesDialogNoStudents')}
                   </div>
                 ) : (
                   <Select
@@ -470,7 +472,7 @@ export default function Grades() {
                     disabled={!!editingGrade}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select student" />
+                      <SelectValue placeholder={t('pages.gradesDialogFieldStudentPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {availableStudents.map((student: any) => (
@@ -484,7 +486,7 @@ export default function Grades() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="score">Score *</Label>
+                  <Label htmlFor="score">{t('pages.gradesDialogFieldScore')}</Label>
                   <Input
                     id="score"
                     type="number"
@@ -496,7 +498,7 @@ export default function Grades() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="max_score">Max Score *</Label>
+                  <Label htmlFor="max_score">{t('pages.gradesDialogFieldMaxScore')}</Label>
                   <Input
                     id="max_score"
                     type="number"
@@ -509,22 +511,22 @@ export default function Grades() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="feedback">Feedback</Label>
+                <Label htmlFor="feedback">{t('pages.gradesDialogFieldFeedback')}</Label>
                 <Textarea
                   id="feedback"
                   value={formData.feedback}
                   onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
                   rows={3}
-                  placeholder="Optional feedback for the student"
+                  placeholder={t('pages.gradesDialogFieldFeedbackPlaceholder')}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('pages.gradesDialogCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingGrade ? (updateMutation.isPending ? 'Updating...' : 'Update') : createMutation.isPending ? 'Creating...' : 'Create'}
+                {editingGrade ? (updateMutation.isPending ? t('pages.gradesDialogButtonUpdating') : t('pages.gradesDialogButtonUpdate')) : createMutation.isPending ? t('pages.gradesDialogButtonCreating') : t('pages.gradesDialogButtonCreate')}
               </Button>
             </DialogFooter>
           </form>
@@ -536,47 +538,47 @@ export default function Grades() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {moderationAction === 'approve' ? 'Approve Grade' : 'Reject Grade'}
+              {moderationAction === 'approve' ? t('pages.gradesModerationDialogApproveTitle') : t('pages.gradesModerationDialogRejectTitle')}
             </DialogTitle>
             <DialogDescription>
               {moderationAction === 'approve'
-                ? 'Approve this grade for the student'
-                : 'Reject this grade and require review'}
+                ? t('pages.gradesModerationDialogApproveDescription')
+                : t('pages.gradesModerationDialogRejectDescription')}
             </DialogDescription>
           </DialogHeader>
           {selectedGradeForModeration && (
             <div className="space-y-4 py-4">
               <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm font-medium">
-                  Assessment: {assessments.find((a: any) => a.id === selectedGradeForModeration.assessment)?.title || 'Unknown'}
+                  {t('pages.gradesModerationAssessmentLabel')}: {assessments.find((a: any) => a.id === selectedGradeForModeration.assessment)?.title || t('pages.gradesUnknownAssessment')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Student: {allStudents.find((s: any) => s.id === selectedGradeForModeration.student) 
+                  {t('pages.gradesStudentLabel')}: {allStudents.find((s: any) => s.id === selectedGradeForModeration.student) 
                     ? `${allStudents.find((s: any) => s.id === selectedGradeForModeration.student)?.first_name} ${allStudents.find((s: any) => s.id === selectedGradeForModeration.student)?.last_name}`
                     : selectedGradeForModeration.student_name || selectedGradeForModeration.student}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Score: {selectedGradeForModeration.score} / {selectedGradeForModeration.max_score} ({parseFloat(selectedGradeForModeration.percentage).toFixed(1)}%)
+                  {t('pages.gradesScoreLabel')}: {selectedGradeForModeration.score} / {selectedGradeForModeration.max_score} ({parseFloat(selectedGradeForModeration.percentage).toFixed(1)}%)
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="moderation_comment">Moderation Comment (Optional)</Label>
+                <Label htmlFor="moderation_comment">{t('pages.gradesModerationCommentLabel')}</Label>
                 <Textarea
                   id="moderation_comment"
                   value={moderationComment}
                   onChange={(e) => setModerationComment(e.target.value)}
                   rows={3}
-                  placeholder="Add a comment about this moderation decision..."
+                  placeholder={t('pages.gradesModerationCommentPlaceholder')}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Your comment will be saved with the moderation decision
+                  {t('pages.gradesModerationCommentHelper')}
                 </p>
               </div>
             </div>
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsModerationDialogOpen(false)}>
-              Cancel
+              {t('pages.gradesModerationDialogCancel')}
             </Button>
             <Button
               onClick={handleModerate}
@@ -584,10 +586,10 @@ export default function Grades() {
               variant={moderationAction === 'reject' ? 'destructive' : 'default'}
             >
               {moderateMutation.isPending
-                ? 'Processing...'
+                ? t('pages.gradesModerationDialogButtonProcessing')
                 : moderationAction === 'approve'
-                ? 'Approve'
-                : 'Reject'}
+                ? t('pages.gradesModerationDialogButtonApprove')
+                : t('pages.gradesModerationDialogButtonReject')}
             </Button>
           </DialogFooter>
         </DialogContent>
