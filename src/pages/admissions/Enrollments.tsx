@@ -123,10 +123,10 @@ export default function Enrollments() {
       activateEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
-      toast({ title: 'Success', description: 'Enrollment activated successfully' });
+      toast({ title: t('pages.admissionsEnrollmentsToastActivateTitle'), description: t('pages.admissionsEnrollmentsToastActivateDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.admissionsEnrollmentsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
 
     
@@ -147,10 +147,10 @@ export default function Enrollments() {
       withdrawEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
-      toast({ title: 'Success', description: 'Enrollment withdrawn successfully' });
+      toast({ title: t('pages.admissionsEnrollmentsToastWithdrawTitle'), description: t('pages.admissionsEnrollmentsToastWithdrawDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.admissionsEnrollmentsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -169,10 +169,10 @@ export default function Enrollments() {
       completeEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
-      toast({ title: 'Success', description: 'Enrollment completed successfully' });
+      toast({ title: t('pages.admissionsEnrollmentsToastCompleteTitle'), description: t('pages.admissionsEnrollmentsToastCompleteDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.admissionsEnrollmentsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -215,8 +215,8 @@ export default function Enrollments() {
     onSuccess: (data) => {
       console.log('✅ Bulk activation successful:', data);
       toast({
-        title: 'Success',
-        description: `${data.activated} enrollment(s) activated successfully`,
+        title: t('pages.admissionsEnrollmentsToastBulkActivateTitle'),
+        description: t('pages.admissionsEnrollmentsToastBulkActivateDescription', { count: data.activated }),
       });
       setIsBulkDialogOpen(false);
       setSelectedEnrollments([]);
@@ -239,8 +239,8 @@ export default function Enrollments() {
         'Failed to activate enrollments';
 
       toast({
-        title: 'Error',
-        description: errorMsg,
+        title: t('pages.admissionsEnrollmentsToastErrorTitle'),
+        description: errorMsg || t('pages.admissionsEnrollmentsToastErrorDescription'),
         variant: 'destructive',
       });
     },
@@ -267,7 +267,7 @@ export default function Enrollments() {
 
 
   const handleWithdraw = (enrollment: any) => {
-    if (confirm('Are you sure you want to withdraw this enrollment?')) {
+    if (confirm(t('pages.admissionsEnrollmentsWithdrawConfirm'))) {
       withdrawMutation.mutate({
         id: enrollment.id,
         payload: {
@@ -283,7 +283,7 @@ export default function Enrollments() {
   };
 
   const handleComplete = (enrollment: any) => {
-    if (confirm('Are you sure you want to mark this enrollment as complete?')) {
+    if (confirm(t('pages.admissionsEnrollmentsCompleteConfirm'))) {
       completeMutation.mutate({
         id: enrollment.id,
         payload: {
@@ -301,8 +301,8 @@ export default function Enrollments() {
   const handleBulkActivate = () => {
     if (selectedEnrollments.length === 0) {
       toast({
-        title: 'Error',
-        description: 'Please select at least one enrollment',
+        title: t('pages.admissionsEnrollmentsToastSelectOneTitle'),
+        description: t('pages.admissionsEnrollmentsToastSelectOneDescription'),
         variant: 'destructive',
       });
       return;

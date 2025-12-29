@@ -54,6 +54,25 @@ export default function Programs() {
   const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
+
+  // Helper function to convert translated day abbreviations to English for backend
+  const convertDayAbbreviationsToEnglish = (pattern: string): string => {
+    const dayMap: Record<string, string> = {
+      [t('pages.catalogCohortsDayMon').toUpperCase()]: 'MON',
+      [t('pages.catalogCohortsDayTue').toUpperCase()]: 'TUE',
+      [t('pages.catalogCohortsDayWed').toUpperCase()]: 'WED',
+      [t('pages.catalogCohortsDayThu').toUpperCase()]: 'THU',
+      [t('pages.catalogCohortsDayFri').toUpperCase()]: 'FRI',
+      [t('pages.catalogCohortsDaySat').toUpperCase()]: 'SAT',
+      [t('pages.catalogCohortsDaySun').toUpperCase()]: 'SUN',
+    };
+
+    return pattern
+      .split(',')
+      .map((day) => day.trim().toUpperCase())
+      .map((day) => dayMap[day] || day)
+      .join(',');
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -168,12 +187,12 @@ export default function Programs() {
     mutationFn: createProgram,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['programs'] });
-      toast({ title: 'Success', description: 'Program created successfully' });
+      toast({ title: t('pages.catalogProgramsToastCreateTitle'), description: t('pages.catalogProgramsToastCreateDescription') });
       setIsDialogOpen(false);
       setFormData({ name: '', code: '', description: '', active: true });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -181,13 +200,13 @@ export default function Programs() {
     mutationFn: ({ id, data }: { id: string; data: Partial<ProgramDto> }) => updateProgram(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['programs'] });
-      toast({ title: 'Success', description: 'Program updated successfully' });
+      toast({ title: t('pages.catalogProgramsToastUpdateTitle'), description: t('pages.catalogProgramsToastUpdateDescription') });
       setIsDialogOpen(false);
       setEditingProgram(null);
       setFormData({ name: '', code: '', description: '', active: true });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -195,10 +214,10 @@ export default function Programs() {
     mutationFn: deleteProgram,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['programs'] });
-      toast({ title: 'Success', description: 'Program deleted successfully' });
+      toast({ title: t('pages.catalogProgramsToastDeleteTitle'), description: t('pages.catalogProgramsToastDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -223,7 +242,7 @@ export default function Programs() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this program?')) {
+    if (confirm(t('pages.catalogProgramsDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -237,8 +256,8 @@ export default function Programs() {
   const handleConfirmRecruitmentPlan = () => {
     if (!recruitmentPrograms.length || !recruitmentRange.start || !recruitmentRange.end) {
       toast({
-        title: 'Missing information',
-        description: 'Choose at least one program and a date range.',
+        title: t('pages.catalogProgramsToastMissingInfoTitle'),
+        description: t('pages.catalogProgramsToastMissingInfoDescription'),
         variant: 'destructive',
       });
       return;
@@ -304,10 +323,10 @@ export default function Programs() {
     mutationFn: deleteCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: 'Success', description: 'Course deleted successfully' });
+      toast({ title: t('pages.catalogProgramsToastCourseDeleteTitle'), description: t('pages.catalogProgramsToastCourseDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -315,22 +334,22 @@ export default function Programs() {
     mutationFn: createCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["courses"] });
-      toast({ title: "Success", description: "Course created successfully" });
+      toast({ title: t('pages.catalogProgramsToastCourseCreateTitle'), description: t('pages.catalogProgramsToastCourseCreateDescription') });
       setIsCourseDialogOpen(false);
       setCourseForm({ program: "", title: "", code: "", hours: 1, credits: "", description: "" });
     },
-    onError: (e) => toast({ title:"Error", description:getErrorMessage(e), variant:"destructive" })
+    onError: (e) => toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(e), variant: "destructive" })
   });
 
   const updateCourseMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => updateCourse(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["courses"] });
-      toast({ title: "Success", description: "Course updated successfully" });
+      toast({ title: t('pages.catalogProgramsToastCourseUpdateTitle'), description: t('pages.catalogProgramsToastCourseUpdateDescription') });
       setEditingCourse(null);
       setIsCourseDialogOpen(false);
     },
-    onError: (e) => toast({ title:"Error", description:getErrorMessage(e), variant:"destructive" })
+    onError: (e) => toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(e), variant: "destructive" })
   });
 
   const handleOpenCourseEdit = (course: CourseDto) => {
@@ -367,7 +386,7 @@ export default function Programs() {
   };
 
   const handleDeleteCourse = (id: string) => {
-    if (confirm('Are you sure you want to delete this course?')) {
+    if (confirm(t('pages.catalogProgramsCourseDeleteConfirm'))) {
       deleteCourseMutation.mutate(id);
     }
   };
@@ -381,10 +400,10 @@ export default function Programs() {
     mutationFn: deleteCohort,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: 'Success', description: 'Cohort deleted successfully' });
+      toast({ title: t('pages.catalogProgramsToastCohortDeleteTitle'), description: t('pages.catalogProgramsToastCohortDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -392,22 +411,22 @@ export default function Programs() {
     mutationFn: createCohort,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cohorts"] });
-      toast({ title: "Success", description: "Cohort created successfully" });
+      toast({ title: t('pages.catalogProgramsToastCohortCreateTitle'), description: t('pages.catalogProgramsToastCohortCreateDescription') });
       setIsCohortDialogOpen(false);
       setCohortForm({  course: '',  name: '',  lecturer: '',  capacity: 20,  start_date: '',  end_date: '',  status: 'PLANNED' as CohortDto['status'],}); 
     },
-    onError: (e) => toast({ title:"Error", description:getErrorMessage(e), variant:"destructive" })
+    onError: (e) => toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(e), variant: "destructive" })
   });
 
   const updateCohortMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => updateCohort(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cohorts"] });
-      toast({ title: "Success", description: "Cohort updated successfully" });
+      toast({ title: t('pages.catalogProgramsToastCohortUpdateTitle'), description: t('pages.catalogProgramsToastCohortUpdateDescription') });
       setEditingCohort(null);
       setIsCohortDialogOpen(false);
     },
-    onError: (e) => toast({ title:"Error", description:getErrorMessage(e), variant:"destructive" })
+    onError: (e) => toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(e), variant: "destructive" })
   });
 
   const handleOpenCohortEdit = (cohort: CohortDto) => {
@@ -456,7 +475,7 @@ export default function Programs() {
   };
 
   const handleDeleteCohort = (id: string) => {
-    if (confirm('Are you sure you want to delete this cohort?')) {
+    if (confirm(t('pages.catalogProgramsCohortDeleteConfirm'))) {
       deleteCohortMutation.mutate(id);
     }
   };
@@ -475,14 +494,14 @@ export default function Programs() {
   onSuccess: (data) => {
     qc.invalidateQueries({ queryKey: ['sessions'] });
     toast({
-      title: 'Success',
-      description: `Generated ${data.created} sessions successfully`,
+      title: t('pages.catalogCohortsToastCreateTitle'),
+      description: t('pages.catalogCohortsToastGenerateSessionsDescription', { count: data.created }),
     });
     setIsSessionDialogOpen(false);
     setSelectedCohortForSessions(null);
   },
   onError: (error) => {
-    toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    toast({ title: t('pages.catalogCohortsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
   },
 });
 
@@ -1246,32 +1265,42 @@ export default function Programs() {
       <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Generate Sessions</DialogTitle>
+            <DialogTitle>{t('pages.catalogCohortsDialogGenerateSessionsTitle')}</DialogTitle>
             <DialogDescription>
-              Generate recurring sessions for {selectedCohortForSessions?.name}
+              {t('pages.catalogCohortsDialogGenerateSessionsDescription', { name: selectedCohortForSessions?.name || '' })}
             </DialogDescription>
           </DialogHeader>
 
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              // Convert translated day abbreviations to English for backend
+              const convertedPattern = convertDayAbbreviationsToEnglish(sessionFormData.pattern);
               generateSessionsMutation.mutate({
                 cohortId: selectedCohortForSessions!.id,
-                payload: sessionFormData,
+                payload: {
+                  ...sessionFormData,
+                  pattern: convertedPattern,
+                },
               });
             }}
           >
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Pattern *</Label>
+                <Label>
+                  {t('pages.catalogCohortsFieldPattern')} * (e.g., {t('pages.catalogCohortsDayMon')},{t('pages.catalogCohortsDayWed')},{t('pages.catalogCohortsDayFri')} or {t('pages.catalogCohortsDayTue')},{t('pages.catalogCohortsDayThu')})
+                </Label>
                 <Input
                   value={sessionFormData.pattern}
                   onChange={(e) =>
-                    setSessionFormData({ ...sessionFormData, pattern: e.target.value.toUpperCase() })
+                    setSessionFormData({ ...sessionFormData, pattern: e.target.value })
                   }
-                  placeholder="MON,WED,FRI"
+                  placeholder={t('pages.catalogCohortsFieldPatternPlaceholder')}
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.catalogCohortsFieldPatternHelper')}
+                </p>
               </div>
                 
               <div className="grid grid-cols-2 gap-4">
@@ -1294,7 +1323,7 @@ export default function Programs() {
                 
             <DialogFooter>
               <Button type="submit" disabled={generateSessionsMutation.isPending}>
-                Generate Sessions
+                {t('pages.catalogCohortsDialogGenerateSessionsTitle')}
               </Button>
             </DialogFooter>
           </form>

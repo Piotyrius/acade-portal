@@ -92,10 +92,10 @@ export default function Applications() {
       updateApplication(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['applications'] });
-      toast({ title: 'Updated', description: 'Application updated' });
+      toast({ title: t('pages.admissionsApplicationsToastUpdateTitle'), description: t('pages.admissionsApplicationsToastUpdateDescription') });
     },
     onError: (err) =>
-      toast({ title: 'Error', description: getErrorMessage(err), variant: 'destructive' }),
+      toast({ title: t('pages.admissionsApplicationsToastErrorTitle'), description: getErrorMessage(err), variant: 'destructive' }),
   });
 
   // ✅ THIS is the REAL ACCEPT - Now uses course_id instead of cohort_id
@@ -106,7 +106,7 @@ export default function Applications() {
       qc.invalidateQueries({ queryKey: ['applications'] });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: 'Accepted', description: 'Enrollment created and invoice generated automatically' });
+      toast({ title: t('pages.admissionsApplicationsToastAcceptTitle'), description: t('pages.admissionsApplicationsToastAcceptDescription') });
       setAcceptDialogOpen(false);
       setSelectedApp(null);
       setSelectedCourse('');
@@ -114,7 +114,7 @@ export default function Applications() {
       setSelectedDiscountIds([]);
     },
     onError: (err) =>
-      toast({ title: 'Error', description: getErrorMessage(err), variant: 'destructive' }),
+      toast({ title: t('pages.admissionsApplicationsToastErrorTitle'), description: getErrorMessage(err), variant: 'destructive' }),
   });
 
   /* ===================== HANDLERS ===================== */
@@ -146,8 +146,8 @@ export default function Applications() {
       qc.invalidateQueries({ queryKey: ['invoices'] });
 
       toast({
-        title: 'Enrollment created',
-        description: 'Enrollment created and invoice generated automatically.',
+        title: t('pages.admissionsApplicationsToastEnrollmentCreatedTitle'),
+        description: t('pages.admissionsApplicationsToastEnrollmentCreatedDescription'),
       });
 
       setAcceptDialogOpen(false);
@@ -158,7 +158,7 @@ export default function Applications() {
       setAcceptStep(1);
     } catch (err) {
       toast({
-        title: 'Error',
+        title: t('pages.admissionsApplicationsToastErrorTitle'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
