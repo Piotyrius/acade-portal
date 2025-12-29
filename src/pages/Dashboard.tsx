@@ -468,21 +468,21 @@ export default function Dashboard() {
             onClick={() => navigate("/admissions/applications")}
             variant="outline"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             {t("dashboard.reviewApplications")}
           </Button>
           <Button
             onClick={() => navigate("/admissions/enrollments")}
             variant="outline"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Users className="mr-2 h-4 w-4" />
             {t("dashboard.manageEnrollments")}
           </Button>
           <Button
             onClick={() => navigate("/payments/invoices")}
             variant="outline"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             {t("dashboard.viewInvoices")}
           </Button>
           <Button onClick={() => navigate("/payments")} variant="outline">
