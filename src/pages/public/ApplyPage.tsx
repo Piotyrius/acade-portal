@@ -58,7 +58,7 @@ export default function ApplyPage() {
   const mutation = useMutation({
     mutationFn: submitPublicApplication,
     onSuccess: () => {
-      toast({ title: 'Success', description: 'Application submitted successfully' });
+      toast({ title: t('success'), description: t('pages.applicationSubmitted') });
       setForm({
         firstName: '',
         lastName: '',
@@ -70,7 +70,7 @@ export default function ApplyPage() {
       });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -87,8 +87,8 @@ export default function ApplyPage() {
 
     if (cleanedPhones.length === 0) {
       toast({
-        title: 'Phone required',
-        description: 'Please enter at least one phone number.',
+        title: t('error'),
+        description: t('pages.recruitingPhoneRequiredDescription'),
         variant: 'destructive',
       });
       return;

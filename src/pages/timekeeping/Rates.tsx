@@ -57,15 +57,12 @@ export default function Rates() {
     mutationFn: createRate,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rates'] });
-      toast({
-        title: 'Success',
-        description: 'Rate created successfully',
-      });
+      toast({ title: t('success'), description: t('pages.rateCreateSuccess') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -73,16 +70,13 @@ export default function Rates() {
     mutationFn: ({ id, data }: { id: string; data: Partial<RateDto> }) => updateRate(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rates'] });
-      toast({
-        title: 'Success',
-        description: 'Rate updated successfully',
-      });
+      toast({ title: t('success'), description: t('pages.rateUpdateSuccess') });
       setIsDialogOpen(false);
       setEditingRate(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -90,13 +84,10 @@ export default function Rates() {
     mutationFn: deleteRate,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rates'] });
-      toast({
-        title: 'Success',
-        description: 'Rate deleted successfully',
-      });
+      toast({ title: t('success'), description: t('pages.rateDeleteSuccess') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 

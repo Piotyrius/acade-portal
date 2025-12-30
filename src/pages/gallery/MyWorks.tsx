@@ -166,6 +166,15 @@ const displayWorks: WorkDto[] =
     }
   };
   
+  const getPreviewUrl = (url?: string) => {
+    if (!url) return '';
+    const lower = url.split('?')[0].toLowerCase();
+    if (/(\.jpg|\.jpeg|\.png|\.webp|\.gif|\.svg)$/i.test(lower)) return url;
+    // If Cloudinary URL contains /upload/, insert f_auto to request an image-compatible format
+    if (url.includes('/upload/')) return url.replace('/upload/', '/upload/f_auto/');
+    // fallback: return original URL
+    return url;
+  };
 
   return (
     <div className="space-y-6">
@@ -218,20 +227,14 @@ const displayWorks: WorkDto[] =
         {displayWorks.map((work: WorkDto) => (
           <Card key={work.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardHeader className="p-0">
-  <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
-    {work.media ? (
-      <img
-        src={
-          work.media_url
-        }
-        alt={work.title}
-        className="w-full h-full object-cover"
-      />
-    ) : (
-      <ImageIcon className="h-12 w-12 text-muted-foreground" />
-    )}
-  </div>
-</CardHeader>
+              <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+                {work.media || work.media_url ? (
+                  <img src={getPreviewUrl(work.media_url || work.media)} alt={work.title} className="w-full h-full object-cover" />
+                ) : (
+                  <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                )}
+              </div>
+            </CardHeader>
 
             <CardContent className="p-4">
               <CardTitle className="text-base mb-2">{work.title}</CardTitle>

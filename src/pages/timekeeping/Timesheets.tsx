@@ -70,15 +70,12 @@ export default function Timesheets() {
     mutationFn: createTimesheet,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['timesheets'] });
-      toast({
-        title: 'Success',
-        description: 'Timesheet created successfully',
-      });
+      toast({ title: t('success'), description: t('pages.timesheetCreateSuccess') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -86,16 +83,13 @@ export default function Timesheets() {
     mutationFn: ({ id, data }: { id: string; data: Partial<TimesheetDto> }) => updateTimesheet(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['timesheets'] });
-      toast({
-        title: 'Success',
-        description: 'Timesheet updated successfully',
-      });
+      toast({ title: t('success'), description: t('pages.timesheetUpdateSuccess') });
       setIsDialogOpen(false);
       setEditingTimesheet(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -103,13 +97,10 @@ export default function Timesheets() {
     mutationFn: deleteTimesheet,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['timesheets'] });
-      toast({
-        title: 'Success',
-        description: 'Timesheet deleted successfully',
-      });
+      toast({ title: t('success'), description: t('pages.timesheetDeleteSuccess') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -141,11 +132,7 @@ export default function Timesheets() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.period_start || !formData.period_end) {
-      toast({
-        title: 'Error',
-        description: 'Period start and end dates are required',
-        variant: 'destructive',
-      });
+      toast({ title: t('error'), description: t('pages.timesheetFormRequired'), variant: 'destructive' });
       return;
     }
 
@@ -167,7 +154,7 @@ export default function Timesheets() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this timesheet?')) {
+    if (confirm(t('pages.timesheetsDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -182,21 +169,14 @@ export default function Timesheets() {
 
   const handleBulkApprove = () => {
     if (selectedIds.length === 0) {
-      toast({
-        title: 'No selection',
-        description: 'Please select timesheets to approve',
-        variant: 'destructive',
-      });
+      toast({ title: t('error'), description: t('pages.timesheetsNoSelection'), variant: 'destructive' });
       return;
     }
 
     Promise.all(selectedIds.map(id => updateTimesheet(id, { status: 'APPROVED' })))
       .then(() => {
         qc.invalidateQueries({ queryKey: ['timesheets'] });
-        toast({
-          title: 'Success',
-          description: `${selectedIds.length} timesheet(s) approved`,
-        });
+        toast({ title: t('success'), description: t('pages.timesheetsBulkApproved', { count: selectedIds.length }) });
         setSelectedIds([]);
       })
       .catch((error) => {

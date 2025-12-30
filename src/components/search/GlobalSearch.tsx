@@ -104,7 +104,7 @@ export function GlobalSearch() {
           <Input
             ref={inputRef}
             type="text"
-            placeholder={t('layout.globalSearchPlaceholder')}
+            placeholder={t('pages.globalSearchPlaceholder')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
