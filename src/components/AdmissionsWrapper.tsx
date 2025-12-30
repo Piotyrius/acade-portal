@@ -9,13 +9,20 @@ const active =
 
 const AdmissionsWrapper = () => {
   const { t } = useTranslation('common');
-
+  
   return (
     <div>
       <div className="mb-[2rem] inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
-        <NavLink to="applications" className={({ isActive }) => `${base} ${isActive ? active : ""}`}>{t('wrappers.Applications')}</NavLink>
-        <NavLink to="enrollments" className={({ isActive }) => `${base} ${isActive ? active : ""}`}>{t('wrappers.Enrollments')}</NavLink>
-        <NavLink to="recruiting" className={({ isActive }) => `${base} ${isActive ? active : ""}`}>{t('wrappers.Recruit Students')}</NavLink>
+        
+        <NavLink to="applications" className={({ isActive }) => `${base} ${isActive ? active : ""}`}>
+          {t('layout.admissionsTabApplications')}
+        </NavLink>
+        <NavLink to="enrollments" className={({ isActive }) => `${base} ${isActive ? active : ""}`}>
+          {t('layout.admissionsTabEnrollments')}
+        </NavLink>
+        <NavLink to="recruiting" className={({ isActive }) => `${base} ${isActive ? active : ""}`}>
+          {t('layout.admissionsTabRecruitStudents')}
+        </NavLink>
 
       </div>
 

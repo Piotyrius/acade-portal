@@ -12,7 +12,6 @@ import { getSubmissions, createSubmission, updateSubmission, SubmissionDto } fro
 import { getAssessments } from '@/api/endpoints/assessment';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -24,12 +23,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 export default function Submissions() {
   const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<string>('all');
   const [dragActive, setDragActive] = useState(false);
@@ -55,12 +57,12 @@ export default function Submissions() {
       createSubmission(payload.assessment, { text: payload.text, file: payload.file }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['submissions'] });
-      toast({ title: 'Success', description: 'Submission created successfully' });
+      toast({ title: t('pages.submissionsToastCreateTitle'), description: t('pages.submissionsToastCreateDescription') });
       setIsDialogOpen(false);
       setFormData({ assessment: '', text: '', file: null });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.submissionsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -68,10 +70,10 @@ export default function Submissions() {
     mutationFn: ({ id, data }: { id: string; data: Partial<SubmissionDto> }) => updateSubmission(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['submissions'] });
-      toast({ title: 'Success', description: 'Submission updated successfully' });
+      toast({ title: t('pages.submissionsToastUpdateTitle'), description: t('pages.submissionsToastUpdateDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.submissionsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -79,8 +81,8 @@ export default function Submissions() {
     e.preventDefault();
     if (!formData.assessment) {
       toast({
-        title: 'Error',
-        description: 'Assessment is required',
+        title: t('pages.submissionsToastErrorTitle'),
+        description: t('pages.submissionsErrorAssessmentRequired'),
         variant: 'destructive',
       });
       return;
@@ -88,8 +90,8 @@ export default function Submissions() {
 
     if (!formData.text && !formData.file) {
       toast({
-        title: 'Error',
-        description: 'Either text or file is required',
+        title: t('pages.submissionsToastErrorTitle'),
+        description: t('pages.submissionsErrorTextOrFileRequired'),
         variant: 'destructive',
       });
       return;
@@ -143,16 +145,16 @@ export default function Submissions() {
     <div className="space-y-6">
       <div className="flex items-center justify-between submissions_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.assessmentSubmissionsTitle')}</h2>
-          <p className="text-muted-foreground">{t('pages.assessmentSubmissionsSubtitle') || t('pages.assessmentSubmissionsSubtitle')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.submissionsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.submissionsSubtitle')}</p>
         </div>
         <div className="flex gap-2 select_wrapper">
           <Select value={selectedAssessment} onValueChange={setSelectedAssessment}>
             <SelectTrigger>
-              <SelectValue placeholder={t('pages.assessmentSubmissionsFilterPlaceholder') || t('assessmentSubmissionsFilterPlaceholder')} />
+              <SelectValue placeholder={t('pages.submissionsFilterPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t('pages.assessmentSubmissionsAllAssessments') || t('assessmentSubmissionsAllAssessments')}</SelectItem>
+              <SelectItem value="all">{t('pages.submissionsFilterAll')}</SelectItem>
               {assessments.map((assessment: any) => (
                 <SelectItem key={assessment.id} value={assessment.id}>
                   {assessment.title}
@@ -164,7 +166,7 @@ export default function Submissions() {
             {user?.role === 'STUDENT' && (
               <Button onClick={() => setIsDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                {t('pages.assessmentSubmitButton') || t('assessmentSubmitButton')}
+                {t('pages.submissionsButtonSubmit')}
               </Button>
             )}
           </div>
@@ -173,13 +175,13 @@ export default function Submissions() {
 
       {submissions.length === 0 && <ExampleBanner />}
       <Card>
-          <CardHeader>
-          <CardTitle>{t('pages.assessmentSubmissionsTitle') || t('assessmentSubmissionsTitle')}</CardTitle>
+        <CardHeader>
+          <CardTitle>{t('pages.submissionsTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-              {filteredSubmissions.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">{t('pages.assessmentSubmissionsEmpty') || t('assessmentSubmissionsEmpty')}</p>
+            {filteredSubmissions.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">{t('pages.submissionsNoneFound')}</p>
             ) : (
               filteredSubmissions.map((submission: any) => {
                 const assessment = assessments.find((a: any) => a.id === submission.assessment);
@@ -190,12 +192,21 @@ export default function Submissions() {
                         <FileText className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{assessment?.title || t('pages.catalogCoursesUnknownProgram') || 'Unknown Assessment'}</p>
+                        <p className="font-medium">{assessment?.title || t('pages.submissionsUnknownAssessment')}</p>
                         <p className="text-sm text-muted-foreground">
-                          Student: {submission.student_name || submission.student}
+                          {t('pages.submissionsStudentLabel')}: {submission.student ? (
+                            <button
+                              onClick={() => navigate(`/users/${submission.student}`)}
+                              className="hover:text-primary hover:underline cursor-pointer"
+                            >
+                              {submission.student_name || submission.student}
+                            </button>
+                          ) : (
+                            <span>{submission.student_name || submission.student}</span>
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Submitted: {new Date(submission.submitted_at).toLocaleString()}
+                          {t('pages.submissionsSubmittedLabel')}: {new Date(submission.submitted_at).toLocaleString()}
                         </p>
                         {submission.text && (
                           <p className="text-sm text-muted-foreground mt-1">{submission.text.substring(0, 100)}...</p>
@@ -203,12 +214,12 @@ export default function Submissions() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {submission.late_flag && <Badge variant="destructive">Late</Badge>}
+                      {submission.late_flag && <Badge variant="destructive">{t('pages.submissionsBadgeLate')}</Badge>}
                       {submission.file && (
                         <Button variant="outline" size="sm" asChild>
                           <a href={submission.file} download target="_blank" rel="noopener noreferrer">
                             <Download className="mr-2 h-4 w-4" />
-                            {t('pages.catalogCoursesSave') || 'Download'}
+                            {t('pages.submissionsButtonDownload')}
                           </a>
                         </Button>
                       )}
@@ -225,19 +236,19 @@ export default function Submissions() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-                <DialogTitle>{t('pages.assessmentSubmitDialogTitle') || t('assessmentSubmitDialogTitle')}</DialogTitle>
-                <DialogDescription>{t('pages.assessmentSubmitDialogDescription') || t('assessmentSubmitDialogDescription')}</DialogDescription>
-              </DialogHeader>
+              <DialogTitle>{t('pages.submissionsDialogTitle')}</DialogTitle>
+              <DialogDescription>{t('pages.submissionsDialogDescription')}</DialogDescription>
+            </DialogHeader>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="assessment">Assessment *</Label>
+                  <Label htmlFor="assessment">{t('pages.submissionsDialogFieldAssessment')}</Label>
                   <Select
                     value={formData.assessment}
                     onValueChange={(value) => setFormData({ ...formData, assessment: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={t('pages.assessmentSubmissionsFilterPlaceholder') || t('assessmentSubmissionsFilterPlaceholder')} />
+                      <SelectValue placeholder={t('pages.submissionsDialogFieldAssessmentPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {assessments
@@ -251,17 +262,17 @@ export default function Submissions() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="text">Text Response</Label>
-                    <Textarea
+                  <Label htmlFor="text">{t('pages.submissionsDialogFieldText')}</Label>
+                  <Textarea
                     id="text"
                     value={formData.text}
                     onChange={(e) => setFormData({ ...formData, text: e.target.value })}
                     rows={5}
-                    placeholder={t('pages.assessmentSubmitDialogDescription') || 'Enter your submission text...'}
+                    placeholder={t('pages.submissionsDialogFieldTextPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="file">File Upload</Label>
+                  <Label htmlFor="file">{t('pages.submissionsDialogFieldFile')}</Label>
                   <div
                     className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
                       dragActive
@@ -307,17 +318,17 @@ export default function Submissions() {
                         <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                         <div className="space-y-2">
                           <p className="text-sm font-medium">
-                            Drag and drop your file here, or{' '}
+                            {t('pages.submissionsFileUploadDragDrop')}{' '}
                             <button
                               type="button"
                               onClick={() => fileInputRef.current?.click()}
                               className="text-primary hover:underline"
                             >
-                              browse
+                              {t('pages.submissionsFileUploadBrowse')}
                             </button>
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Supports PDF, DOC, DOCX, and other common file types
+                            {t('pages.submissionsFileUploadSupported')}
                           </p>
                         </div>
                       </div>
@@ -327,10 +338,10 @@ export default function Submissions() {
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  {t('catalogCoursesCancel')}
+                  {t('pages.submissionsDialogCancel')}
                 </Button>
                 <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? (t('gradesModerationProcessing') || 'Submitting...') : (t('pages.assessmentSubmitButton') || t('assessmentSubmitButton'))}
+                  {createMutation.isPending ? t('pages.submissionsDialogButtonSubmitting') : t('pages.submissionsDialogButtonSubmit')}
                 </Button>
               </DialogFooter>
             </form>

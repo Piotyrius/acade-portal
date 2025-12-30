@@ -9,6 +9,7 @@ import Grades from './Grades';
 import { useTranslation } from 'react-i18next';
 
 export default function AssessmentUnified() {
+  const { t } = useTranslation('common');
   const [tab, setTab] = useState<'assessments' | 'submissions' | 'grades'>('assessments');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -21,8 +22,6 @@ export default function AssessmentUnified() {
     }
   }, [searchParams]);
 
-  const { t } = useTranslation('common');
-
   const handleGoToAttendance = () => {
     navigate('/attendance/list');
   };
@@ -34,31 +33,32 @@ export default function AssessmentUnified() {
     setTab('grades');
   };
 
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('layout.teaching')}</h2>
-          <p className="text-muted-foreground">{t('pages.catalogCohortsTakeAttendanceTitle')} &mdash; {t('dashboard.gradeSubmissions')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.assessmentUnifiedTitle')}</h2>
+          <p className="text-muted-foreground">
+            {t('pages.assessmentUnifiedSubtitle')}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleGoToAttendance}>
             <ClipboardCheck className="mr-2 h-4 w-4" />
-            {t('pages.catalogCohortsTakeAttendanceTitle')}
+            {t('pages.assessmentUnifiedButtonAttendance')}
           </Button>
           <Button onClick={handleGoToGrades}>
             <FileCheck className="mr-2 h-4 w-4" />
-            {t('dashboard.gradeSubmissions')}
+            {t('pages.assessmentUnifiedButtonGrades')}
           </Button>
         </div>
       </div>
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="assessments">{t('assessment.tabs.assessments')}</TabsTrigger>
-          <TabsTrigger value="submissions">{t('assessment.tabs.submissions')}</TabsTrigger>
-          <TabsTrigger value="grades">{t('assessment.tabs.grades')}</TabsTrigger>
+          <TabsTrigger value="assessments">{t('pages.assessmentUnifiedTabAssessments')}</TabsTrigger>
+          <TabsTrigger value="submissions">{t('pages.assessmentUnifiedTabSubmissions')}</TabsTrigger>
+          <TabsTrigger value="grades">{t('pages.assessmentUnifiedTabGrades')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="assessments" className="mt-6">

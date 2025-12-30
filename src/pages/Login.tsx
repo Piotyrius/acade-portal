@@ -13,6 +13,7 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { login } from "@/api/endpoints/auth";
+import { validateAuth } from "@/utils/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -32,12 +33,10 @@ export default function Login() {
   useEffect(() => {
     if (isAuthenticated) {
       // Validate token before redirecting
-      import('@/utils/auth').then(({ validateAuth }) => {
-        validateAuth().then((isValid) => {
-          if (isValid) {
-            navigate('/dashboard', { replace: true });
-          }
-        });
+      validateAuth().then((isValid) => {
+        if (isValid) {
+          navigate('/dashboard', { replace: true });
+        }
       });
     }
   }, [isAuthenticated, navigate]);
@@ -96,7 +95,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <img src="/logo.svg" alt="Cyber Academy" className="h-16 w-auto" />
+            <img src="/logo.svg" alt={t("app.appLogoAlt")} className="h-16 w-auto" />
           </div>
           <CardTitle className="text-2xl">
             {t("auth.loginTitle")}

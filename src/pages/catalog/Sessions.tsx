@@ -19,7 +19,6 @@ import {
 } from '@/api/endpoints/catalog';
 import { SessionDto } from '@/api/types';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -47,6 +46,7 @@ const localizer = dateFnsLocalizer({
 });
 import { exampleSessions } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
+import { useTranslation } from 'react-i18next';
 
 export default function Sessions() {
   const { t } = useTranslation('common');
@@ -85,12 +85,12 @@ export default function Sessions() {
     mutationFn: createSession,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
-      toast({ title: 'Success', description: 'Session created successfully' });
+      toast({ title: t('pages.catalogSessionsToastCreateTitle'), description: t('pages.catalogSessionsToastCreateDescription') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogSessionsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -100,11 +100,11 @@ export default function Sessions() {
       qc.invalidateQueries({ queryKey: ['sessions'] });
       const createdCount = data?.created ?? data?.sessions?.length ?? 0;
       toast({
-        title: 'Success',
+        title: t('pages.catalogSessionsToastCreateTitle'),
         description:
           createdCount > 1
-            ? `Created ${createdCount} sessions successfully`
-            : 'Session created successfully',
+            ? t('pages.catalogSessionsToastCreateMultipleDescription', { count: createdCount })
+            : t('pages.catalogSessionsToastCreateDescription'),
       });
       setIsDialogOpen(false);
       setEditingSession(null);
@@ -112,7 +112,7 @@ export default function Sessions() {
       resetRepeat();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogSessionsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -120,13 +120,13 @@ export default function Sessions() {
     mutationFn: ({ id, data }: { id: string; data: Partial<SessionDto> }) => updateSession(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
-      toast({ title: 'Success', description: 'Session updated successfully' });
+      toast({ title: t('pages.catalogSessionsToastUpdateTitle'), description: t('pages.catalogSessionsToastUpdateDescription') });
       setIsDialogOpen(false);
       setEditingSession(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogSessionsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -134,10 +134,10 @@ export default function Sessions() {
     mutationFn: deleteSession,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
-      toast({ title: 'Success', description: 'Session deleted successfully' });
+      toast({ title: t('pages.catalogSessionsToastDeleteTitle'), description: t('pages.catalogSessionsToastDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogSessionsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -234,25 +234,25 @@ export default function Sessions() {
     }
 
     if (!formData.start_at || !formData.end_at) {
-      setRepeatError('Please fill in both start and end time before creating repeated sessions.');
+      setRepeatError(t('pages.catalogSessionsFormRepeatErrorMissingTimes'));
       return;
     }
 
     const basePayload = buildBasePayload();
 
     if (repeatWeekdays.length === 0) {
-      setRepeatError('Select at least one weekday for repeating sessions.');
+      setRepeatError(t('pages.catalogSessionsFormRepeatErrorNoWeekdays'));
       return;
     }
     if (!repeatUntil) {
-      setRepeatError('Select an end date for repeating sessions.');
+      setRepeatError(t('pages.catalogSessionsFormRepeatErrorNoEndDate'));
       return;
     }
 
     const startDate = new Date(formData.start_at);
     const repeatUntilStart = startOfDay(repeatUntil);
     if (isBefore(repeatUntilStart, startOfDay(startDate))) {
-      setRepeatError('End date must be on or after the session start date.');
+      setRepeatError(t('pages.catalogSessionsFormRepeatErrorInvalidRange'));
       return;
     }
 
@@ -266,7 +266,7 @@ export default function Sessions() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this session?')) {
+    if (confirm(t('pages.catalogSessionsDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -304,7 +304,7 @@ export default function Sessions() {
             onClick={() => setViewMode('list')}
           >
             <List className="mr-2 h-4 w-4" />
-            {t('pages.catalogSessionsDurationLabel')}
+            {t('pages.catalogSessionsViewList')}
           </Button>
           <Button
             variant={viewMode === 'calendar' ? 'default' : 'outline'}
@@ -312,7 +312,7 @@ export default function Sessions() {
             onClick={() => setViewMode('calendar')}
           >
             <Cal className="mr-2 h-4 w-4" />
-            {t('pages.catalogSessionsTitle')}
+            {t('pages.catalogSessionsViewCalendar')}
           </Button>
           <Button onClick={handleOpenCreate} className='create_sessions_btn'>
             <Plus className="mr-2 h-4 w-4" />
@@ -375,7 +375,7 @@ export default function Sessions() {
                       <div className='sessions_top_side'>
                         <div>
 
-                        <CardTitle>{session.cohort_name || 'Unknown Cohort'}</CardTitle>
+                        <CardTitle>{session.cohort_name || t('pages.catalogSessionsUnknownCohort')}</CardTitle>
                         <CardDescription className="mt-1">
                           {format(startDate, 'PPpp')} - {format(endDate, 'p')}
                         </CardDescription>
@@ -385,10 +385,10 @@ export default function Sessions() {
                             <Badge variant="outline">📍 {session.location}</Badge>
                           )}
                           {session.online_link && (
-                            <Badge variant="outline">🔗 Online</Badge>
+                            <Badge variant="outline">🔗 {t('pages.catalogSessionsBadgeOnline')}</Badge>
                           )}
                           {session.is_cancelled && (
-                            <Badge variant="destructive">Cancelled</Badge>
+                            <Badge variant="destructive">{t('pages.catalogSessionsCancelledBadge')}</Badge>
                           )}
                         </div>
                       </div>
@@ -416,7 +416,7 @@ export default function Sessions() {
               localizer={localizer}
               events={filteredSessions.map((session: any) => ({
                 id: session.id,
-                title: session.cohort_name || 'Session',
+                title: session.cohort_name || t('pages.catalogSessionsUnknownCohort'),
                 start: new Date(session.start_at),
                 end: new Date(session.end_at),
                 resource: session,
@@ -436,8 +436,8 @@ export default function Sessions() {
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             {searchTerm || selectedCohort !== 'all'
-              ? 'No sessions found matching your filters'
-              : 'No sessions yet. Create your first session!'}
+              ? t('pages.catalogSessionsNoResultsSearch')
+              : t('pages.catalogSessionsNoResultsDefault')}
           </CardContent>
         </Card>
       )}
@@ -446,21 +446,21 @@ export default function Sessions() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingSession ? 'Edit Session' : 'Create Session'}</DialogTitle>
+            <DialogTitle>{editingSession ? t('pages.catalogSessionsEditTitle') : t('pages.catalogSessionsCreateTitle')}</DialogTitle>
             <DialogDescription>
-              {editingSession ? 'Update session details' : 'Add a new class session'}
+              {editingSession ? t('pages.catalogSessionsEditDescription') : t('pages.catalogSessionsCreateDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="cohort">Cohort *</Label>
+                <Label htmlFor="cohort">{t('pages.catalogSessionsFormCohort')} *</Label>
                 <Select
                   value={formData.cohort}
                   onValueChange={(value) => setFormData({ ...formData, cohort: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select cohort" />
+                    <SelectValue placeholder={t('pages.catalogSessionsFormCohortPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {cohorts.map((c) => (
@@ -473,7 +473,7 @@ export default function Sessions() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start_at">Start Date & Time *</Label>
+                  <Label htmlFor="start_at">{t('pages.catalogSessionsFormStartAt')} *</Label>
                   <Input
                     id="start_at"
                     type="datetime-local"
@@ -483,7 +483,7 @@ export default function Sessions() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="end_at">End Date & Time *</Label>
+                  <Label htmlFor="end_at">{t('pages.catalogSessionsFormEndAt')} *</Label>
                   <Input
                     id="end_at"
                     type='time'
@@ -495,22 +495,22 @@ export default function Sessions() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">{t('pages.catalogSessionsFormLocation')}</Label>
                   <Input
                     id="location"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="Room 101"
+                    placeholder={t('pages.catalogSessionsFormLocationPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="online_link">Online Link</Label>
+                  <Label htmlFor="online_link">{t('pages.catalogSessionsFormOnlineLink')}</Label>
                   <Input
                     id="online_link"
                     type="url"
                     value={formData.online_link}
                     onChange={(e) => setFormData({ ...formData, online_link: e.target.value })}
-                    placeholder="https://meet.google.com/..."
+                    placeholder={t('pages.catalogSessionsFormOnlineLinkPlaceholder')}
                   />
                 </div>
               </div>
@@ -520,16 +520,16 @@ export default function Sessions() {
                   checked={formData.is_cancelled}
                   onCheckedChange={(checked) => setFormData({ ...formData, is_cancelled: checked })}
                 />
-                <Label htmlFor="is_cancelled">Cancelled</Label>
+                <Label htmlFor="is_cancelled">{t('pages.catalogSessionsFormCancelled')}</Label>
               </div>
               {formData.is_cancelled && (
                 <div className="space-y-2">
-                  <Label htmlFor="cancellation_reason">Cancellation Reason</Label>
+                  <Label htmlFor="cancellation_reason">{t('pages.catalogSessionsFormCancellationReason')}</Label>
                   <Input
                     id="cancellation_reason"
                     value={formData.cancellation_reason}
                     onChange={(e) => setFormData({ ...formData, cancellation_reason: e.target.value })}
-                    placeholder="Reason for cancellation"
+                    placeholder={t('pages.catalogSessionsFormCancellationReasonPlaceholder')}
                   />
                 </div>
               )}
@@ -538,9 +538,9 @@ export default function Sessions() {
                 <div className="mt-4 space-y-3 border-t pt-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="repeat-session">Repeat this session</Label>
+                      <Label htmlFor="repeat-session">{t('pages.catalogSessionsFormRepeatLabel')}</Label>
                       <p className="text-xs text-muted-foreground">
-                        Create this session again on selected weekdays at the same time.
+                        {t('pages.catalogSessionsFormRepeatDescription')}
                       </p>
                     </div>
                     <Switch
@@ -560,16 +560,16 @@ export default function Sessions() {
                   {repeatEnabled && (
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <p className="text-sm font-medium">Weekdays</p>
+                        <p className="text-sm font-medium">{t('pages.catalogSessionsFormWeekdays')}</p>
                         <div className="flex flex-wrap gap-2">
                           {[
-                            { label: 'Mon', value: 1 },
-                            { label: 'Tue', value: 2 },
-                            { label: 'Wed', value: 3 },
-                            { label: 'Thu', value: 4 },
-                            { label: 'Fri', value: 5 },
-                            { label: 'Sat', value: 6 },
-                            { label: 'Sun', value: 0 },
+                            { label: t('pages.catalogSessionsWeekdayMon'), value: 1 },
+                            { label: t('pages.catalogSessionsWeekdayTue'), value: 2 },
+                            { label: t('pages.catalogSessionsWeekdayWed'), value: 3 },
+                            { label: t('pages.catalogSessionsWeekdayThu'), value: 4 },
+                            { label: t('pages.catalogSessionsWeekdayFri'), value: 5 },
+                            { label: t('pages.catalogSessionsWeekdaySat'), value: 6 },
+                            { label: t('pages.catalogSessionsWeekdaySun'), value: 0 },
                           ].map((day) => (
                             <button
                               key={day.value}
@@ -595,7 +595,7 @@ export default function Sessions() {
                       </div>
 
                       <div className="space-y-1">
-                        <Label>Repeat until</Label>
+                        <Label>{t('pages.catalogSessionsFormRepeatUntil')}</Label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
@@ -607,7 +607,7 @@ export default function Sessions() {
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {repeatUntil ? format(repeatUntil, 'PPP') : 'Pick end date'}
+                              {repeatUntil ? format(repeatUntil, 'PPP') : t('pages.catalogSessionsFormRepeatUntilPlaceholder')}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
@@ -627,7 +627,7 @@ export default function Sessions() {
                           </PopoverContent>
                         </Popover>
                         <p className="text-xs text-muted-foreground">
-                          Sessions will be created on these weekdays up to and including this date.
+                          {t('pages.catalogSessionsFormRepeatUntilHelper')}
                         </p>
                       </div>
 
@@ -641,14 +641,14 @@ export default function Sessions() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('pages.catalogSessionsFormCancel')}
               </Button>
               {editingSession ? (
                 <Button
                   type="submit"
                   disabled={updateMutation.isPending}
                 >
-                  Update
+                  {updateMutation.isPending ? t('pages.catalogSessionsFormButtonUpdating') : t('pages.catalogSessionsFormButtonUpdate')}
                 </Button>
               ) : (
                 <>
@@ -656,7 +656,7 @@ export default function Sessions() {
                     type="submit"
                     disabled={createMutation.isPending}
                   >
-                    Create
+                    {createMutation.isPending ? t('pages.catalogSessionsFormButtonCreating') : t('pages.catalogSessionsFormButtonCreate')}
                   </Button>
                   <Button
                     type="button"
@@ -666,7 +666,7 @@ export default function Sessions() {
                     }
                     onClick={handleCreateWithRecurrence}
                   >
-                    Create &amp; Repeat
+                    {createWithRecurrenceMutation.isPending ? t('pages.catalogSessionsFormButtonCreating') : t('pages.catalogSessionsFormSaveAndRepeat')}
                   </Button>
                 </>
               )}

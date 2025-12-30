@@ -14,24 +14,27 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTranslation } from 'react-i18next';
 
 interface Shortcut {
   keys: string[];
-  description: string;
-  category: string;
+  descriptionKey: string;
+  categoryKey: string;
 }
 
-const shortcuts: Shortcut[] = [
-  { keys: ['⌘', 'K'], description: 'Open command palette', category: 'Navigation' },
-  { keys: ['⌘', '/'], description: 'Show keyboard shortcuts', category: 'Navigation' },
-  { keys: ['⌘', 'B'], description: 'Toggle sidebar', category: 'Navigation' },
-  { keys: ['Esc'], description: 'Close dialog/modal', category: 'General' },
-  { keys: ['⌘', 'Enter'], description: 'Submit form', category: 'Forms' },
-  { keys: ['⌘', 'S'], description: 'Save (if applicable)', category: 'General' },
+const getShortcuts = (t: (key: string) => string): Shortcut[] => [
+  { keys: ['⌘', 'K'], descriptionKey: 'layout.keyboardShortcutsOpenCommandPalette', categoryKey: 'layout.keyboardShortcutsCategoryNavigation' },
+  { keys: ['⌘', '/'], descriptionKey: 'layout.keyboardShortcutsShowShortcuts', categoryKey: 'layout.keyboardShortcutsCategoryNavigation' },
+  { keys: ['⌘', 'B'], descriptionKey: 'layout.keyboardShortcutsToggleSidebar', categoryKey: 'layout.keyboardShortcutsCategoryNavigation' },
+  { keys: ['Esc'], descriptionKey: 'layout.keyboardShortcutsCloseDialog', categoryKey: 'layout.keyboardShortcutsCategoryGeneral' },
+  { keys: ['⌘', 'Enter'], descriptionKey: 'layout.keyboardShortcutsSubmitForm', categoryKey: 'layout.keyboardShortcutsCategoryForms' },
+  { keys: ['⌘', 'S'], descriptionKey: 'layout.keyboardShortcutsSave', categoryKey: 'layout.keyboardShortcutsCategoryGeneral' },
 ];
 
 export function KeyboardShortcuts() {
+  const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
+  const shortcuts = getShortcuts(t);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -46,10 +49,11 @@ export function KeyboardShortcuts() {
   }, []);
 
   const shortcutsByCategory = shortcuts.reduce((acc, shortcut) => {
-    if (!acc[shortcut.category]) {
-      acc[shortcut.category] = [];
+    const category = t(shortcut.categoryKey);
+    if (!acc[category]) {
+      acc[category] = [];
     }
-    acc[shortcut.category].push(shortcut);
+    acc[category].push(shortcut);
     return acc;
   }, {} as Record<string, Shortcut[]>);
 
@@ -57,9 +61,9 @@ export function KeyboardShortcuts() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Keyboard Shortcuts</DialogTitle>
+          <DialogTitle>{t('layout.keyboardShortcutsTitle')}</DialogTitle>
           <DialogDescription>
-            Use these keyboard shortcuts to navigate faster
+            {t('layout.keyboardShortcutsDescription')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -69,8 +73,8 @@ export function KeyboardShortcuts() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Shortcut</TableHead>
-                    <TableHead>Description</TableHead>
+                    <TableHead>{t('layout.keyboardShortcutsTableShortcut')}</TableHead>
+                    <TableHead>{t('layout.keyboardShortcutsTableDescription')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -88,7 +92,7 @@ export function KeyboardShortcuts() {
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell>{shortcut.description}</TableCell>
+                      <TableCell>{t(shortcut.descriptionKey)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -105,6 +109,7 @@ export function KeyboardShortcuts() {
 export function useKeyboardShortcuts() {
   return { KeyboardShortcuts };
 }
+
 
 
 

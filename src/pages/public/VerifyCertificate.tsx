@@ -64,7 +64,7 @@ export default function VerifyCertificate() {
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
             <Shield className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">Certificate Verification</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{t('pages.verifyCertificateTitle')}</h1>
           <p className="mt-2 text-muted-foreground">
             {t('pages.verifyCertificateSubtitle')}
           </p>
@@ -205,7 +205,7 @@ export default function VerifyCertificate() {
                 <div className="flex justify-center pt-4">
                   <img
                     src={certificate.qr_code}
-                    alt="Certificate QR Code"
+                    alt={t('pages.qrCodeAlt')}
                     className="h-32 w-32 rounded border"
                   />
                 </div>

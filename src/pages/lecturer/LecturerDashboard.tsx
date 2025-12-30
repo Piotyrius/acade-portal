@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, BookOpen, Clock, Award, TrendingUp } from 'lucide-react';
+import { Calendar, Users, BookOpen, Clock } from 'lucide-react';
 import { getMyCohorts, getMySessions } from '@/api/endpoints/catalog';
 import { format, isToday, isTomorrow, parseISO, startOfWeek, endOfWeek } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 export default function LecturerDashboard() {
+  const { t } = useTranslation('common');
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 }); // Sunday
@@ -53,61 +55,83 @@ export default function LecturerDashboard() {
 
   const getSessionTimeLabel = (session: any) => {
     const sessionDate = parseISO(session.date);
-    if (isToday(sessionDate)) return 'Today';
-    if (isTomorrow(sessionDate)) return 'Tomorrow';
+    if (isToday(sessionDate)) return t('dashboard.today');
+    if (isTomorrow(sessionDate)) return t('dashboard.tomorrow');
     return format(sessionDate, 'MMM dd');
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Lecturer Dashboard</h1>
-        <p className="text-muted-foreground">Your teaching schedule and cohorts overview</p>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t('pages.lecturerDashboardTitle')}
+        </h1>
+        <p className="text-muted-foreground">
+          {t('pages.lecturerDashboardSubtitle')}
+        </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">My Cohorts</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.lecturerDashboardMyCohortsTitle')}
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalCohorts}</div>
-            <p className="text-xs text-muted-foreground">{activeCohorts} active cohorts</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.lecturerDashboardMyCohortsActive', {
+                count: activeCohorts,
+              })}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.lecturerDashboardTotalStudentsTitle')}
+            </CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalStudents}</div>
-            <p className="text-xs text-muted-foreground">Across all cohorts</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.lecturerDashboardTotalStudentsSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Week</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.lecturerDashboardThisWeekTitle')}
+            </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{weekSessionsCount}</div>
-            <p className="text-xs text-muted-foreground">Sessions scheduled</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.lecturerDashboardThisWeekSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.lecturerDashboardUpcomingTitle')}
+            </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{upcomingSessions.length}</div>
-            <p className="text-xs text-muted-foreground">Today & tomorrow</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.lecturerDashboardUpcomingSubtitle')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -118,13 +142,17 @@ export default function LecturerDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Upcoming Sessions
+              {t('pages.lecturerDashboardUpcomingCardTitle')}
             </CardTitle>
-            <CardDescription>Your sessions for today and tomorrow</CardDescription>
+            <CardDescription>
+              {t('pages.lecturerDashboardUpcomingCardSubtitle')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {sessionsLoading ? (
-              <p className="text-sm text-muted-foreground">Loading sessions...</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.lecturerDashboardLoadingSessions')}
+              </p>
             ) : sortedUpcoming.length > 0 ? (
               <div className="space-y-4">
                 {sortedUpcoming.map((session) => (
@@ -150,7 +178,9 @@ export default function LecturerDashboard() {
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Calendar className="mb-2 h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">No upcoming sessions</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('pages.lecturerDashboardNoUpcoming')}
+                </p>
               </div>
             )}
           </CardContent>
@@ -161,13 +191,17 @@ export default function LecturerDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              My Cohorts
+              {t('pages.lecturerDashboardCohortsCardTitle')}
             </CardTitle>
-            <CardDescription>Cohorts you are teaching</CardDescription>
+            <CardDescription>
+              {t('pages.lecturerDashboardCohortsCardSubtitle')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {cohortsLoading ? (
-              <p className="text-sm text-muted-foreground">Loading cohorts...</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.lecturerDashboardLoadingCohorts')}
+              </p>
             ) : cohorts && cohorts.length > 0 ? (
               <div className="space-y-3">
                 {cohorts.map((cohort) => (
@@ -189,7 +223,9 @@ export default function LecturerDashboard() {
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <BookOpen className="mb-2 h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">No cohorts assigned</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('pages.lecturerDashboardNoCohorts')}
+                </p>
               </div>
             )}
           </CardContent>
@@ -201,7 +237,7 @@ export default function LecturerDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            This Week's Schedule
+            {t('pages.lecturerDashboardWeekCardTitle')}
           </CardTitle>
           <CardDescription>
             {format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
@@ -260,7 +296,9 @@ export default function LecturerDashboard() {
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Calendar className="mb-2 h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No sessions scheduled this week</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('pages.lecturerDashboardNoWeekSessions')}
+                </p>
             </div>
           )}
         </CardContent>

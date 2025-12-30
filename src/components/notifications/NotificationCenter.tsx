@@ -18,11 +18,13 @@ import {
   type NotificationDto 
 } from '@/api/endpoints/notifications';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('common');
 
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery({
@@ -74,7 +76,7 @@ export function NotificationCenter() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Notifications</h3>
+          <h3 className="font-semibold">{t('layout.notificationCenterTitle')}</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -82,18 +84,18 @@ export function NotificationCenter() {
               className="h-8 text-xs"
               onClick={markAllAsRead}
             >
-              Mark all as read
+              {t('layout.notificationCenterMarkAllRead')}
             </Button>
           )}
         </div>
         <ScrollArea className="h-[400px]">
           {isLoading ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              Loading notifications...
+              {t('layout.notificationCenterLoading')}
             </div>
           ) : notifications.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              No notifications
+              {t('layout.notificationCenterEmpty')}
             </div>
           ) : (
             <div className="divide-y">
@@ -132,7 +134,7 @@ export function NotificationCenter() {
                       </p>
                       {notification.related_cohort_name && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Cohort: {notification.related_cohort_name}
+                          {t('layout.notificationCenterCohort')}: {notification.related_cohort_name}
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground mt-2">

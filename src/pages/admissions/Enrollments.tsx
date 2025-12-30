@@ -33,11 +33,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import ManualEnrollment from './ManualEnrollment';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 export default function Enrollments() {
   const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,10 +125,10 @@ export default function Enrollments() {
       activateEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
-      toast({ title: t('pages.enrollmentsSuccessTitle', 'Success'), description: t('pages.enrollmentsActivated', 'Enrollment activated successfully') });
+      toast({ title: t('pages.admissionsEnrollmentsToastActivateTitle'), description: t('pages.admissionsEnrollmentsToastActivateDescription') });
     },
     onError: (error) => {
-      toast({ title: t('pages.enrollmentsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.admissionsEnrollmentsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
 
     
@@ -147,10 +149,10 @@ export default function Enrollments() {
       withdrawEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
-      toast({ title: t('pages.enrollmentsSuccessTitle', 'Success'), description: t('pages.enrollmentsWithdrawn', 'Enrollment withdrawn successfully') });
+      toast({ title: t('pages.admissionsEnrollmentsToastWithdrawTitle'), description: t('pages.admissionsEnrollmentsToastWithdrawDescription') });
     },
     onError: (error) => {
-      toast({ title: t('pages.enrollmentsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.admissionsEnrollmentsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -169,10 +171,10 @@ export default function Enrollments() {
       completeEnrollment(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
-      toast({ title: t('pages.enrollmentsSuccessTitle', 'Success'), description: t('pages.enrollmentsCompleted', 'Enrollment completed successfully') });
+      toast({ title: t('pages.admissionsEnrollmentsToastCompleteTitle'), description: t('pages.admissionsEnrollmentsToastCompleteDescription') });
     },
     onError: (error) => {
-      toast({ title: t('pages.enrollmentsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.admissionsEnrollmentsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -215,8 +217,8 @@ export default function Enrollments() {
     onSuccess: (data) => {
       console.log('✅ Bulk activation successful:', data);
       toast({
-        title: t('pages.enrollmentsSuccessTitle', 'Success'),
-        description: t('pages.enrollmentsBulkActivated', '{{count}} enrollment(s) activated successfully', { count: data.activated }),
+        title: t('pages.admissionsEnrollmentsToastBulkActivateTitle'),
+        description: t('pages.admissionsEnrollmentsToastBulkActivateDescription', { count: data.activated }),
       });
       setIsBulkDialogOpen(false);
       setSelectedEnrollments([]);
@@ -239,8 +241,8 @@ export default function Enrollments() {
         'Failed to activate enrollments';
 
       toast({
-        title: 'Error',
-        description: errorMsg,
+        title: t('pages.admissionsEnrollmentsToastErrorTitle'),
+        description: errorMsg || t('pages.admissionsEnrollmentsToastErrorDescription'),
         variant: 'destructive',
       });
     },
@@ -267,7 +269,7 @@ export default function Enrollments() {
 
 
   const handleWithdraw = (enrollment: any) => {
-    if (confirm(t('pages.enrollmentsConfirmWithdraw', 'Are you sure you want to withdraw this enrollment?'))) {
+    if (confirm(t('pages.admissionsEnrollmentsWithdrawConfirm'))) {
       withdrawMutation.mutate({
         id: enrollment.id,
         payload: {
@@ -283,7 +285,7 @@ export default function Enrollments() {
   };
 
   const handleComplete = (enrollment: any) => {
-    if (confirm(t('pages.enrollmentsConfirmComplete', 'Are you sure you want to mark this enrollment as complete?'))) {
+    if (confirm(t('pages.admissionsEnrollmentsCompleteConfirm'))) {
       completeMutation.mutate({
         id: enrollment.id,
         payload: {
@@ -301,8 +303,8 @@ export default function Enrollments() {
   const handleBulkActivate = () => {
     if (selectedEnrollments.length === 0) {
       toast({
-        title: t('pages.enrollmentsErrorTitle', 'Error'),
-        description: t('pages.enrollmentsSelectAtLeast', 'Please select at least one enrollment'),
+        title: t('pages.admissionsEnrollmentsToastSelectOneTitle'),
+        description: t('pages.admissionsEnrollmentsToastSelectOneDescription'),
         variant: 'destructive',
       });
       return;
@@ -441,30 +443,39 @@ export default function Enrollments() {
                         />
                       )}
                       <div className="space-y-1">
-                        <p className="font-medium">
-                          {enrollment.student_name || enrollment.student || t('pages.unknownStudent')}
-                        </p>
+                        {enrollment.student ? (
+                          <button
+                            onClick={() => navigate(`/users/${enrollment.student}`)}
+                            className="font-medium text-left hover:text-primary hover:underline cursor-pointer"
+                          >
+                            {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
+                          </button>
+                        ) : (
+                          <p className="font-medium">
+                            {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
+                          </p>
+                        )}
                         {enrollment.student_email && (
                           <p className="text-sm text-muted-foreground">
                             {enrollment.student_email}
                           </p>
                         )}
                         <p className="text-sm text-muted-foreground">
-                          {t('pages.cohortLabel')}: {cohort?.name || enrollment.cohort_name || t('pages.unknown')}
+                          {t('pages.enrollmentsCohortLabel')} {cohort?.name || enrollment.cohort_name || t('pages.enrollmentsUnknownCohort')}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {t('pages.enrolledOn', { date: new Date(enrollment.enrolled_at).toLocaleDateString() })}
+                          {t('pages.enrollmentsEnrolledOnLabel')} {new Date(enrollment.enrolled_at).toLocaleDateString()}
                         </p>
                         {enrollment.notes && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            {t('pages.notesLabel')}: {enrollment.notes}
+                            {t('pages.enrollmentsNotesLabel')} {enrollment.notes}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={getStatusVariant(enrollment.status)}>
-                        {enrollment.status_display || t(`pages.enrollmentsStatus${(enrollment.status || '').charAt(0) + (enrollment.status || '').slice(1).toLowerCase()}`) || enrollment.status}
+                        {enrollment.status_display || enrollment.status}
                       </Badge>
                       {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
                         <div className="flex gap-1">
@@ -474,7 +485,7 @@ export default function Enrollments() {
                               size="sm"
                               onClick={() => handleActivate(enrollment)}
                               disabled={activateMutation.isPending}
-                              title={t('pages.activateEnrollmentTitle')}
+                              title={t('pages.enrollmentsButtonActivateTitle')}
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -486,7 +497,7 @@ export default function Enrollments() {
                                 size="sm"
                                 onClick={() => handleComplete(enrollment)}
                                 disabled={completeMutation.isPending}
-                                title={t('pages.completeEnrollmentTitle')}
+                                title={t('pages.enrollmentsButtonCompleteTitle')}
                               >
                                 <CheckCircle className="h-4 w-4" />
                               </Button>
@@ -495,7 +506,7 @@ export default function Enrollments() {
                                 size="sm"
                                 onClick={() => handleWithdraw(enrollment)}
                                 disabled={withdrawMutation.isPending}
-                                title={t('pages.withdrawEnrollmentTitle')}
+                                title={t('pages.enrollmentsButtonWithdrawTitle')}
                               >
                                 <XCircle className="h-4 w-4" />
                               </Button>
@@ -507,7 +518,7 @@ export default function Enrollments() {
                               size="sm"
                               onClick={() => handleActivate(enrollment)}
                               disabled={activateMutation.isPending}
-                              title={t('pages.reactivateEnrollmentTitle')}
+                              title={t('pages.enrollmentsButtonReactivateTitle')}
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -526,7 +537,7 @@ export default function Enrollments() {
       {!showExample && totalEnrollments > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {t('pages.pageLabel', { page })}
+            {t('pages.enrollmentsPaginationPage')} {page} 
           </p>
           <div className="flex gap-2">
             <Button
@@ -535,7 +546,7 @@ export default function Enrollments() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={!canGoPrev}
             >
-              {t('previous')}
+              {t('pages.enrollmentsPaginationPrevious')}
             </Button>
             <Button
               type="button"
@@ -543,7 +554,7 @@ export default function Enrollments() {
               onClick={() => setPage((p) => p + 1)}
               disabled={!canGoNext}
             >
-              {t('next')}
+              {t('pages.enrollmentsPaginationNext')}
             </Button>
           </div>
         </div>
@@ -552,7 +563,7 @@ export default function Enrollments() {
       {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && waitlist.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('pages.waitlistTitle')}</CardTitle>
+            <CardTitle>{t('pages.enrollmentsWaitlistTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -564,11 +575,20 @@ export default function Enrollments() {
                     className="flex items-center justify-between p-4 border border-border rounded-lg"
                   >
                     <div>
-                      <p className="font-medium">
-                        {enrollment.student_name || enrollment.student || t('pages.unknownStudent')}
-                      </p>
+                      {enrollment.student ? (
+                        <button
+                          onClick={() => navigate(`/users/${enrollment.student}`)}
+                          className="font-medium text-left hover:text-primary hover:underline cursor-pointer"
+                        >
+                          {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
+                        </button>
+                      ) : (
+                        <p className="font-medium">
+                          {enrollment.student_name || enrollment.student || t('pages.enrollmentsUnknownStudent')}
+                        </p>
+                      )}
                       <p className="text-sm text-muted-foreground">
-                        {t('pages.cohortLabel')}: {cohort?.name || enrollment.cohort_name || t('pages.unknown')}
+                        {t('pages.enrollmentsCohortLabel')} {cohort?.name || enrollment.cohort_name || t('pages.enrollmentsUnknownCohort')}
                       </p>
                     </div>
                     <Button
@@ -578,7 +598,7 @@ export default function Enrollments() {
                       disabled={activateMutation.isPending}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      {t('pages.activate')}
+                      {t('pages.enrollmentsButtonActivate')}
                     </Button>
                   </div>
                 );
@@ -614,13 +634,13 @@ export default function Enrollments() {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsBulkDialogOpen(false)}>
-              {t('cancel')}
+              Cancel
             </Button>
             <Button
               onClick={handleBulkActivate}
               disabled={bulkActivateMutation.isPending || selectedEnrollments.length === 0}
             >
-              {bulkActivateMutation.isPending ? t('creating') : t('pages.enrollmentsActivateButton', { count: selectedEnrollments.length })}
+              {bulkActivateMutation.isPending ? 'Activating...' : `Activate ${selectedEnrollments.length} Enrollment(s)`}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -631,8 +651,8 @@ export default function Enrollments() {
         <Dialog open={manualEnrolPopup} onOpenChange={setManualEnrolPopup}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{t('pages.enrollmentsManualTitle')}</DialogTitle>
-              <DialogDescription>{t('pages.enrollmentsManualDescription')}</DialogDescription>
+              <DialogTitle>Manual Enrollment</DialogTitle>
+              <DialogDescription>Enroll a student into a cohort manually</DialogDescription>
             </DialogHeader>
 
             <ManualEnrollment
@@ -640,8 +660,8 @@ export default function Enrollments() {
             />
 
             <DialogFooter>
-              <Button variant="outline" className='w-full' onClick={() => setManualEnrolPopup(false)}>
-                {t('cancel')}
+              <Button variant="outline" onClick={() => setManualEnrolPopup(false)}>
+                Cancel
               </Button>
             </DialogFooter>
           </DialogContent>

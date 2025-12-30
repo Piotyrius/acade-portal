@@ -27,13 +27,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslation } from 'react-i18next';
 
 export default function Pricings() {
   const { user } = useAuthStore();
-  const { t } = useTranslation('common');
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPricing, setEditingPricing] = useState<PricingDto | null>(null);
@@ -122,12 +122,19 @@ export default function Pricings() {
     mutationFn: createPricing,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pricings'] });
-      toast({ title: t('success'), description: t('pages.pricingCreateSuccess') });
+      toast({
+        title: t('common:pages.pricingsToastCreateTitle'),
+        description: t('common:pages.pricingsToastCreateDescription'),
+      });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.pricingsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -135,13 +142,20 @@ export default function Pricings() {
     mutationFn: ({ id, data }: { id: string; data: Partial<PricingRequest> }) => updatePricing(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pricings'] });
-      toast({ title: t('success'), description: t('pages.pricingUpdateSuccess') });
+      toast({
+        title: t('common:pages.pricingsToastUpdateTitle'),
+        description: t('common:pages.pricingsToastUpdateDescription'),
+      });
       setIsDialogOpen(false);
       setEditingPricing(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.pricingsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -149,10 +163,17 @@ export default function Pricings() {
     mutationFn: deletePricing,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pricings'] });
-      toast({ title: t('success'), description: t('pages.pricingDeleteSuccess') });
+      toast({
+        title: t('common:pages.pricingsToastDeleteTitle'),
+        description: t('common:pages.pricingsToastDeleteDescription'),
+      });
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.pricingsToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -211,7 +232,11 @@ export default function Pricings() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.object_id || !formData.content_type || !formData.amount || !formData.effective_from) {
-      toast({ title: t('error'), description: t('pages.pricingFormRequired'), variant: 'destructive' });
+      toast({
+        title: t('common:pages.pricingsToastErrorTitle'),
+        description: t('common:pages.pricingsErrorRequired'),
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -233,7 +258,7 @@ export default function Pricings() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm(t('pages.pricingDeleteConfirm'))) {
+    if (confirm(t('common:pages.pricingsDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -250,8 +275,8 @@ export default function Pricings() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.pricingsTitle')}</h2>
-          <p className="text-muted-foreground">{t('pages.noPermissionPricings')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.pricingsTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.pricingsNoPermission')}</p>
         </div>
       </div>
     );
@@ -270,23 +295,25 @@ export default function Pricings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.pricingsTitle')}</h2>
-          <p className="text-muted-foreground">{t('pages.pricingsDescription')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.pricingsTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.pricingsSubtitle')}</p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          {t('pages.createPricing')}
+          {t('common:pages.pricingsCreate')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Pricings</CardTitle>
+          <CardTitle>{t('common:pages.pricingsCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {pricings.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">{t('pages.noPricingsFound')}</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t('common:pages.pricingsNoneFound')}
+              </p>
             ) : (
               pricings.map((pricing: PricingDto) => (
                 <div
@@ -296,18 +323,28 @@ export default function Pricings() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <p className="font-medium">
-                        {pricing.pricing_object_name || `Object ${pricing.object_id.slice(0, 8)}`}
+                        {pricing.pricing_object_name ||
+                          t('common:pages.pricingsObjectFallback', {
+                            id: pricing.object_id.slice(0, 8),
+                          })}
                       </p>
                       <Badge variant={pricing.is_active ? 'default' : 'outline'}>
-                        {pricing.is_active ? t('pages.statusActive') : t('pages.statusInactive')}
+                        {pricing.is_active
+                          ? t('common:pages.pricingsStatusActive')
+                          : t('common:pages.pricingsStatusInactive')}
                       </Badge>
                     </div>
                     <p className="text-sm font-medium">
-                      Price: {formatCurrency(pricing.amount)} {pricing.currency}
+                      {t('common:pages.pricingsPriceLabel')}:{' '}
+                      {formatCurrency(pricing.amount)} {pricing.currency}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t('pages.effectiveFrom')}: {new Date(pricing.effective_from).toLocaleDateString()}
-                      {pricing.effective_to && ` ${t('pages.to')} ${new Date(pricing.effective_to).toLocaleDateString()}`}
+                      {t('common:pages.pricingsEffectiveFromLabel')}:{' '}
+                      {new Date(pricing.effective_from).toLocaleDateString()}
+                      {pricing.effective_to &&
+                        ` ${t('common:pages.pricingsEffectiveToSeparator')} ${new Date(
+                          pricing.effective_to,
+                        ).toLocaleDateString()}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -315,7 +352,7 @@ export default function Pricings() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenDialog(pricing)}
-                      title={t('pages.editPricing')}
+                      title={t('common:pages.pricingsEditTooltip')}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -323,7 +360,7 @@ export default function Pricings() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(pricing.id)}
-                      title={t('pages.deletePricing')}
+                      title={t('common:pages.pricingsDeleteTooltip')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -338,15 +375,21 @@ export default function Pricings() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingPricing ? t('pages.editPricing') : t('pages.createPricing')}</DialogTitle>
+            <DialogTitle>
+              {editingPricing
+                ? t('common:pages.pricingsDialogTitleEdit')
+                : t('common:pages.pricingsDialogTitleCreate')}
+            </DialogTitle>
             <DialogDescription>
-              {editingPricing ? t('pages.updatePricingDetails') : t('pages.createPricingDescription')}
+              {editingPricing
+                ? t('common:pages.pricingsDialogDescriptionEdit')
+                : t('common:pages.pricingsDialogDescriptionCreate')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="object_type">{t('pages.objectTypeLabel')}</Label>
+                <Label htmlFor="object_type">{t('common:pages.pricingsFieldObjectType')} *</Label>
                 <Select
                   value={formData.object_type || undefined}
                   onValueChange={(value: 'program' | 'course' | 'cohort') => {
@@ -363,17 +406,23 @@ export default function Pricings() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t('pages.selectObjectType')} />
+                    <SelectValue placeholder={t('common:pages.pricingsFieldObjectTypePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="program">{t('pages.objectProgram')}</SelectItem>
-                    <SelectItem value="course">{t('pages.objectCourse')}</SelectItem>
-                    <SelectItem value="cohort">{t('pages.objectCohort')}</SelectItem>
+                    <SelectItem value="program">
+                      {t('common:pages.pricingsObjectTypeProgram')}
+                    </SelectItem>
+                    <SelectItem value="course">
+                      {t('common:pages.pricingsObjectTypeCourse')}
+                    </SelectItem>
+                    <SelectItem value="cohort">
+                      {t('common:pages.pricingsObjectTypeCohort')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="object_id">{t('pages.objectLabel')}</Label>
+                <Label htmlFor="object_id">{t('common:pages.pricingsFieldObject')} *</Label>
                 <Select
                   value={formData.object_id || undefined}
                   onValueChange={(value) => {
@@ -389,7 +438,15 @@ export default function Pricings() {
                   disabled={!formData.object_type}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={formData.object_type ? t('pages.selectObject') : t('pages.selectObjectTypeFirst')} />
+                    <SelectValue
+                      placeholder={
+                        formData.object_type
+                          ? t('common:pages.pricingsFieldObjectPlaceholderTyped', {
+                              type: formData.object_type,
+                            })
+                          : t('common:pages.pricingsFieldObjectPlaceholder')
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {formData.object_type === 'program' && programs.length > 0 && (
@@ -417,51 +474,57 @@ export default function Pricings() {
                       ((formData.object_type === 'program' && programs.length === 0) ||
                        (formData.object_type === 'course' && courses.length === 0) ||
                        (formData.object_type === 'cohort' && cohorts.length === 0)) && (
-                      <SelectItem value="none" disabled>{t('pages.noObjectsAvailable', { type: formData.object_type })}</SelectItem>
+                      <SelectItem value="none" disabled>
+                        {t('common:pages.pricingsNoObjectsAvailable')}
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="content_type">{t('pages.contentTypeLabel')}</Label>
-                  <Input
+                <Label htmlFor="content_type">{t('common:pages.pricingsFieldContentType')} *</Label>
+                <Input
                   id="content_type"
                   type="number"
                   value={formData.content_type}
                   onChange={(e) => setFormData({ ...formData, content_type: parseInt(e.target.value) || 0 })}
-                    placeholder={t('pages.contentTypePlaceholder')}
+                  placeholder={t('common:pages.pricingsFieldContentTypePlaceholder')}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  {t('pages.contentTypeInfo')}: {formData.content_type || t('dashboard.rateNotSet')} ({t('pages.autoFilledWhenObjectTypeSelected')})
+                  {t('common:pages.pricingsFieldContentTypeHelper', {
+                    value: formData.content_type || t('common:pages.pricingsFieldContentTypeNotSet'),
+                  })}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">{t('pages.amountLabel')}</Label>
+                  <Label htmlFor="amount">{t('common:pages.pricingsFieldAmount')} *</Label>
                   <Input
                     id="amount"
                     type="number"
                     step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    placeholder={t('pages.amountPlaceholder')}
+                    placeholder={t('common:pages.pricingsFieldAmountPlaceholder')}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="currency">{t('pages.currencyLabel')}</Label>
+                  <Label htmlFor="currency">{t('common:pages.pricingsFieldCurrency')}</Label>
                   <Input
                     id="currency"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    placeholder={t('pages.currencyPlaceholder')}
+                    placeholder={t('common:pages.pricingsFieldCurrencyPlaceholder')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="effective_from">{t('pages.effectiveFrom')}</Label>
+                  <Label htmlFor="effective_from">
+                    {t('common:pages.pricingsFieldEffectiveFrom')} *
+                  </Label>
                   <Input
                     id="effective_from"
                     type="date"
@@ -471,7 +534,9 @@ export default function Pricings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="effective_to">{t('pages.effectiveTo')}</Label>
+                  <Label htmlFor="effective_to">
+                    {t('common:pages.pricingsFieldEffectiveTo')}
+                  </Label>
                   <Input
                     id="effective_to"
                     type="date"
@@ -489,16 +554,18 @@ export default function Pricings() {
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  {t('pages.active')}
+                  {t('common:pages.pricingsFieldActive')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                {t('cancel')}
+                {t('common:pages.pricingsCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingPricing ? t('pages.update') : t('pages.create')}
+                {editingPricing
+                  ? t('common:pages.pricingsButtonUpdate')
+                  : t('common:pages.pricingsButtonCreate')}
               </Button>
             </DialogFooter>
           </form>

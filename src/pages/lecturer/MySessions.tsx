@@ -1,20 +1,36 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar as CalendarIcon, Edit, MapPin, Link as LinkIcon, Clock, List, Calendar as Cal } from 'lucide-react';
+import {
+  Calendar as CalendarIcon,
+  Edit,
+  MapPin,
+  Link as LinkIcon,
+  Clock,
+  List,
+  Calendar as Cal,
+} from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMySessions, updateSession } from '@/api/endpoints/catalog';
 import { SessionDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { useTranslation } from 'react-i18next';
 
 const localizer = dateFnsLocalizer({
     format,
@@ -25,6 +41,7 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function MySessions() {
+    const { t } = useTranslation('common');
     const { toast } = useToast();
     const qc = useQueryClient();
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -71,13 +88,20 @@ export default function MySessions() {
         mutationFn: ({ id, data }: { id: string; data: Partial<SessionDto> }) => updateSession(id, data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['my-sessions'] });
-            toast({ title: 'Success', description: 'Session updated successfully' });
+            toast({
+                title: t('pages.mySessionsToastSuccessTitle'),
+                description: t('pages.mySessionsToastSuccessDescription'),
+            });
             setIsDialogOpen(false);
             setEditingSession(null);
             resetForm();
         },
         onError: (error) => {
-            toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+            toast({
+                title: t('pages.mySessionsToastErrorTitle'),
+                description: getErrorMessage(error),
+                variant: 'destructive',
+            });
         },
     });
 
@@ -146,8 +170,12 @@ export default function MySessions() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">My Sessions</h2>
-                    <p className="text-muted-foreground">View and manage your teaching schedule</p>
+                    <h2 className="text-3xl font-bold tracking-tight">
+                        {t('pages.mySessionsTitle')}
+                    </h2>
+                    <p className="text-muted-foreground">
+                        {t('pages.mySessionsSubtitle')}
+                    </p>
                 </div>
                 <div className="flex gap-2">
                     <Button
@@ -156,7 +184,7 @@ export default function MySessions() {
                         onClick={() => setViewMode('list')}
                     >
                         <List className="mr-2 h-4 w-4" />
-                        List
+                        {t('pages.mySessionsViewList')}
                     </Button>
                     <Button
                         variant={viewMode === 'calendar' ? 'default' : 'outline'}
@@ -164,7 +192,7 @@ export default function MySessions() {
                         onClick={() => setViewMode('calendar')}
                     >
                         <Cal className="mr-2 h-4 w-4" />
-                        Calendar
+                        {t('pages.mySessionsViewCalendar')}
                     </Button>
                 </div>
             </div>
@@ -175,28 +203,28 @@ export default function MySessions() {
                     size="sm"
                     onClick={() => setDateFilter('upcoming')}
                 >
-                    Upcoming
+                    {t('pages.mySessionsFilterUpcoming')}
                 </Button>
                 <Button
                     variant={dateFilter === 'thisWeek' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setDateFilter('thisWeek')}
                 >
-                    This Week
+                    {t('pages.mySessionsFilterThisWeek')}
                 </Button>
                 <Button
                     variant={dateFilter === 'thisMonth' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setDateFilter('thisMonth')}
                 >
-                    This Month
+                    {t('pages.mySessionsFilterThisMonth')}
                 </Button>
                 <Button
                     variant={dateFilter === 'all' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setDateFilter('all')}
                 >
-                    All
+                    {t('pages.mySessionsFilterAll')}
                 </Button>
             </div>
 
@@ -205,7 +233,7 @@ export default function MySessions() {
                     {sessions.length === 0 ? (
                         <Card>
                             <CardContent className="py-8 text-center text-muted-foreground">
-                                No sessions found for the selected period
+                                {t('pages.mySessionsNoneFound')}
                             </CardContent>
                         </Card>
                     ) : (
@@ -221,7 +249,10 @@ export default function MySessions() {
                                                     <CalendarIcon className="h-6 w-6 text-primary" />
                                                 </div>
                                                 <div>
-                                                    <CardTitle>{session.cohort_name || 'Unknown Cohort'}</CardTitle>
+                                                    <CardTitle>
+                                                        {session.cohort_name ||
+                                                            t('pages.mySessionsUnknownCohort')}
+                                                    </CardTitle>
                                                     <CardDescription className="mt-1 flex items-center gap-2">
                                                         <Clock className="h-4 w-4" />
                                                         {format(startDate, 'PPpp')} - {format(endDate, 'p')}
@@ -236,11 +267,13 @@ export default function MySessions() {
                                                         {session.online_link && (
                                                             <Badge variant="outline" className="flex items-center gap-1">
                                                                 <LinkIcon className="h-3 w-3" />
-                                                                Online
+                                                                {t('pages.mySessionsOnlineBadge')}
                                                             </Badge>
                                                         )}
                                                         {session.is_cancelled && (
-                                                            <Badge variant="destructive">Cancelled</Badge>
+                                                            <Badge variant="destructive">
+                                                                {t('pages.mySessionsCancelledBadge')}
+                                                            </Badge>
                                                         )}
                                                     </div>
                                                 </div>
@@ -276,14 +309,18 @@ export default function MySessions() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Edit Session</DialogTitle>
-                        <DialogDescription>Update session details or cancel the session</DialogDescription>
+                        <DialogTitle>{t('pages.mySessionsDialogTitle')}</DialogTitle>
+                        <DialogDescription>
+                            {t('pages.mySessionsDialogDescription')}
+                        </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit}>
                         <div className="space-y-4 py-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="start_at">Start Date & Time *</Label>
+                                    <Label htmlFor="start_at">
+                                        {t('pages.mySessionsFieldStartAt')}
+                                    </Label>
                                     <Input
                                         id="start_at"
                                         type="datetime-local"
@@ -293,7 +330,9 @@ export default function MySessions() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="end_at">End Date & Time *</Label>
+                                    <Label htmlFor="end_at">
+                                        {t('pages.mySessionsFieldEndAt')}
+                                    </Label>
                                     <Input
                                         id="end_at"
                                         type="datetime-local"
@@ -305,22 +344,26 @@ export default function MySessions() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="location">Location</Label>
+                                    <Label htmlFor="location">
+                                        {t('pages.mySessionsFieldLocation')}
+                                    </Label>
                                     <Input
                                         id="location"
                                         value={formData.location}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                        placeholder="Room 101"
+                                        placeholder={t('pages.mySessionsFieldLocationPlaceholder')}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="online_link">Online Link</Label>
+                                    <Label htmlFor="online_link">
+                                        {t('pages.mySessionsFieldOnlineLink')}
+                                    </Label>
                                     <Input
                                         id="online_link"
                                         type="url"
                                         value={formData.online_link}
                                         onChange={(e) => setFormData({ ...formData, online_link: e.target.value })}
-                                        placeholder="https://meet.google.com/..."
+                                        placeholder={t('pages.mySessionsFieldOnlineLinkPlaceholder')}
                                     />
                                 </div>
                             </div>
@@ -330,26 +373,32 @@ export default function MySessions() {
                                     checked={formData.is_cancelled}
                                     onCheckedChange={(checked) => setFormData({ ...formData, is_cancelled: checked })}
                                 />
-                                <Label htmlFor="is_cancelled">Cancel Session</Label>
+                                <Label htmlFor="is_cancelled">
+                                    {t('pages.mySessionsFieldCancelToggle')}
+                                </Label>
                             </div>
                             {formData.is_cancelled && (
                                 <div className="space-y-2">
-                                    <Label htmlFor="cancellation_reason">Cancellation Reason</Label>
+                                    <Label htmlFor="cancellation_reason">
+                                        {t('pages.mySessionsFieldCancelReason')}
+                                    </Label>
                                     <Input
                                         id="cancellation_reason"
                                         value={formData.cancellation_reason}
                                         onChange={(e) => setFormData({ ...formData, cancellation_reason: e.target.value })}
-                                        placeholder="Reason for cancellation"
+                                        placeholder={t('pages.mySessionsFieldCancelReasonPlaceholder')}
                                     />
                                 </div>
                             )}
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                                Cancel
+                                {t('pages.mySessionsCancel')}
                             </Button>
                             <Button type="submit" disabled={updateMutation.isPending}>
-                                Update
+                                {updateMutation.isPending
+                                    ? t('pages.mySessionsUpdating')
+                                    : t('pages.mySessionsUpdate')}
                             </Button>
                         </DialogFooter>
                     </form>

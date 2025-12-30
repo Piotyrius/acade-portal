@@ -48,12 +48,12 @@ export default function Courses() {
     mutationFn: createCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: t('success'), description: t('pages.catalogCoursesCreateSuccess') });
+      toast({ title: t('pages.catalogCoursesToastCreateTitle'), description: t('pages.catalogCoursesToastCreateDescription') });
       setIsDialogOpen(false);
       setFormData({ program: '', title: '', code: '', hours: 1, credits: '', description: '' });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCoursesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -61,13 +61,13 @@ export default function Courses() {
     mutationFn: ({ id, data }: { id: string; data: Partial<CourseDto> }) => updateCourse(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: t('success'), description: t('pages.catalogCoursesUpdateSuccess') });
+      toast({ title: t('pages.catalogCoursesToastUpdateTitle'), description: t('pages.catalogCoursesToastUpdateDescription') });
       setIsDialogOpen(false);
       setEditingCourse(null);
       setFormData({ program: '', title: '', code: '', hours: 1, credits: '', description: '' });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCoursesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -75,10 +75,10 @@ export default function Courses() {
     mutationFn: deleteCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: t('success'), description: t('pages.catalogCoursesDeleteSuccess') });
+      toast({ title: t('pages.catalogCoursesToastDeleteTitle'), description: t('pages.catalogCoursesToastDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCoursesToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -186,7 +186,7 @@ export default function Courses() {
                     <div>
                       <CardTitle>{course.title}</CardTitle>
                       <CardDescription className="mt-1">
-                        {course.code} • {program?.name || t('catalogCoursesUnknownProgram')}
+                        {course.code} • {program?.name || t('pages.catalogCoursesUnknownProgram')}
                       </CardDescription>
                     </div>
                   </div>
@@ -300,7 +300,7 @@ export default function Courses() {
                 {t('pages.catalogCoursesCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {t('pages.catalogCoursesSave')}
+                {editingCourse ? t('pages.catalogCoursesButtonUpdate') : t('pages.catalogCoursesButtonCreate')}
               </Button>
             </DialogFooter>
           </form>

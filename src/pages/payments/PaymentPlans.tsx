@@ -29,11 +29,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from 'react-i18next';
 
-
 export default function PaymentPlans() {
   const { user } = useAuthStore();
-  const { t } = useTranslation('common');
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<PaymentPlanDto | null>(null);
@@ -54,12 +53,19 @@ export default function PaymentPlans() {
     mutationFn: createPaymentPlan,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentPlans'] });
-      toast({ title: t('success'), description: t('pages.paymentPlanCreateSuccess') });
+      toast({
+        title: t('common:pages.paymentPlansToastCreateTitle'),
+        description: t('common:pages.paymentPlansToastCreateDescription'),
+      });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentPlansToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -68,13 +74,20 @@ export default function PaymentPlans() {
       updatePaymentPlan(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentPlans'] });
-      toast({ title: t('success'), description: t('pages.paymentPlanUpdateSuccess') });
+      toast({
+        title: t('common:pages.paymentPlansToastUpdateTitle'),
+        description: t('common:pages.paymentPlansToastUpdateDescription'),
+      });
       setIsDialogOpen(false);
       setEditingPlan(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentPlansToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -82,10 +95,17 @@ export default function PaymentPlans() {
     mutationFn: deletePaymentPlan,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['paymentPlans'] });
-      toast({ title: t('success'), description: t('pages.paymentPlanDeleteSuccess') });
+      toast({
+        title: t('common:pages.paymentPlansToastDeleteTitle'),
+        description: t('common:pages.paymentPlansToastDeleteDescription'),
+      });
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentPlansToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -118,8 +138,8 @@ export default function PaymentPlans() {
     e.preventDefault();
     if (!formData.name) {
       toast({
-        title: t('error'),
-        description: t('pages.nameRequired'),
+        title: t('common:pages.paymentPlansToastErrorTitle'),
+        description: t('common:pages.paymentPlansErrorNameRequired'),
         variant: 'destructive',
       });
       return;
@@ -140,7 +160,7 @@ export default function PaymentPlans() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm(t('pages.paymentPlanDeleteConfirm'))) {
+    if (confirm(t('common:pages.paymentPlansDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -149,8 +169,8 @@ export default function PaymentPlans() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.paymentPlansTitle')}</h2>
-          <p className="text-muted-foreground">{t('pages.noPermissionPaymentPlans')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.paymentPlansTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.paymentPlansNoPermission')}</p>
         </div>
       </div>
     );
@@ -169,23 +189,25 @@ export default function PaymentPlans() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.paymentPlansTitle')}</h2>
-          <p className="text-muted-foreground">{t('pages.paymentPlansDescription')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.paymentPlansTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.paymentPlansSubtitle')}</p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
-          {t('pages.createPaymentPlan')}
+          {t('common:pages.paymentPlansCreate')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('pages.paymentPlansTitle')}</CardTitle>
+          <CardTitle>{t('common:pages.paymentPlansCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {paymentPlans.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No payment plans found</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t('common:pages.paymentPlansNoneFound')}
+              </p>
             ) : (
               paymentPlans.map((plan: PaymentPlanDto) => (
                 <div
@@ -196,13 +218,17 @@ export default function PaymentPlans() {
                     <div className="flex items-center gap-2 mb-2">
                       <p className="font-medium">{plan.name}</p>
                       <Badge variant={plan.is_active ? 'default' : 'outline'}>
-                        {plan.is_active ? 'Active' : 'Inactive'}
+                        {plan.is_active
+                          ? t('common:pages.paymentPlansStatusActive')
+                          : t('common:pages.paymentPlansStatusInactive')}
                       </Badge>
                       <Badge variant="secondary">{plan.type_display || plan.type}</Badge>
                     </div>
                     {plan.installment_count && (
                       <p className="text-sm text-muted-foreground">
-                        {t('pages.installmentCountLabel')}: {plan.installment_count}
+                        {t('common:pages.paymentPlansInstallmentsLabel', {
+                          count: plan.installment_count,
+                        })}
                       </p>
                     )}
                   </div>
@@ -211,7 +237,7 @@ export default function PaymentPlans() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenDialog(plan)}
-                      title={t('pages.editPaymentPlan')}
+                      title={t('common:pages.paymentPlansEditTooltip')}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -219,7 +245,7 @@ export default function PaymentPlans() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(plan.id)}
-                      title={t('pages.deletePaymentPlan')}
+                      title={t('common:pages.paymentPlansDeleteTooltip')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -234,25 +260,31 @@ export default function PaymentPlans() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingPlan ? t('pages.editPaymentPlan') : t('pages.createPaymentPlan')}</DialogTitle>
+            <DialogTitle>
+              {editingPlan
+                ? t('common:pages.paymentPlansDialogTitleEdit')
+                : t('common:pages.paymentPlansDialogTitleCreate')}
+            </DialogTitle>
             <DialogDescription>
-              {editingPlan ? t('pages.updatePaymentPlanDetails') : t('pages.createPaymentPlanDescription')}
+              {editingPlan
+                ? t('common:pages.paymentPlansDialogDescriptionEdit')
+                : t('common:pages.paymentPlansDialogDescriptionCreate')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">{t('pages.nameLabel')}</Label>
+                <Label htmlFor="name">{t('common:pages.paymentPlansFieldName')} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={t('pages.paymentPlanNamePlaceholder')}
+                  placeholder={t('common:pages.paymentPlansFieldNamePlaceholder')}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">{t('pages.typeLabel')}</Label>
+                <Label htmlFor="type">{t('common:pages.paymentPlansFieldType')} *</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value: 'MONTHLY' | 'FULL' | 'CUSTOM') =>
@@ -260,25 +292,33 @@ export default function PaymentPlans() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder={t('common:pages.paymentPlansFieldTypePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MONTHLY">{t('pages.typeMonthly')}</SelectItem>
-                    <SelectItem value="FULL">{t('pages.typeFull')}</SelectItem>
-                    <SelectItem value="CUSTOM">{t('pages.typeCustom')}</SelectItem>
+                    <SelectItem value="MONTHLY">
+                      {t('common:pages.paymentPlansTypeMonthly')}
+                    </SelectItem>
+                    <SelectItem value="FULL">
+                      {t('common:pages.paymentPlansTypeFull')}
+                    </SelectItem>
+                    <SelectItem value="CUSTOM">
+                      {t('common:pages.paymentPlansTypeCustom')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {(formData.type === 'MONTHLY' || formData.type === 'CUSTOM') && (
                 <div className="space-y-2">
-                  <Label htmlFor="installment_count">{t('pages.installmentCountLabel')}</Label>
+                  <Label htmlFor="installment_count">
+                    {t('common:pages.paymentPlansFieldInstallments')}
+                  </Label>
                   <Input
                     id="installment_count"
                     type="number"
                     min="1"
                     value={formData.installment_count}
                     onChange={(e) => setFormData({ ...formData, installment_count: e.target.value })}
-                    placeholder={t('pages.installmentCountPlaceholder')}
+                    placeholder={t('common:pages.paymentPlansFieldInstallmentsPlaceholder')}
                   />
                 </div>
               )}
@@ -291,16 +331,18 @@ export default function PaymentPlans() {
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  {t('pages.active')}
+                  {t('common:pages.paymentPlansFieldActive')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                {t('cancel')}
+                {t('common:pages.paymentPlansCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingPlan ? t('pages.update') : t('pages.create')}
+                {editingPlan
+                  ? t('common:pages.paymentPlansButtonUpdate')
+                  : t('common:pages.paymentPlansButtonCreate')}
               </Button>
             </DialogFooter>
           </form>

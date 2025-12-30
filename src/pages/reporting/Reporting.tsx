@@ -42,6 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTranslation } from 'react-i18next';
 
 const coerceNumber = (value: unknown): number | undefined => {
   if (value === null || value === undefined) return undefined;
@@ -666,6 +667,7 @@ function AnalyticsDashboard() {
 
 // Reports & Exports Component (existing functionality)
 function ReportsExports() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const { t } = useTranslation('common');
   const [loading, setLoading] = useState<string | null>(null);

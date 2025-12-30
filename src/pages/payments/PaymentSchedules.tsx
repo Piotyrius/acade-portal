@@ -16,12 +16,12 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { formatCurrencyString } from '@/utils/paymentsFormatting';
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next';
 
 export default function PaymentSchedules() {
   const { user } = useAuthStore();
-  const { t } = useTranslation('common');
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -48,12 +48,18 @@ export default function PaymentSchedules() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['paymentSchedules'] });
       toast({
-        title: 'Success',
-        description: `Marked ${data.marked_overdue} payment schedules as overdue`,
+        title: t('common:pages.paymentSchedulesToastMarkOverdueTitle'),
+        description: t('common:pages.paymentSchedulesToastMarkOverdueDescription', {
+          count: data.marked_overdue,
+        }),
       });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common:pages.paymentSchedulesToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -84,8 +90,8 @@ export default function PaymentSchedules() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.paymentSchedulesTitle')}</h2>
-          <p className="text-muted-foreground">{t('pages.noPermissionPaymentSchedules')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.paymentSchedulesTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.paymentSchedulesNoPermission')}</p>
         </div>
       </div>
     );
@@ -104,16 +110,16 @@ export default function PaymentSchedules() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.paymentSchedulesTitle')}</h2>
-            <p className="text-muted-foreground">{t('pages.paymentSchedulesDescription')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('common:pages.paymentSchedulesTitle')}</h2>
+          <p className="text-muted-foreground">{t('common:pages.paymentSchedulesSubtitle')}</p>
         </div>
-          <Button
+        <Button
           variant="outline"
-            onClick={() => markOverdueMutation.mutate()}
+          onClick={() => markOverdueMutation.mutate()}
           disabled={markOverdueMutation.isPending}
         >
           <AlertCircle className="mr-2 h-4 w-4" />
-            {t('pages.markOverdue')}
+          {t('common:pages.paymentSchedulesMarkOverdue')}
         </Button>
       </div>
 
@@ -121,7 +127,7 @@ export default function PaymentSchedules() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={t('pages.searchSchedulesPlaceholder')}
+            placeholder={t('common:pages.paymentSchedulesSearchPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -129,10 +135,12 @@ export default function PaymentSchedules() {
         </div>
         <Select value={selectedInvoice} onValueChange={setSelectedInvoice}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder={t('pages.allInvoices')} />
+            <SelectValue placeholder={t('common:pages.paymentSchedulesFilterAllInvoices')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('pages.allInvoices')}</SelectItem>
+            <SelectItem value="all">
+              {t('common:pages.paymentSchedulesFilterAllInvoices')}
+            </SelectItem>
             {invoices.map((invoice: any) => (
               <SelectItem key={invoice.id} value={invoice.id}>
                 {invoice.invoice_number || invoice.id.slice(0, 8)}
@@ -142,26 +150,38 @@ export default function PaymentSchedules() {
         </Select>
         <Select value={selectedStatus} onValueChange={setSelectedStatus}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder={t('pages.allStatuses')} />
+            <SelectValue placeholder={t('common:pages.paymentSchedulesFilterAllStatuses')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('pages.allStatuses')}</SelectItem>
-            <SelectItem value="PENDING">{t('pages.statusPending')}</SelectItem>
-            <SelectItem value="PAID">{t('pages.statusPaid')}</SelectItem>
-            <SelectItem value="OVERDUE">{t('pages.statusOverdue')}</SelectItem>
-            <SelectItem value="SKIPPED">{t('pages.statusSkipped')}</SelectItem>
+            <SelectItem value="all">
+              {t('common:pages.paymentSchedulesFilterAllStatuses')}
+            </SelectItem>
+            <SelectItem value="PENDING">
+              {t('common:pages.paymentSchedulesFilterStatusPending')}
+            </SelectItem>
+            <SelectItem value="PAID">
+              {t('common:pages.paymentSchedulesFilterStatusPaid')}
+            </SelectItem>
+            <SelectItem value="OVERDUE">
+              {t('common:pages.paymentSchedulesFilterStatusOverdue')}
+            </SelectItem>
+            <SelectItem value="SKIPPED">
+              {t('common:pages.paymentSchedulesFilterStatusSkipped')}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('pages.paymentSchedulesTitle')}</CardTitle>
+          <CardTitle>{t('common:pages.paymentSchedulesCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {filteredSchedules.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">{t('pages.paymentSchedulesNoneFound')}</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t('common:pages.paymentSchedulesNoneFound')}
+              </p>
             ) : (
               filteredSchedules.map((schedule: PaymentScheduleDto) => {
                 const isOverdue =
@@ -186,13 +206,17 @@ export default function PaymentSchedules() {
                         {isOverdue && (
                           <Badge variant="destructive">
                             <AlertCircle className="h-3 w-3 mr-1" />
-                            Overdue
+                            {t('common:pages.paymentSchedulesOverdueBadge')}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm font-medium">Amount: {formatCurrencyString(schedule.amount, 'USD')}</p>
+                      <p className="text-sm font-medium">
+                        {t('common:pages.paymentSchedulesAmountLabel')}:{' '}
+                        {formatCurrencyString(schedule.amount, 'USD')}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Scheduled: {new Date(schedule.scheduled_date).toLocaleDateString()}
+                        {t('common:pages.paymentSchedulesScheduledLabel')}:{' '}
+                        {new Date(schedule.scheduled_date).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

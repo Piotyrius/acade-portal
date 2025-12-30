@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Copy, Check, Eye, EyeOff, Loader2, Shield, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface MfaSetupProps {
   secret: string;
@@ -17,6 +18,7 @@ interface MfaSetupProps {
 }
 
 export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: MfaSetupProps) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [step, setStep] = useState<'setup' | 'verify'>('setup');
   const [code, setCode] = useState('');
@@ -31,8 +33,8 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
     navigator.clipboard.writeText(secret);
     setCopied(true);
     toast({
-      title: 'Copied',
-      description: 'Secret key copied to clipboard',
+      title: t('pages.mfaSetupCopySuccess'),
+      description: t('pages.mfaSetupCopyDescription'),
     });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -40,8 +42,8 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
   const handleVerify = async () => {
     if (code.length !== 6) {
       toast({
-        title: 'Invalid Code',
-        description: 'Please enter a 6-digit code',
+        title: t('pages.mfaSetupInvalidCodeTitle'),
+        description: t('pages.mfaSetupInvalidCodeDescription'),
         variant: 'destructive',
       });
       return;
@@ -53,8 +55,8 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
       setStep('verify');
     } catch (error: any) {
       toast({
-        title: 'Verification Failed',
-        description: error.response?.data?.detail || error.message || 'Invalid verification code. Please try again.',
+        title: t('pages.mfaSetupVerificationFailedTitle'),
+        description: error.response?.data?.detail || error.message || t('pages.mfaSetupVerificationFailedDescription'),
         variant: 'destructive',
       });
       setCode('');
@@ -69,21 +71,20 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-green-600" />
-            MFA Enabled Successfully
+            {t('pages.mfaSetupSuccessTitle')}
           </CardTitle>
-          <CardDescription>Your account is now protected with two-factor authentication</CardDescription>
+          <CardDescription>{t('pages.mfaSetupSuccessDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Alert>
             <Shield className="h-4 w-4" />
             <AlertDescription>
-              Multi-factor authentication has been successfully enabled for your account. 
-              You will be required to enter a verification code from your authenticator app when logging in.
+              {t('pages.mfaSetupSuccessMessage')}
             </AlertDescription>
           </Alert>
           <div className="mt-4">
             <Button onClick={onCancel} className="w-full">
-              Done
+              {t('pages.mfaSetupButtonDone')}
             </Button>
           </div>
         </CardContent>
@@ -97,10 +98,10 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
-            Set Up Two-Factor Authentication
+            {t('pages.mfaSetupTitle')}
           </CardTitle>
           <CardDescription>
-            Scan the QR code with your authenticator app or enter the secret key manually
+            {t('pages.mfaSetupDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -111,13 +112,13 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
                 <QRCodeSVG value={otpAuthUri} size={200} level="M" />
               </div>
               <p className="text-sm text-muted-foreground text-center max-w-md">
-                Scan this QR code with your authenticator app (Google Authenticator, Authy, Microsoft Authenticator, etc.)
+                {t('pages.mfaSetupScanInstructions')}
               </p>
             </div>
 
             {/* Manual Entry Option */}
             <div className="space-y-2">
-              <Label>Can't scan? Enter this code manually:</Label>
+              <Label>{t('pages.mfaSetupManualEntry')}</Label>
               <div className="flex items-center gap-2">
                 <div className="flex-1 px-3 py-2 bg-muted rounded-md font-mono text-sm">
                   {showSecret ? secret : '•'.repeat(secret.length)}
@@ -143,11 +144,11 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
 
             <Alert>
               <AlertDescription>
-                <strong>Instructions:</strong>
+                <strong>{t('pages.mfaSetupInstructionsTitle')}</strong>
                 <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
-                  <li>Install an authenticator app on your phone (Google Authenticator, Authy, etc.)</li>
-                  <li>Scan the QR code above or enter the secret key manually</li>
-                  <li>Enter the 6-digit code from your app below to verify</li>
+                  <li>{t('pages.mfaSetupInstructions1')}</li>
+                  <li>{t('pages.mfaSetupInstructions2')}</li>
+                  <li>{t('pages.mfaSetupInstructions3')}</li>
                 </ol>
               </AlertDescription>
             </Alert>
@@ -156,7 +157,7 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
           {/* Step 2: Verification */}
           <div className="space-y-4 pt-4 border-t">
             <div className="space-y-2">
-              <Label>Enter verification code from your app</Label>
+              <Label>{t('pages.mfaSetupVerificationLabel')}</Label>
               <div className="flex justify-center">
                 <InputOTP
                   maxLength={6}
@@ -175,7 +176,7 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
                 </InputOTP>
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                Enter the 6-digit code from your authenticator app
+                {t('pages.mfaSetupVerificationHelper')}
               </p>
             </div>
 
@@ -188,10 +189,10 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
                 {verifying ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
+                    {t('pages.mfaSetupButtonVerifying')}
                   </>
                 ) : (
-                  'Verify and Enable'
+                  t('pages.mfaSetupButtonVerify')
                 )}
               </Button>
               <Button
@@ -200,7 +201,7 @@ export function MfaSetup({ secret, qrCodeUri, userEmail, onVerify, onCancel }: M
                 onClick={onCancel}
                 disabled={verifying}
               >
-                Cancel
+                {t('pages.mfaSetupButtonCancel')}
               </Button>
             </div>
           </div>

@@ -19,7 +19,7 @@ import { exampleCohorts } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCohorts, createCohort, updateCohort, deleteCohort, generateSessions, getCourses, getCohortsReadyToStart, startCohort } from '@/api/endpoints/catalog';
-import { getEnrollments } from '@/api/endpoints/admissions';
+import { getEnrollments, getApplications } from '@/api/endpoints/admissions';
 import { CohortDto, EnrollmentDto } from '@/api/types';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +38,8 @@ import { format } from 'date-fns';
 import { getInvoices, getPayments, PaymentDto } from '@/api/endpoints/payments';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Phone, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { getUsersPaginated } from '@/api/endpoints/auth';
 
 function isPaidThisMonth(payments: PaymentDto[] | undefined): boolean {
   if (!payments || payments.length === 0) return false;
@@ -51,8 +53,6 @@ function isPaidThisMonth(payments: PaymentDto[] | undefined): boolean {
   })
 }
 
-  const { t } = useTranslation('common');
-
 
 function EnrollmentRow({
     enrollment,
@@ -62,6 +62,9 @@ function EnrollmentRow({
     getEnrollmentStatusColor: (status: EnrollmentDto['status']) =>
       'default' | 'destructive' | 'outline' | 'secondary';
   }) {
+  const { t } = useTranslation('common');
+  const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
     queryKey: ['invoices', enrollment.id],
@@ -76,32 +79,163 @@ function EnrollmentRow({
     enabled: !!invoice,
   });
 
+  // Fetch student user data to get email for application lookup
+  const { data: studentUser } = useQuery({
+    queryKey: ['studentUser', enrollment.student],
+    queryFn: async () => {
+      const data = await getUsersPaginated({ search: enrollment.student_name || '' });
+      return data.results?.find((u: any) => u.id === enrollment.student);
+    },
+    enabled: !!enrollment.student,
+  });
+
+  // Fetch application data to get parent phones and notes
+  const { data: applications } = useQuery({
+    queryKey: ['studentApplications', studentUser?.email],
+    queryFn: () => getApplications(),
+    enabled: !!studentUser?.email,
+    select: (apps) => apps.filter((app: any) => app.email === studentUser?.email),
+  });
+
+  const application = applications?.[0];
+  const parentPhones = application?.phones?.filter((p: any) => 
+    p.name?.toLowerCase().includes('parent') || 
+    p.name?.toLowerCase().includes('guardian') ||
+    p.name?.toLowerCase().includes('მშობელი') ||
+    p.name?.toLowerCase().includes('родитель')
+  ) || [];
+
   const paid = isPaidThisMonth(payments);
 
+  const handleStudentClick = () => {
+    if (enrollment.student) {
+      navigate(`/users/${enrollment.student}`);
+    }
+  };
+
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-      <div>
-        <p className="font-medium text-sm">{enrollment.student_name}</p>
-        <p className="text-xs text-muted-foreground">
-          {t('pages.enrolledOn', { date: new Date(enrollment.enrolled_at).toLocaleDateString() })}
-        </p>
-      </div>
+    <div className="space-y-0">
+      <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+        <div className="flex-1">
+          <button
+            onClick={handleStudentClick}
+            className="font-medium text-sm hover:text-primary hover:underline cursor-pointer text-left"
+          >
+            {enrollment.student_name}
+          </button>
+          <p className="text-xs text-muted-foreground">
+            {t('pages.enrollmentsEnrolledOnLabel')}: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+          </p>
+          {studentUser?.phone && (
+            <div className="flex items-center gap-1 mt-1">
+              <Phone className="h-3 w-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{studentUser.phone}</span>
+            </div>
+          )}
+          {parentPhones.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-1">
+              {parentPhones.map((p: any, idx: number) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium"
+                >
+                  <Phone className="h-3 w-3" />
+                  {p.name}: {p.phone}
+                </span>
+              ))}
+            </div>
+          )}
+          {application?.notes && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{application.notes}</p>
+          )}
+        </div>
 
-      {/* Payment Badge */}
-      <div className="flex items-center gap-2">
-        {loadingInvoices || loadingPayments ? (
-          <Badge variant="outline">{t('pages.checking')}</Badge>
-        ) : paid ? (
-          <Badge className="bg-green-600 text-white">{t('pages.paid')}</Badge>
-        ) : (
-          <Badge variant="destructive">{t('pages.notPaid')}</Badge>
-        )}
+        {/* Payment Badge */}
+        <div className="flex items-center gap-2">
+          {loadingInvoices || loadingPayments ? (
+            <Badge variant="outline">{t('pages.catalogCohortsBadgeChecking')}</Badge>
+          ) : paid ? (
+            <Badge className="bg-green-600 text-white">{t('pages.catalogCohortsBadgePaid')}</Badge>
+          ) : (
+            <Badge variant="destructive">{t('pages.catalogCohortsBadgeNotPaid')}</Badge>
+          )}
 
-        {/* Enrollment Status Badge */}
-        <Badge variant={getEnrollmentStatusColor(enrollment.status)}>
-          {enrollment.status}
-        </Badge>
+          {/* Enrollment Status Badge */}
+          <Badge variant={getEnrollmentStatusColor(enrollment.status)}>
+            {enrollment.status}
+          </Badge>
+
+          {/* Expand button for more details */}
+          {(parentPhones.length > 0 || application?.notes || application?.phones?.length > 0) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
+      {isExpanded && (parentPhones.length > 0 || application?.notes || application?.phones?.length > 0) && (
+        <div className="px-3 pb-3 border-l border-r border-b rounded-b-lg bg-muted/30">
+          <div className="pt-3 space-y-2">
+            {studentUser?.phone && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs font-medium">{t('pages.usersDetailsPhone')}</span>
+                </div>
+                <p className="text-xs text-muted-foreground pl-5">{studentUser.phone}</p>
+              </div>
+            )}
+            {parentPhones.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-3 w-3 text-primary" />
+                  <span className="text-xs font-medium">{t('pages.usersDetailsParentPhone')}</span>
+                </div>
+                <div className="space-y-1 pl-5">
+                  {parentPhones.map((p: any, idx: number) => (
+                    <p key={idx} className="text-xs font-medium text-primary">
+                      {p.name}: {p.phone}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {application?.phones && application.phones.length > 0 && parentPhones.length === 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs font-medium">{t('pages.usersDetailsAdditionalPhones')}</span>
+                </div>
+                <div className="space-y-1 pl-5">
+                  {application.phones.map((p: any, idx: number) => (
+                    <p key={idx} className="text-xs text-muted-foreground">
+                      {p.name ? `${p.name}: ${p.phone}` : p.phone}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {application?.notes && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs font-medium">{t('pages.usersDetailsNotes')}</span>
+                </div>
+                <p className="text-xs text-muted-foreground pl-5">{application.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -109,6 +243,25 @@ function EnrollmentRow({
 
 export default function Cohorts() {
   const { t } = useTranslation('common');
+
+  // Helper function to convert translated day abbreviations to English for backend
+  const convertDayAbbreviationsToEnglish = (pattern: string): string => {
+    const dayMap: Record<string, string> = {
+      [t('pages.catalogCohortsDayMon').toUpperCase()]: 'MON',
+      [t('pages.catalogCohortsDayTue').toUpperCase()]: 'TUE',
+      [t('pages.catalogCohortsDayWed').toUpperCase()]: 'WED',
+      [t('pages.catalogCohortsDayThu').toUpperCase()]: 'THU',
+      [t('pages.catalogCohortsDayFri').toUpperCase()]: 'FRI',
+      [t('pages.catalogCohortsDaySat').toUpperCase()]: 'SAT',
+      [t('pages.catalogCohortsDaySun').toUpperCase()]: 'SUN',
+    };
+
+    return pattern
+      .split(',')
+      .map((day) => day.trim().toUpperCase())
+      .map((day) => dayMap[day] || day)
+      .join(',');
+  };
   const { toast } = useToast();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -160,12 +313,12 @@ export default function Cohorts() {
     mutationFn: createCohort,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: t('success'), description: t('pages.catalogCohortsCreateSuccess') });
+      toast({ title: t('pages.catalogCohortsToastCreateTitle'), description: t('pages.catalogCohortsToastCreateDescription') });
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCohortsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -173,13 +326,13 @@ export default function Cohorts() {
     mutationFn: ({ id, data }: { id: string; data: Partial<CohortDto> }) => updateCohort(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: t('success'), description: t('pages.catalogCohortsUpdateSuccess') });
+      toast({ title: t('pages.catalogCohortsToastUpdateTitle'), description: t('pages.catalogCohortsToastUpdateDescription') });
       setIsDialogOpen(false);
       setEditingCohort(null);
       resetForm();
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCohortsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -187,10 +340,10 @@ export default function Cohorts() {
     mutationFn: deleteCohort,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: t('success'), description: t('pages.catalogCohortsDeleteSuccess') });
+      toast({ title: t('pages.catalogCohortsToastDeleteTitle'), description: t('pages.catalogCohortsToastDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCohortsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -200,14 +353,14 @@ export default function Cohorts() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
       toast({
-        title: t('success'),
-        description: t('pages.catalogProgramsGenerateSessionsSuccess', { count: data.created }),
+        title: t('pages.catalogCohortsToastCreateTitle'),
+        description: t('pages.catalogCohortsToastGenerateSessionsDescription', { count: data.created }),
       });
       setIsSessionDialogOpen(false);
       setSelectedCohort(null);
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogCohortsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -276,9 +429,14 @@ export default function Cohorts() {
   const handleGenerateSessions = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCohort) return;
+    // Convert translated day abbreviations to English for backend
+    const convertedPattern = convertDayAbbreviationsToEnglish(sessionFormData.pattern);
     generateSessionsMutation.mutate({
       cohortId: selectedCohort.id,
-      payload: sessionFormData,
+      payload: {
+        ...sessionFormData,
+        pattern: convertedPattern,
+      },
     });
   };
 
@@ -477,7 +635,7 @@ export default function Cohorts() {
                     className='cohort_delete_btn'
                     size="sm"
                     onClick={() => handleOpenGenerateSessions(cohort)}
-                    title={t('pages.catalogSessionsGenerateTitle')}
+                    title={t('pages.catalogCohortsButtonGenerateSessions')}
                   >
                     <Calendar className="h-4 w-4" />
                   </Button>
@@ -495,16 +653,16 @@ export default function Cohorts() {
             {expandedCohortId === cohort.id && (
               <CardContent>
                 <div className="border-t pt-4">
-                  <h4 className="text-sm font-semibold mb-3">{t('pages.catalogCohortsEnrolledStudentsTitle')}</h4>
+                  <h4 className="text-sm font-semibold mb-3">{t('pages.catalogCohortsEnrolledStudentsHeading')}</h4>
                   {isLoadingEnrollments ? (
                     <div className="space-y-2">
                       <div className="h-12 bg-muted animate-pulse rounded" />
                       <div className="h-12 bg-muted animate-pulse rounded" />
                     </div>
                   ) : cohortEnrollments.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">{t('pages.catalogCohortsStudentsNone')}</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">{t('pages.catalogCohortsNoStudentsEnrolled')}</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-0">
                       {cohortEnrollments.map((enrollment: EnrollmentDto) => (
                         <EnrollmentRow
                           key={enrollment.id}
@@ -524,7 +682,7 @@ export default function Cohorts() {
       {filteredCohorts.length === 0 && cohorts.length > 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            {searchTerm ? t('pages.catalogCohortsNoResultsSearch') : t('pages.catalogCohortsNoCohortsDefault')}
+            {searchTerm ? t('pages.catalogCohortsNoResultsSearch') : t('pages.catalogCohortsNoResultsDefault')}
           </CardContent>
         </Card>
       )}
@@ -541,13 +699,13 @@ export default function Cohorts() {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="course">{t('pages.catalogCohortsFieldCourse')} *</Label>
+                <Label htmlFor="course">Course *</Label>
                 <Select
                   value={formData.course}
                   onValueChange={(value) => setFormData({ ...formData, course: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t('pages.catalogCohortsFieldCoursePlaceholder')} />
+                    <SelectValue placeholder={t('pages.catalogCohortsSelectCoursePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {courses.map((c) => (
@@ -559,7 +717,7 @@ export default function Cohorts() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="name">{t('pages.catalogCohortsFieldName')} *</Label>
+                <Label htmlFor="name">{t('pages.catalogCohortsFieldCohortName')} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -611,23 +769,23 @@ export default function Cohorts() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="PLANNED">{t('pages.catalogCohortsStatusPlanned')}</SelectItem>
-                        <SelectItem value="ENROLLING">{t('pages.catalogCohortsStatusEnrolling')}</SelectItem>
-                        <SelectItem value="ACTIVE">{t('pages.catalogCohortsStatusActive')}</SelectItem>
-                        <SelectItem value="COMPLETED">{t('pages.catalogCohortsStatusCompleted')}</SelectItem>
-                        <SelectItem value="CANCELLED">{t('pages.catalogCohortsStatusCancelled')}</SelectItem>
+                      <SelectItem value="PLANNED">{t('pages.catalogCohortsStatusPlanned')}</SelectItem>
+                      <SelectItem value="ENROLLING">{t('pages.catalogCohortsStatusEnrolling')}</SelectItem>
+                      <SelectItem value="ACTIVE">{t('pages.catalogCohortsStatusActive')}</SelectItem>
+                      <SelectItem value="COMPLETED">{t('pages.catalogCohortsStatusCompleted')}</SelectItem>
+                      <SelectItem value="CANCELLED">{t('pages.catalogCohortsStatusCancelled')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  {t('cancel')}
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingCohort ? t('pages.catalogCohortsDialogUpdateButton') : t('pages.catalogCohortsDialogCreateButton')}
-                </Button>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                {t('pages.catalogCohortsButtonCancel')}
+              </Button>
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                {editingCohort ? t('pages.catalogCohortsButtonUpdate') : t('pages.catalogCohortsButtonCreate')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -637,27 +795,31 @@ export default function Cohorts() {
       <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.catalogSessionsGenerateTitle')}</DialogTitle>
+            <DialogTitle>{t('pages.catalogCohortsDialogGenerateSessionsTitle')}</DialogTitle>
             <DialogDescription>
-              {t('pages.catalogSessionsGenerateDescription', { name: selectedCohort?.name })}
+              {t('pages.catalogCohortsDialogGenerateSessionsDescription', { name: selectedCohort?.name || '' })}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleGenerateSessions}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="pattern">{t('pages.catalogSessionsPatternLabel')} *</Label>
+                <Label htmlFor="pattern">
+                  {t('pages.catalogCohortsFieldPattern')} * (e.g., {t('pages.catalogCohortsDayMon')},{t('pages.catalogCohortsDayWed')},{t('pages.catalogCohortsDayFri')} or {t('pages.catalogCohortsDayTue')},{t('pages.catalogCohortsDayThu')})
+                </Label>
                 <Input
                   id="pattern"
-                  placeholder={t('pages.catalogSessionsPatternPlaceholder')}
+                  placeholder={t('pages.catalogCohortsFieldPatternPlaceholder')}
                   value={sessionFormData.pattern}
-                  onChange={(e) => setSessionFormData({ ...sessionFormData, pattern: e.target.value.toUpperCase() })}
+                  onChange={(e) => setSessionFormData({ ...sessionFormData, pattern: e.target.value })}
                   required
                 />
-                <p className="text-xs text-muted-foreground">{t('pages.catalogSessionsPatternHelper')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.catalogCohortsFieldPatternHelper')}
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start_time">Start Time *</Label>
+                  <Label htmlFor="start_time">{t('pages.catalogCohortsFieldStartTime')} *</Label>
                   <Input
                     id="start_time"
                     type="time"
@@ -667,7 +829,7 @@ export default function Cohorts() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="end_time">End Time *</Label>
+                  <Label htmlFor="end_time">{t('pages.catalogCohortsFieldEndTime')} *</Label>
                   <Input
                     id="end_time"
                     type="time"
@@ -680,10 +842,10 @@ export default function Cohorts() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsSessionDialogOpen(false)}>
-                {t('cancel')}
+                Cancel
               </Button>
               <Button type="submit" disabled={generateSessionsMutation.isPending}>
-                {t('pages.catalogSessionsGenerateButton')}
+                {t('pages.catalogCohortsDialogGenerateSessionsTitle')}
               </Button>
             </DialogFooter>
           </form>

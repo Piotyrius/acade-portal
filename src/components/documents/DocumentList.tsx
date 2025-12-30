@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { DocumentDto, deleteDocument, downloadDocument, downloadBlob } from '@/api/endpoints/documents';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
     Table,
     TableBody,
@@ -50,10 +50,10 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
         mutationFn: deleteDocument,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['documents'] });
-            toast({ title: t('pages.documentsDeletedTitle', 'Success'), description: t('pages.documentsDeletedDescription', 'Document deleted successfully') });
+            toast({ title: t('pages.documentsDeleteSuccess'), description: t('pages.documentsDeleteSuccess') });
         },
         onError: (error) => {
-            toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+            toast({ title: t('pages.documentsDeleteError'), description: getErrorMessage(error), variant: 'destructive' });
         },
     });
 
@@ -64,18 +64,18 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
             if (doc) {
                 const filename = getFilename(doc);
                 downloadBlob(blob, filename);
-                toast({ title: t('pages.documentsDownloadTitle', 'Success'), description: t('pages.documentsDownloadDescription', 'Document downloaded successfully') });
+                toast({ title: t('pages.documentsDownloadSuccess'), description: t('pages.documentsDownloadSuccess') });
             }
             setDownloadingId(null);
         },
         onError: (error) => {
-            toast({ title: t('pages.documentsErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
+            toast({ title: t('pages.documentsDownloadError'), description: getErrorMessage(error), variant: 'destructive' });
             setDownloadingId(null);
         },
     });
 
     const handleDelete = (id: string) => {
-        if (confirm(t('pages.documentsDeleteConfirm', 'Are you sure you want to delete this document?'))) {
+        if (confirm(t('pages.documentsDeleteConfirm'))) {
             deleteMutation.mutate(id);
         }
     };
@@ -110,15 +110,15 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
     };
 
     const getCategoryFromDoc = (doc: DocumentDto) => {
-        if (doc.kind === 'CONSENT') return t('pages.documentsCategory_CONSENT', 'Consent Form');
-        if (doc.kind === 'ID') return t('pages.documentsCategory_ID', 'ID Document');
+        if (doc.kind === 'CONSENT') return t('pages.documentsCategoryConsent');
+        if (doc.kind === 'ID') return t('pages.documentsCategoryId');
 
-        if (doc.description.startsWith('[Student Doc]')) return t('pages.documentsCategory_STUDENT_DOC', 'Student Document');
-        if (doc.description.startsWith('[Course Material]')) return t('pages.documentsCategory_COURSE_MATERIAL', 'Course Material');
-        if (doc.description.startsWith('[Admin]')) return t('pages.documentsCategory_ADMINISTRATIVE', 'Administrative');
-        if (doc.description.startsWith('[Certificate]')) return t('pages.documentsCategory_CERTIFICATE', 'Certificate');
+        if (doc.description.startsWith('[Student Doc]')) return t('pages.documentsCategoryStudentDoc');
+        if (doc.description.startsWith('[Course Material]')) return t('pages.documentsCategoryCourseMaterial');
+        if (doc.description.startsWith('[Admin]')) return t('pages.documentsCategoryAdministrative');
+        if (doc.description.startsWith('[Certificate]')) return t('pages.documentsCategoryCertificate');
 
-        return t('pages.documentsCategory_OTHER', 'Other');
+        return t('pages.documentsCategoryOther');
     };
 
     const getCleanDescription = (doc: DocumentDto) => {
@@ -169,7 +169,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                 <div className="relative flex-1">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder={t('pages.documentsSearchPlaceholder', 'Search documents...')}
+                        placeholder={t('pages.documentsSearchPlaceholder')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-8"
@@ -177,28 +177,28 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                 </div>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder={t('pages.documentsFilterCategoryPlaceholder', 'Filter by Category')} />
+                        <SelectValue placeholder={t('pages.documentsFilterCategory')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">{t('pages.documentsFilterAllCategories', 'All Categories')}</SelectItem>
-                        <SelectItem value="STUDENT_DOC">{t('pages.documentsCategory_STUDENT_DOC', 'Student Document')}</SelectItem>
-                        <SelectItem value="COURSE_MATERIAL">{t('pages.documentsCategory_COURSE_MATERIAL', 'Course Material')}</SelectItem>
-                        <SelectItem value="ADMINISTRATIVE">{t('pages.documentsCategory_ADMINISTRATIVE', 'Administrative')}</SelectItem>
-                        <SelectItem value="CERTIFICATE">{t('pages.documentsCategory_CERTIFICATE', 'Certificate')}</SelectItem>
-                        <SelectItem value="CONSENT">{t('pages.documentsCategory_CONSENT', 'Consent Form')}</SelectItem>
-                        <SelectItem value="ID">{t('pages.documentsCategory_ID', 'ID Document')}</SelectItem>
-                        <SelectItem value="OTHER">{t('pages.documentsCategory_OTHER', 'Other')}</SelectItem>
+                        <SelectItem value="all">{t('pages.documentsAllCategories')}</SelectItem>
+                        <SelectItem value="STUDENT_DOC">{t('pages.documentsCategoryStudentDoc')}</SelectItem>
+                        <SelectItem value="COURSE_MATERIAL">{t('pages.documentsCategoryCourseMaterial')}</SelectItem>
+                        <SelectItem value="ADMINISTRATIVE">{t('pages.documentsCategoryAdministrative')}</SelectItem>
+                        <SelectItem value="CERTIFICATE">{t('pages.documentsCategoryCertificate')}</SelectItem>
+                        <SelectItem value="CONSENT">{t('pages.documentsCategoryConsent')}</SelectItem>
+                        <SelectItem value="ID">{t('pages.documentsCategoryId')}</SelectItem>
+                        <SelectItem value="OTHER">{t('pages.documentsCategoryOther')}</SelectItem>
                     </SelectContent>
                 </Select>
                 <Select value={visibilityFilter} onValueChange={setVisibilityFilter}>
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder={t('pages.documentsFilterVisibilityPlaceholder', 'Filter by Visibility')} />
+                        <SelectValue placeholder={t('pages.documentsFilterVisibility')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">{t('pages.documentsFilterAllVisibility', 'All Visibility')}</SelectItem>
-                        <SelectItem value="PRIVATE">{t('pages.documentsVisibility_Private', 'Private')}</SelectItem>
-                        <SelectItem value="LECTURER">{t('pages.documentsVisibility_Lecturer', 'Lecturer')}</SelectItem>
-                        <SelectItem value="ADMIN">{t('pages.documentsVisibility_Admin', 'Admin')}</SelectItem>
+                        <SelectItem value="all">{t('pages.documentsAllVisibility')}</SelectItem>
+                        <SelectItem value="PRIVATE">{t('pages.documentsVisibilityPrivate')}</SelectItem>
+                        <SelectItem value="LECTURER">{t('pages.documentsVisibilityLecturer')}</SelectItem>
+                        <SelectItem value="ADMIN">{t('pages.documentsVisibilityAdmin')}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -207,24 +207,24 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{t('pages.documentsTableHeadCategory', 'Category')}</TableHead>
-                            <TableHead>{t('pages.documentsTableHeadDescription', 'Description')}</TableHead>
-                            <TableHead>{t('pages.documentsTableHeadVisibility', 'Visibility')}</TableHead>
-                            <TableHead>{t('pages.documentsTableHeadDate', 'Date')}</TableHead>
-                            <TableHead className="text-right">{t('pages.documentsTableHeadActions', 'Actions')}</TableHead>
+                            <TableHead>{t('pages.documentsTableCategory')}</TableHead>
+                            <TableHead>{t('pages.documentsTableDescription')}</TableHead>
+                            <TableHead>{t('pages.documentsTableVisibility')}</TableHead>
+                            <TableHead>{t('pages.documentsTableDate')}</TableHead>
+                            <TableHead className="text-right">{t('pages.documentsTableActions')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8">
-                                    {t('pages.documentsLoading', 'Loading documents...')}
+                                    {t('pages.documentsLoading')}
                                 </TableCell>
                             </TableRow>
                         ) : filteredDocuments.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    {t('pages.documentsNoResults', 'No documents found')}
+                                    {t('pages.documentsEmpty')}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -252,7 +252,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => setPreviewDoc(doc)}
-                                                    title={t('pages.documentsPreviewAction', 'Preview')}
+                                                    title={t('pages.documentsActionPreview')}
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
@@ -262,7 +262,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                                 size="icon"
                                                 onClick={() => handleDownload(doc)}
                                                 disabled={downloadingId === doc.id}
-                                                title={t('pages.documentsDownloadAction', 'Download')}
+                                                title={t('pages.documentsActionDownload')}
                                             >
                                                 {downloadingId === doc.id ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -275,7 +275,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                                 size="icon"
                                                 onClick={() => handleDelete(doc.id)}
                                                 className="text-destructive hover:text-destructive"
-                                                title={t('pages.documentsDeleteAction', 'Delete')}
+                                                title={t('pages.documentsActionDelete')}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
@@ -291,7 +291,7 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
             <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
                 <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                     <DialogHeader>
-                        <DialogTitle>{t('pages.documentsPreviewTitle', 'Document Preview')}</DialogTitle>
+                        <DialogTitle>{t('pages.documentsPreviewTitle')}</DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 min-h-0 bg-muted/20 rounded-md overflow-hidden flex items-center justify-center">
                         {previewDoc && (
@@ -300,12 +300,12 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                                     <iframe
                                         src={previewDoc.file}
                                         className="w-full h-full"
-                                        title={t('pages.documentsPdfPreviewTitle', 'PDF Preview')}
+                                        title="PDF Preview"
                                     />
                                 ) : (
                                     <img
                                         src={previewDoc.file}
-                                        alt={t('pages.documentsImagePreviewAlt', 'Preview')}
+                                        alt="Preview"
                                         className="max-w-full max-h-full object-contain"
                                     />
                                 )}
@@ -320,12 +320,12 @@ export function DocumentList({ documents, isLoading }: DocumentListProps) {
                             {previewDoc && downloadingId === previewDoc.id ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    {t('pages.documentsDownloading', 'Downloading...')}
+                                    {t('pages.documentsDownloading')}
                                 </>
                             ) : (
                                 <>
                                     <Download className="mr-2 h-4 w-4" />
-                                    {t('pages.documentsDownloadOriginal', 'Download Original')}
+                                    {t('pages.documentsDownloadOriginal')}
                                 </>
                             )}
                         </Button>

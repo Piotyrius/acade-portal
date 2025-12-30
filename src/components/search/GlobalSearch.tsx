@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, FileText } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -10,12 +10,14 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getUsers } from '@/api/endpoints/auth';
 import { getCohorts } from '@/api/endpoints/catalog';
-import { getEnrollments } from '@/api/endpoints/admissions';
+import { getEnrollments, getApplications } from '@/api/endpoints/admissions';
 import { useAuthStore } from '@/store/authStore';
 import { Users, BookOpen, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export function GlobalSearch() {
+  const { t } = useTranslation('common');
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -102,7 +104,7 @@ export function GlobalSearch() {
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Search..."
+            placeholder={t('layout.globalSearchPlaceholder')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -121,7 +123,7 @@ export function GlobalSearch() {
         <div className="max-h-[300px] overflow-y-auto">
           {filteredUsers.length > 0 && (
             <div className="p-2">
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Users</div>
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{t('layout.globalSearchUsers')}</div>
               {filteredUsers.map((u: any) => (
                 <div
                   key={u.id}
@@ -139,7 +141,7 @@ export function GlobalSearch() {
 
           {filteredCohorts.length > 0 && (
             <div className="p-2">
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Cohorts</div>
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{t('layout.globalSearchCohorts')}</div>
               {filteredCohorts.map((c: any) => (
                 <div
                   key={c.id}
@@ -155,7 +157,7 @@ export function GlobalSearch() {
 
           {user?.role === 'ADMIN' && filteredEnrollments.length > 0 && (
             <div className="p-2">
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Enrollments</div>
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{t('layout.globalSearchEnrollments')}</div>
               {filteredEnrollments.map((e: any) => (
                 <div
                   key={e.id}
@@ -173,7 +175,7 @@ export function GlobalSearch() {
 
           {user?.role === 'ADMIN' && filteredApplications.length > 0 && (
             <div className="p-2">
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Applications</div>
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{t('layout.globalSearchApplications')}</div>
               {filteredApplications.map((app: any) => (
                 <div
                   key={app.id}
@@ -191,7 +193,7 @@ export function GlobalSearch() {
 
           {searchQuery.length > 0 && !hasResults && (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              No results found
+              {t('layout.globalSearchNoResults')}
             </div>
           )}
         </div>

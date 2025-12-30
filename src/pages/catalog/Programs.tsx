@@ -35,13 +35,12 @@ function EnrollmentRow({
 }: {
   enrollment: EnrollmentDto;
 }) {
-  const { t } = useTranslation('common');
   return (
     <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
       <div>
         <p className="font-medium text-sm">{enrollment.student_name}</p>
         <p className="text-xs text-muted-foreground">
-          {t('pages.enrolledOn', { date: new Date(enrollment.enrolled_at).toLocaleDateString() })}
+          Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
         </p>
       </div>
 
@@ -55,6 +54,25 @@ export default function Programs() {
   const { t } = useTranslation('common');
   const { toast } = useToast();
   const qc = useQueryClient();
+
+  // Helper function to convert translated day abbreviations to English for backend
+  const convertDayAbbreviationsToEnglish = (pattern: string): string => {
+    const dayMap: Record<string, string> = {
+      [t('pages.catalogCohortsDayMon').toUpperCase()]: 'MON',
+      [t('pages.catalogCohortsDayTue').toUpperCase()]: 'TUE',
+      [t('pages.catalogCohortsDayWed').toUpperCase()]: 'WED',
+      [t('pages.catalogCohortsDayThu').toUpperCase()]: 'THU',
+      [t('pages.catalogCohortsDayFri').toUpperCase()]: 'FRI',
+      [t('pages.catalogCohortsDaySat').toUpperCase()]: 'SAT',
+      [t('pages.catalogCohortsDaySun').toUpperCase()]: 'SUN',
+    };
+
+    return pattern
+      .split(',')
+      .map((day) => day.trim().toUpperCase())
+      .map((day) => dayMap[day] || day)
+      .join(',');
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -169,12 +187,12 @@ export default function Programs() {
     mutationFn: createProgram,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['programs'] });
-      toast({ title: t('success'), description: t('pages.catalogProgramsCreateSuccess') });
+      toast({ title: t('pages.catalogProgramsToastCreateTitle'), description: t('pages.catalogProgramsToastCreateDescription') });
       setIsDialogOpen(false);
       setFormData({ name: '', code: '', description: '', active: true });
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -182,13 +200,13 @@ export default function Programs() {
     mutationFn: ({ id, data }: { id: string; data: Partial<ProgramDto> }) => updateProgram(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['programs'] });
-      toast({ title: t('success'), description: t('pages.catalogProgramsUpdateSuccess') });
+      toast({ title: t('pages.catalogProgramsToastUpdateTitle'), description: t('pages.catalogProgramsToastUpdateDescription') });
       setIsDialogOpen(false);
       setEditingProgram(null);
       setFormData({ name: '', code: '', description: '', active: true });
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -196,10 +214,10 @@ export default function Programs() {
     mutationFn: deleteProgram,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['programs'] });
-      toast({ title: t('success'), description: t('pages.catalogProgramsDeleteSuccess') });
+      toast({ title: t('pages.catalogProgramsToastDeleteTitle'), description: t('pages.catalogProgramsToastDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -238,8 +256,8 @@ export default function Programs() {
   const handleConfirmRecruitmentPlan = () => {
     if (!recruitmentPrograms.length || !recruitmentRange.start || !recruitmentRange.end) {
       toast({
-        title: 'Missing information',
-        description: 'Choose at least one program and a date range.',
+        title: t('pages.catalogProgramsToastMissingInfoTitle'),
+        description: t('pages.catalogProgramsToastMissingInfoDescription'),
         variant: 'destructive',
       });
       return;
@@ -279,8 +297,8 @@ export default function Programs() {
     setRecruitmentStep(1);
 
     toast({
-      title: t('pages.catalogProgramsRecruitmentCreatedTitle'),
-      description: t('pages.catalogProgramsRecruitmentCreatedDescription'),
+      title: 'Recruitment plan created',
+      description: 'Targets have been calculated for the selected date range.',
     });
   };
 
@@ -305,10 +323,10 @@ export default function Programs() {
     mutationFn: deleteCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
-      toast({ title: t('success'), description: t('pages.catalogCoursesDeleteSuccess') });
+      toast({ title: t('pages.catalogProgramsToastCourseDeleteTitle'), description: t('pages.catalogProgramsToastCourseDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -316,22 +334,22 @@ export default function Programs() {
     mutationFn: createCourse,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["courses"] });
-      toast({ title: t('success'), description: t('pages.catalogCoursesCreateSuccess') });
+      toast({ title: t('pages.catalogProgramsToastCourseCreateTitle'), description: t('pages.catalogProgramsToastCourseCreateDescription') });
       setIsCourseDialogOpen(false);
       setCourseForm({ program: "", title: "", code: "", hours: 1, credits: "", description: "" });
     },
-    onError: (e) => toast({ title:"Error", description:getErrorMessage(e), variant:"destructive" })
+    onError: (e) => toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(e), variant: "destructive" })
   });
 
   const updateCourseMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => updateCourse(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["courses"] });
-      toast({ title: t('success'), description: t('pages.catalogCoursesUpdateSuccess') });
+      toast({ title: t('pages.catalogProgramsToastCourseUpdateTitle'), description: t('pages.catalogProgramsToastCourseUpdateDescription') });
       setEditingCourse(null);
       setIsCourseDialogOpen(false);
     },
-    onError: (e) => toast({ title: t('error'), description: getErrorMessage(e), variant: 'destructive' })
+    onError: (e) => toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(e), variant: "destructive" })
   });
 
   const handleOpenCourseEdit = (course: CourseDto) => {
@@ -368,7 +386,7 @@ export default function Programs() {
   };
 
   const handleDeleteCourse = (id: string) => {
-    if (confirm(t('pages.catalogCoursesDeleteConfirm'))) {
+    if (confirm(t('pages.catalogProgramsCourseDeleteConfirm'))) {
       deleteCourseMutation.mutate(id);
     }
   };
@@ -382,10 +400,10 @@ export default function Programs() {
     mutationFn: deleteCohort,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: t('success'), description: t('pages.catalogCohortsDeleteSuccess') });
+      toast({ title: t('pages.catalogProgramsToastCohortDeleteTitle'), description: t('pages.catalogProgramsToastCohortDeleteDescription') });
     },
     onError: (error) => {
-      toast({ title: t('error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -393,22 +411,22 @@ export default function Programs() {
     mutationFn: createCohort,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cohorts"] });
-      toast({ title: t('success'), description: t('pages.catalogCohortsCreateSuccess') });
+      toast({ title: t('pages.catalogProgramsToastCohortCreateTitle'), description: t('pages.catalogProgramsToastCohortCreateDescription') });
       setIsCohortDialogOpen(false);
       setCohortForm({  course: '',  name: '',  lecturer: '',  capacity: 20,  start_date: '',  end_date: '',  status: 'PLANNED' as CohortDto['status'],}); 
     },
-    onError: (e) => toast({ title:"Error", description:getErrorMessage(e), variant:"destructive" })
+    onError: (e) => toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(e), variant: "destructive" })
   });
 
   const updateCohortMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => updateCohort(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cohorts"] });
-      toast({ title: t('success'), description: t('pages.catalogCohortsUpdateSuccess') });
+      toast({ title: t('pages.catalogProgramsToastCohortUpdateTitle'), description: t('pages.catalogProgramsToastCohortUpdateDescription') });
       setEditingCohort(null);
       setIsCohortDialogOpen(false);
     },
-    onError: (e) => toast({ title: t('error'), description: getErrorMessage(e), variant: 'destructive' })
+    onError: (e) => toast({ title: t('pages.catalogProgramsToastErrorTitle'), description: getErrorMessage(e), variant: "destructive" })
   });
 
   const handleOpenCohortEdit = (cohort: CohortDto) => {
@@ -457,7 +475,7 @@ export default function Programs() {
   };
 
   const handleDeleteCohort = (id: string) => {
-    if (confirm(t('pages.catalogCohortsDeleteConfirm'))) {
+    if (confirm(t('pages.catalogProgramsCohortDeleteConfirm'))) {
       deleteCohortMutation.mutate(id);
     }
   };
@@ -476,14 +494,14 @@ export default function Programs() {
   onSuccess: (data) => {
     qc.invalidateQueries({ queryKey: ['sessions'] });
     toast({
-      title: t('success'),
-      description: t('pages.catalogProgramsGenerateSessionsSuccess', { count: data.created }),
+      title: t('pages.catalogCohortsToastCreateTitle'),
+      description: t('pages.catalogCohortsToastGenerateSessionsDescription', { count: data.created }),
     });
     setIsSessionDialogOpen(false);
     setSelectedCohortForSessions(null);
   },
   onError: (error) => {
-    toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+    toast({ title: t('pages.catalogCohortsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
   },
 });
 
@@ -673,26 +691,28 @@ export default function Programs() {
       {recruitmentSummary && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('pages.catalogProgramsRecruitmentSummaryTitle')}</CardTitle>
-            <CardDescription>{t('pages.catalogProgramsRecruitmentSummaryDescription')}</CardDescription>
+            <CardTitle>Recruitment plan summary</CardTitle>
+            <CardDescription>
+              Simple targets for applications and enrollments across your selected programs.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm">
-              <span className="font-medium">{t('pages.catalogProgramsRecruitmentDateRangeLabel')}</span>{' '}
+              <span className="font-medium">Date range:</span>{' '}
               {recruitmentSummary.start} – {recruitmentSummary.end}
             </p>
             <p className="text-sm">
-              <span className="font-medium">{t('pages.catalogProgramsRecruitmentProgramsLabel')}</span>{' '}
+              <span className="font-medium">Programs:</span>{' '}
               {recruitmentSummary.programIds
                 .map((id) => programList.find((p) => p.id === id)?.name || id)
                 .join(', ')}
             </p>
             <p className="text-sm">
-              <span className="font-medium">{t('pages.catalogProgramsRecruitmentTotalApplicationsLabel')}</span>{' '}
+              <span className="font-medium">Total applications target:</span>{' '}
               {recruitmentSummary.totalApplications}
             </p>
             <p className="text-sm">
-              <span className="font-medium">{t('pages.catalogProgramsRecruitmentApproxPerMonthLabel')}</span>{' '}
+              <span className="font-medium">Approx. applications per month:</span>{' '}
               {recruitmentSummary.applicationsPerMonth}
             </p>
             {recruitmentSummary.enrollmentsPerCohort > 0 && (
@@ -711,7 +731,7 @@ export default function Programs() {
                     key={m.label}
                     className="rounded-full border px-2 py-1 bg-muted text-muted-foreground"
                   >
-                    {m.label}: {m.applications} {t('pages.catalogProgramsRecruitmentAppsShort')}
+                    {m.label}: {m.applications} apps
                   </span>
                 ))}
               </div>
@@ -722,14 +742,14 @@ export default function Programs() {
 
       {filteredPrograms.length === 0 && (
         <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
+          <CardContent className="py-8 text-center text-muted-foreground">
             {searchTerm
-              ? t('pages.catalogProgramsNoResultsSearch')
+              ? 'No programs found matching your search'
               : filter === 'active'
-                ? t('pages.catalogProgramsNoActive')
+                ? 'No active programs found.'
                 : filter === 'inactive'
-                  ? t('pages.catalogProgramsNoInactive')
-                  : t('pages.catalogProgramsNoProgramsDefault')}
+                  ? 'No inactive programs found.'
+                  : 'No programs yet. Create your first program!'}
           </CardContent>
         </Card>
       )}
@@ -737,18 +757,21 @@ export default function Programs() {
       <Dialog open={isRecruitmentDialogOpen} onOpenChange={setIsRecruitmentDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.catalogProgramsRecruitmentTitle')}</DialogTitle>
-            <DialogDescription>{t('pages.catalogProgramsRecruitmentDescription')}</DialogDescription>
+            <DialogTitle>Plan recruitment</DialogTitle>
+            <DialogDescription>
+              Choose programs, a date range, and simple goals to generate a lightweight recruitment
+              plan.
+            </DialogDescription>
           </DialogHeader>
 
           {recruitmentStep === 1 && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>{t('pages.catalogProgramsRecruitmentProgramsLabel')}</Label>
+                <Label>Programs</Label>
                 <div className="max-h-48 overflow-auto rounded-md border p-2 space-y-2">
                   {programList.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      {t('pages.catalogProgramsNoProgramsDefault')}
+                      No programs yet. Create a program first.
                     </p>
                   )}
                   {programList.map((program) => (
@@ -767,7 +790,7 @@ export default function Programs() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{t('pages.catalogProgramsRecruitmentTargetStartLabel')}</Label>
+                  <Label>Target start (month)</Label>
                   <Input
                     type="month"
                     value={recruitmentRange.start}
@@ -777,7 +800,7 @@ export default function Programs() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('pages.catalogProgramsRecruitmentTargetEndLabel')}</Label>
+                  <Label>Target end (month)</Label>
                   <Input
                     type="month"
                     value={recruitmentRange.end}
@@ -789,13 +812,13 @@ export default function Programs() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsRecruitmentDialogOpen(false)}>
-                  {t('cancel')}
+                  Cancel
                 </Button>
                 <Button
                   onClick={() => setRecruitmentStep(2)}
                   disabled={!recruitmentPrograms.length || !recruitmentRange.start || !recruitmentRange.end}
                 >
-                  {t('pages.catalogProgramsRecruitmentNext')}
+                  Next: Set goals
                 </Button>
               </DialogFooter>
             </div>
@@ -804,7 +827,7 @@ export default function Programs() {
           {recruitmentStep === 2 && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>{t('pages.catalogProgramsRecruitmentTotalApplicationsLabel')}</Label>
+                <Label>Total applications target</Label>
                 <Input
                   type="number"
                   min={0}
@@ -816,7 +839,7 @@ export default function Programs() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('pages.catalogProgramsRecruitmentEnrollmentsLabel')}</Label>
+                <Label>Target enrollments per cohort (optional)</Label>
                 <Input
                   type="number"
                   min={0}
@@ -831,14 +854,14 @@ export default function Programs() {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {t('pages.catalogProgramsRecruitmentHelper')}
+                We&apos;ll calculate an approximate applications-per-month target for this period.
               </p>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setRecruitmentStep(1)}>
-                  {t('pages.catalogProgramsRecruitmentBack')}
+                  Back
                 </Button>
                 <Button onClick={() => setRecruitmentStep(3)} disabled={!recruitmentGoals.applications}>
-                  {t('pages.catalogProgramsRecruitmentReview')}
+                  Review plan
                 </Button>
               </DialogFooter>
             </div>
@@ -847,14 +870,15 @@ export default function Programs() {
           {recruitmentStep === 3 && (
             <div className="space-y-4 py-4">
               <p className="text-sm">
-                {t('pages.catalogProgramsRecruitmentSummaryLine1', {
-                  count: recruitmentPrograms.length,
-                  start: recruitmentRange.start,
-                  end: recruitmentRange.end,
-                })}
+                You&apos;re planning recruitment for{' '}
+                <span className="font-medium">{recruitmentPrograms.length}</span> program
+                {recruitmentPrograms.length === 1 ? '' : 's'} between{' '}
+                <span className="font-medium">{recruitmentRange.start}</span> and{' '}
+                <span className="font-medium">{recruitmentRange.end}</span>.
               </p>
               <p className="text-sm">
-                {t('pages.catalogProgramsRecruitmentSummaryTotalApplications', { total: recruitmentGoals.applications || 0 })}
+                Total applications target:{' '}
+                <span className="font-medium">{recruitmentGoals.applications || 0}</span>
               </p>
               {recruitmentGoals.enrollmentsPerCohort && (
                 <p className="text-sm">
@@ -865,13 +889,14 @@ export default function Programs() {
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                {t('pages.catalogProgramsRecruitmentSummaryNote')}
+                When you confirm, we&apos;ll generate a simple monthly breakdown you can refer to on
+                this page. This doesn&apos;t change any backend data yet.
               </p>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setRecruitmentStep(2)}>
-                  {t('pages.catalogProgramsRecruitmentBack')}
+                  Back
                 </Button>
-                <Button onClick={handleConfirmRecruitmentPlan}>{t('pages.catalogProgramsRecruitmentConfirm')}</Button>
+                <Button onClick={handleConfirmRecruitmentPlan}>Confirm plan</Button>
               </DialogFooter>
             </div>
           )}
@@ -881,15 +906,15 @@ export default function Programs() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingProgram ? t('pages.catalogProgramsDialogEditTitle') : t('pages.catalogProgramsDialogCreateTitle')}</DialogTitle>
+            <DialogTitle>{editingProgram ? 'Edit Program' : 'Create Program'}</DialogTitle>
             <DialogDescription>
-              {editingProgram ? t('pages.catalogProgramsDialogEditDescription') : t('pages.catalogProgramsDialogCreateDescription')}
+              {editingProgram ? 'Update program details' : 'Add a new educational program'}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">{t('pages.catalogProgramsFieldName')} *</Label>
+                <Label htmlFor="name">Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -898,7 +923,7 @@ export default function Programs() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="code">{t('pages.catalogProgramsFieldCode')} *</Label>
+                <Label htmlFor="code">Code *</Label>
                 <Input
                   id="code"
                   value={formData.code}
@@ -907,7 +932,7 @@ export default function Programs() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">{t('pages.catalogProgramsFieldDescription')}</Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -921,15 +946,15 @@ export default function Programs() {
                   checked={formData.active}
                   onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                 />
-                <Label htmlFor="active">{t('pages.catalogProgramsFieldActiveLabel')}</Label>
+                <Label htmlFor="active">Active</Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                {t('cancel')}
+                Cancel
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingProgram ? t('pages.catalogProgramsDialogUpdateButton') : t('pages.catalogProgramsDialogCreateButton')}
+                {editingProgram ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>
           </form>
@@ -1059,7 +1084,7 @@ export default function Programs() {
                 <Label htmlFor="program">Program *</Label>
                 <Select value={courseForm.program} onValueChange={(value) => setCourseForm({ ...courseForm, program: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select program" />
+                    <SelectValue placeholder={t('pages.catalogProgramsSelectProgramPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {programList.map((p) => (
@@ -1151,7 +1176,7 @@ export default function Programs() {
                   onValueChange={(value) => setCohortForm({ ...cohortForm, course: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select course" />
+                    <SelectValue placeholder={t('pages.catalogProgramsSelectCoursePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {courseList.map((c) => (
@@ -1240,32 +1265,42 @@ export default function Programs() {
       <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.catalogSessionsGenerateTitle')}</DialogTitle>
+            <DialogTitle>{t('pages.catalogCohortsDialogGenerateSessionsTitle')}</DialogTitle>
             <DialogDescription>
-              {t('pages.catalogSessionsGenerateDescription', { name: selectedCohortForSessions?.name })}
+              {t('pages.catalogCohortsDialogGenerateSessionsDescription', { name: selectedCohortForSessions?.name || '' })}
             </DialogDescription>
           </DialogHeader>
 
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              // Convert translated day abbreviations to English for backend
+              const convertedPattern = convertDayAbbreviationsToEnglish(sessionFormData.pattern);
               generateSessionsMutation.mutate({
                 cohortId: selectedCohortForSessions!.id,
-                payload: sessionFormData,
+                payload: {
+                  ...sessionFormData,
+                  pattern: convertedPattern,
+                },
               });
             }}
           >
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>{t('pages.catalogSessionsPatternLabel')}</Label>
+                <Label>
+                  {t('pages.catalogCohortsFieldPattern')} * (e.g., {t('pages.catalogCohortsDayMon')},{t('pages.catalogCohortsDayWed')},{t('pages.catalogCohortsDayFri')} or {t('pages.catalogCohortsDayTue')},{t('pages.catalogCohortsDayThu')})
+                </Label>
                 <Input
                   value={sessionFormData.pattern}
                   onChange={(e) =>
-                    setSessionFormData({ ...sessionFormData, pattern: e.target.value.toUpperCase() })
+                    setSessionFormData({ ...sessionFormData, pattern: e.target.value })
                   }
-                  placeholder={t('pages.catalogSessionsPatternPlaceholder')}
+                  placeholder={t('pages.catalogCohortsFieldPatternPlaceholder')}
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.catalogCohortsFieldPatternHelper')}
+                </p>
               </div>
                 
               <div className="grid grid-cols-2 gap-4">
@@ -1288,7 +1323,7 @@ export default function Programs() {
                 
             <DialogFooter>
               <Button type="submit" disabled={generateSessionsMutation.isPending}>
-                {t('pages.catalogSessionsGenerateButton')}
+                {t('pages.catalogCohortsDialogGenerateSessionsTitle')}
               </Button>
             </DialogFooter>
           </form>
@@ -1299,16 +1334,18 @@ export default function Programs() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {t('pages.catalogProgramsStudentsIn', { name: studentsPopupCohort?.name })}
+              Students in {studentsPopupCohort?.name}
             </DialogTitle>
-            <DialogDescription>{t('pages.catalogProgramsStudentsDescription')}</DialogDescription>
+            <DialogDescription>
+              Enrolled students for this cohort.
+            </DialogDescription>
           </DialogHeader>
                 
           {isLoadingEnrollments ? (
-            <p>{t('pages.loading')}</p>
+            <p>Loading...</p>
           ) : cohortEnrollments.length === 0 ? (
             <p className="text-sm text-muted-foreground py-3">
-              {t('pages.catalogProgramsStudentsNone')}
+              No students enrolled yet.
             </p>
           ) : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -1319,7 +1356,7 @@ export default function Programs() {
           )}
           <DialogFooter>
             <Button onClick={() => setIsStudentsPopupOpen(false)}>
-              {t('pages.close')}
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

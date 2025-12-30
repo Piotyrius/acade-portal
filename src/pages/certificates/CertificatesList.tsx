@@ -2,16 +2,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Award, Download, CheckCircle, ShieldCheck, Eye } from 'lucide-react';
+import { Search, Award, Download, CheckCircle, ShieldCheck } from 'lucide-react';
 import { exampleCertificates } from '@/utils/exampleData';
 import { ExampleBanner } from '@/components/ExampleBanner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCertificates, issueCertificate, revokeCertificate, checkEligibility, verifyCertificate } from '@/api/endpoints/certificates';
+import {
+  getCertificates,
+  issueCertificate,
+  revokeCertificate,
+  checkEligibility,
+  verifyCertificate,
+} from '@/api/endpoints/certificates';
 import { getCohorts } from '@/api/endpoints/catalog';
 import { getUsers } from '@/api/endpoints/auth';
 import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import {
@@ -23,13 +28,20 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
 
 export default function CertificatesList() {
-  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { t } = useTranslation('common');
   const [searchTerm, setSearchTerm] = useState('');
   const [issueDialogOpen, setIssueDialogOpen] = useState(false);
   const [eligibilityDialogOpen, setEligibilityDialogOpen] = useState(false);
@@ -37,7 +49,10 @@ export default function CertificatesList() {
   const [formData, setFormData] = useState({ cohort: '', student: '', force: false });
   const [eligibilityData, setEligibilityData] = useState({ student: '', cohort: '' });
   const [verifyData, setVerifyData] = useState({ serialOrQr: '' });
-  const [eligibilityResult, setEligibilityResult] = useState<{ eligible: boolean; reason?: string } | null>(null);
+  const [eligibilityResult, setEligibilityResult] = useState<{
+    eligible: boolean;
+    reason?: string;
+  } | null>(null);
   const [verifyResult, setVerifyResult] = useState<any>(null);
 
   const { data: certificates = [], isLoading } = useQuery({
@@ -61,14 +76,21 @@ export default function CertificatesList() {
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: ['certificates'] });
       toast({
-        title: t('pages.certificatesIssueSuccessTitle', 'Success'),
-        description: t('pages.certificatesIssueSuccessDescription', `Issued ${result.issued} certificate(s)${result.errors.length > 0 ? `. ${result.errors.length} errors` : ''}`),
+        title: t('pages.certificatesToastIssueSuccessTitle'),
+        description: t('pages.certificatesToastIssueSuccessDescription', {
+          count: result.issued,
+          errors: result.errors.length,
+        }),
       });
       setIssueDialogOpen(false);
       setFormData({ cohort: '', student: '', force: false });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('pages.certificatesToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -76,10 +98,17 @@ export default function CertificatesList() {
     mutationFn: ({ id, reason }: { id: string; reason?: string }) => revokeCertificate(id, reason),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['certificates'] });
-      toast({ title: t('pages.certificatesRevokeSuccessTitle', 'Success'), description: t('pages.certificatesRevokeSuccessDescription', 'Certificate revoked successfully') });
+      toast({
+        title: t('pages.certificatesToastRevokeSuccessTitle'),
+        description: t('pages.certificatesToastRevokeSuccessDescription'),
+      });
     },
     onError: (error) => {
-      toast({ title: t('pages.certificatesErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('pages.certificatesToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -90,7 +119,11 @@ export default function CertificatesList() {
       setEligibilityResult(data);
     },
     onError: (error) => {
-      toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('pages.certificatesToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -100,7 +133,11 @@ export default function CertificatesList() {
       setVerifyResult(data);
     },
     onError: (error) => {
-      toast({ title: t('pages.certificatesErrorTitle', 'Error'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('pages.certificatesToastErrorTitle'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
       setVerifyResult(null);
     },
   });
@@ -112,7 +149,11 @@ export default function CertificatesList() {
 
   const handleIssue = () => {
     if (!formData.cohort) {
-      toast({ title: 'Error', description: 'Please select a cohort', variant: 'destructive' });
+      toast({
+        title: t('pages.certificatesToastErrorTitle'),
+        description: t('pages.certificatesErrorCohortRequired'),
+        variant: 'destructive',
+      });
       return;
     }
     const payload: any = { cohort_id: formData.cohort, force: formData.force };
@@ -123,7 +164,7 @@ export default function CertificatesList() {
   };
 
   const handleRevoke = (id: string) => {
-    if (confirm('Are you sure you want to revoke this certificate?')) {
+    if (confirm(t('pages.certificatesConfirmRevoke'))) {
       revokeMutation.mutate({ id });
     }
   };
@@ -131,8 +172,8 @@ export default function CertificatesList() {
   const handleCheckEligibility = () => {
     if (!eligibilityData.student || !eligibilityData.cohort) {
       toast({
-        title: 'Error',
-        description: 'Student and cohort are required',
+        title: t('pages.certificatesToastErrorTitle'),
+        description: t('pages.certificatesErrorEligibilityRequired'),
         variant: 'destructive',
       });
       return;
@@ -146,8 +187,8 @@ export default function CertificatesList() {
   const handleVerify = () => {
     if (!verifyData.serialOrQr) {
       toast({
-        title: 'Error',
-        description: 'Serial number or QR token is required',
+        title: t('pages.certificatesToastErrorTitle'),
+        description: t('pages.certificatesErrorSerialRequired'),
         variant: 'destructive',
       });
       return;
@@ -174,19 +215,23 @@ export default function CertificatesList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between certificates_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.certificatesTitle', 'Certificates')}</h2>
-          <p className="text-muted-foreground">{t('pages.certificatesSubtitle', 'Issue and manage course completion certificates')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.certificatesTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('pages.certificatesSubtitle')}
+          </p>
         </div>
         <div className="flex gap-2 certificate_btn_wrapper">
           {(user?.role === 'ADMIN' || user?.role === 'LECTURER') && (
             <>
               <Button variant="outline" onClick={() => setEligibilityDialogOpen(true)}>
                 <CheckCircle className="mr-2 h-4 w-4" />
-                {t('pages.certificatesCheckEligibility', 'Check Eligibility')}
+                {t('pages.certificatesCtaCheckEligibility')}
               </Button>
               <Button variant="outline" onClick={() => setVerifyDialogOpen(true)}>
                 <ShieldCheck className="mr-2 h-4 w-4" />
-                {t('pages.certificatesVerify', 'Verify Certificate')}
+                {t('pages.certificatesCtaVerify')}
               </Button>
             </>
           )}
@@ -194,7 +239,7 @@ export default function CertificatesList() {
             {user?.role === 'ADMIN' && (
               <Button onClick={() => setIssueDialogOpen(true)} className='issue_certificate_btn'>
                 <Award className="mr-2 h-4 w-4" />
-                {t('pages.certificatesIssue', 'Issue Certificate')}
+                {t('pages.certificatesCtaIssue')}
               </Button>
             )}
           </div>
@@ -205,7 +250,7 @@ export default function CertificatesList() {
         <div className="relative flex-1 max-w-sm certificate_search">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={t('pages.certificatesSearchPlaceholder', 'Search certificates...')}
+            placeholder={t('pages.certificatesSearchPlaceholder')}
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -216,7 +261,7 @@ export default function CertificatesList() {
       {certificates.length === 0 && <ExampleBanner />}
       <Card>
         <CardHeader>
-          <CardTitle>{t('pages.certificatesIssuedTitle', 'Issued Certificates')}</CardTitle>
+          <CardTitle>{t('pages.certificatesCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -227,18 +272,25 @@ export default function CertificatesList() {
                     <Award className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">{t('pages.certificatesStudentLabel', 'Student ID')}: {cert.student}</p>
-                    <p className="text-sm text-muted-foreground">{t('pages.certificatesCohortLabel', 'Cohort ID')}: {cert.cohort}</p>
+                    <p className="font-medium">
+                      {t('pages.certificatesItemStudentId', { id: cert.student })}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {t('pages.certificatesItemCohortId', { id: cert.cohort })}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t('pages.certificatesSerialLabel', 'Serial')}: {cert.serial} • {t('pages.certificatesIssuedLabel', 'Issued')}: {new Date(cert.issued_at).toLocaleDateString()}
+                      {t('pages.certificatesItemSerialIssued', {
+                        serial: cert.serial,
+                        date: new Date(cert.issued_at).toLocaleDateString(),
+                      })}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Badge variant={cert.status === 'ISSUED' ? 'default' : 'destructive'}>{t(`pages.certificatesStatus_${cert.status}`, cert.status)}</Badge>
+                  <Badge variant={cert.status === 'ISSUED' ? 'default' : 'destructive'}>{cert.status}</Badge>
                   {cert.status === 'ISSUED' && (
                     <Button variant="outline" size="sm" onClick={() => handleRevoke(cert.id)}>
-                      {t('pages.certificatesRevoke', 'Revoke')}
+                      {t('pages.certificatesRevokeCta')}
                     </Button>
                   )}
                   <Button variant="outline" size="sm">
@@ -250,7 +302,9 @@ export default function CertificatesList() {
           </div>
           {filteredCertificates.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
-              {searchTerm ? t('pages.certificatesNoResultsSearch', 'No certificates found') : t('pages.certificatesNoResultsDefault', 'No certificates issued yet')}
+              {searchTerm
+                ? t('pages.certificatesNoneFoundSearch')
+                : t('pages.certificatesNoneFoundDefault')}
             </div>
           )}
         </CardContent>
@@ -259,15 +313,21 @@ export default function CertificatesList() {
       <Dialog open={issueDialogOpen} onOpenChange={setIssueDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.certificatesIssueDialogTitle', 'Issue Certificate')}</DialogTitle>
-            <DialogDescription>{t('pages.certificatesIssueDialogDescription', 'Issue a certificate for a student in a cohort')}</DialogDescription>
+            <DialogTitle>{t('pages.certificatesIssueDialogTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('pages.certificatesIssueDialogDescription')}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="cohort">{t('pages.certificatesCohortLabel', 'Cohort')} *</Label>
+              <Label htmlFor="cohort">
+                {t('pages.certificatesIssueCohortLabel')}
+              </Label>
               <Select value={formData.cohort} onValueChange={(value) => setFormData({ ...formData, cohort: value })}>
-                  <SelectTrigger>
-                  <SelectValue placeholder={t('pages.certificatesSelectCohortPlaceholder', 'Select cohort')} />
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={t('pages.certificatesIssueCohortPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {cohorts.map((c) => (
@@ -279,16 +339,22 @@ export default function CertificatesList() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="student">{t('pages.certificatesStudentOptionalLabel', 'Student (optional, leave empty for bulk)')}</Label>
+              <Label htmlFor="student">
+                {t('pages.certificatesIssueStudentLabel')}
+              </Label>
               <Select
                 value={formData.student}
                 onValueChange={(value) => setFormData({ ...formData, student: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('pages.certificatesSelectStudentPlaceholder', 'Select student (optional)')} />
+                  <SelectValue
+                    placeholder={t('pages.certificatesIssueStudentPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('pages.certificatesAllEligible', 'All eligible students')}</SelectItem>
+                  <SelectItem value="all">
+                    {t('pages.certificatesIssueStudentAllOption')}
+                  </SelectItem>
                   {students.map((student: any) => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.first_name} {student.last_name} ({student.email})
@@ -306,16 +372,18 @@ export default function CertificatesList() {
                 className="rounded border-gray-300"
               />
               <Label htmlFor="force" className="cursor-pointer">
-                {t('pages.certificatesForceIssue', 'Force issue (ignore eligibility checks)')}
+                {t('pages.certificatesIssueForceLabel')}
               </Label>
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIssueDialogOpen(false)}>
-              {t('cancel', 'Cancel')}
+              {t('pages.certificatesCancel')}
             </Button>
             <Button onClick={handleIssue} disabled={!formData.cohort || issueMutation.isPending}>
-              {issueMutation.isPending ? t('creating', 'Creating...') : t('pages.certificatesIssue', 'Issue Certificate')}
+              {issueMutation.isPending
+                ? t('pages.certificatesIssueSubmitting')
+                : t('pages.certificatesIssueSubmit')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -326,19 +394,27 @@ export default function CertificatesList() {
           <Dialog open={eligibilityDialogOpen} onOpenChange={setEligibilityDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                    <DialogTitle>{t('pages.certificatesEligibilityTitle', 'Check Eligibility')}</DialogTitle>
-                    <DialogDescription>{t('pages.certificatesEligibilityDescription', 'Check if a student is eligible for a certificate')}</DialogDescription>
+              <DialogTitle>{t('pages.certificatesEligibilityDialogTitle')}</DialogTitle>
+              <DialogDescription>
+                {t('pages.certificatesEligibilityDialogDescription')}
+              </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="eligibility_student">{t('pages.certificatesStudentLabel', 'Student')} *</Label>
+                <Label htmlFor="eligibility_student">
+                  {t('pages.certificatesEligibilityStudentLabel')}
+                </Label>
                   <Select
                     value={eligibilityData.student}
                     onValueChange={(value) => setEligibilityData({ ...eligibilityData, student: value })}
                   >
                     <SelectTrigger>
-                        <SelectValue placeholder={t('pages.certificatesSelectStudentPlaceholder', 'Select student')} />
-                      </SelectTrigger>
+                    <SelectValue
+                      placeholder={t(
+                        'pages.certificatesEligibilityStudentPlaceholder',
+                      )}
+                    />
+                    </SelectTrigger>
                     <SelectContent>
                       {students.map((student: any) => (
                         <SelectItem key={student.id} value={student.id}>
@@ -349,14 +425,20 @@ export default function CertificatesList() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="eligibility_cohort">{t('pages.certificatesCohortLabel', 'Cohort')} *</Label>
+                <Label htmlFor="eligibility_cohort">
+                  {t('pages.certificatesEligibilityCohortLabel')}
+                </Label>
                   <Select
                     value={eligibilityData.cohort}
                     onValueChange={(value) => setEligibilityData({ ...eligibilityData, cohort: value })}
                   >
                     <SelectTrigger>
-                        <SelectValue placeholder={t('pages.certificatesSelectCohortPlaceholder', 'Select cohort')} />
-                      </SelectTrigger>
+                    <SelectValue
+                      placeholder={t(
+                        'pages.certificatesEligibilityCohortPlaceholder',
+                      )}
+                    />
+                    </SelectTrigger>
                     <SelectContent>
                       {cohorts.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
@@ -369,7 +451,9 @@ export default function CertificatesList() {
                 {eligibilityResult && (
                   <div className={`p-4 rounded-lg ${eligibilityResult.eligible ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
                     <p className={`font-medium ${eligibilityResult.eligible ? 'text-green-800' : 'text-red-800'}`}>
-                      {eligibilityResult.eligible ? `✓ ${t('pages.certificatesEligible', 'Eligible')}` : `✗ ${t('pages.certificatesNotEligible', 'Not Eligible')}`}
+                    {eligibilityResult.eligible
+                      ? t('pages.certificatesEligibilityResultEligible')
+                      : t('pages.certificatesEligibilityResultNotEligible')}
                     </p>
                     {eligibilityResult.reason && (
                       <p className={`text-sm mt-1 ${eligibilityResult.eligible ? 'text-green-700' : 'text-red-700'}`}>
@@ -385,10 +469,12 @@ export default function CertificatesList() {
                   setEligibilityResult(null);
                   setEligibilityData({ student: '', cohort: '' });
                 }}>
-                  {t('close', 'Close')}
+                {t('pages.certificatesClose')}
                 </Button>
                 <Button onClick={handleCheckEligibility} disabled={eligibilityMutation.isPending || !eligibilityData.student || !eligibilityData.cohort}>
-                  {eligibilityMutation.isPending ? t('pages.certificatesChecking', 'Checking...') : t('pages.certificatesCheckEligibility', 'Check Eligibility')}
+                {eligibilityMutation.isPending
+                  ? t('pages.certificatesEligibilityChecking')
+                  : t('pages.certificatesCtaCheckEligibility')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -397,28 +483,49 @@ export default function CertificatesList() {
           <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{t('pages.certificatesVerifyTitle', 'Verify Certificate')}</DialogTitle>
-                <DialogDescription>{t('pages.certificatesVerifyDescription', 'Verify a certificate by serial number or QR token')}</DialogDescription>
+              <DialogTitle>{t('pages.certificatesVerifyDialogTitle')}</DialogTitle>
+              <DialogDescription>
+                {t('pages.certificatesVerifyDialogDescription')}
+              </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="verify_serial">{t('pages.certificatesVerifySerialLabel', 'Serial Number or QR Token')} *</Label>
+                <Label htmlFor="verify_serial">
+                  {t('pages.certificatesVerifySerialLabel')}
+                </Label>
                   <Input
                     id="verify_serial"
                     value={verifyData.serialOrQr}
                     onChange={(e) => setVerifyData({ serialOrQr: e.target.value })}
-                    placeholder={t('pages.certificatesVerifyPlaceholder', 'Enter serial number or QR token')}
+                  placeholder={t('pages.certificatesVerifySerialPlaceholder')}
                   />
                 </div>
                 {verifyResult && (
                   <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-                    <p className="font-medium text-green-800">✓ Certificate Verified</p>
+                  <p className="font-medium text-green-800">
+                    {t('pages.certificatesVerifyResultTitle')}
+                  </p>
                     <div className="mt-2 space-y-1 text-sm text-green-700">
-                      <p>Serial: {verifyResult.serial}</p>
-                      <p>Student: {verifyResult.student_name || verifyResult.student}</p>
-                      <p>Cohort: {verifyResult.cohort_name || verifyResult.cohort}</p>
-                      <p>Status: {verifyResult.status}</p>
-                      <p>Issued: {new Date(verifyResult.issued_at).toLocaleDateString()}</p>
+                    <p>
+                      {t('pages.certificatesVerifySerialLabelShort')}{' '}
+                      {verifyResult.serial}
+                    </p>
+                    <p>
+                      {t('pages.certificatesVerifyStudentLabel')}{' '}
+                      {verifyResult.student_name || verifyResult.student}
+                    </p>
+                    <p>
+                      {t('pages.certificatesVerifyCohortLabel')}{' '}
+                      {verifyResult.cohort_name || verifyResult.cohort}
+                    </p>
+                    <p>
+                      {t('pages.certificatesVerifyStatusLabel')}{' '}
+                      {verifyResult.status}
+                    </p>
+                    <p>
+                      {t('pages.certificatesVerifyIssuedLabel')}{' '}
+                      {new Date(verifyResult.issued_at).toLocaleDateString()}
+                    </p>
                     </div>
                   </div>
                 )}
@@ -429,10 +536,12 @@ export default function CertificatesList() {
                   setVerifyResult(null);
                   setVerifyData({ serialOrQr: '' });
                 }}>
-                  {t('close', 'Close')}
+                {t('pages.certificatesClose')}
                 </Button>
                 <Button onClick={handleVerify} disabled={verifyMutation.isPending || !verifyData.serialOrQr}>
-                  {verifyMutation.isPending ? t('pages.certificatesVerifying', 'Verifying...') : t('pages.certificatesVerify', 'Verify')}
+                {verifyMutation.isPending
+                  ? t('pages.certificatesVerifySubmitting')
+                  : t('pages.certificatesVerifySubmit')}
                 </Button>
               </DialogFooter>
             </DialogContent>

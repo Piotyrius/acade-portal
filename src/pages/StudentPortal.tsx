@@ -17,8 +17,10 @@ import {
 } from '@/components/ui/table';
 import { Loader2 } from 'lucide-react';
 import { formatCurrencyMinor, formatCurrencyString } from '@/utils/paymentsFormatting';
+import { useTranslation } from 'react-i18next';
 
 export default function StudentPortal() {
+  const { t } = useTranslation('common');
   const { data: enrollments = [] } = useQuery({
     queryKey: ['my-enrollments'],
     queryFn: getMyEnrollments,
@@ -93,8 +95,8 @@ export default function StudentPortal() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Student Portal</h2>
-          <p className="text-muted-foreground">View your enrollments, attendance, assessments, grades, certificates, and financial information</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.studentPortalTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.studentPortalSubtitle')}</p>
         </div>
       </div>
 
@@ -102,47 +104,47 @@ export default function StudentPortal() {
         <TabsList>
           <TabsTrigger value="enrollments">
             <BookOpen className="mr-2 h-4 w-4" />
-            Enrollments
+            {t('pages.studentPortalTabEnrollments')}
           </TabsTrigger>
           <TabsTrigger value="attendance">
             <ClipboardCheck className="mr-2 h-4 w-4" />
-            Attendance
+            {t('pages.studentPortalTabAttendance')}
           </TabsTrigger>
           <TabsTrigger value="assessments">
             <FileCheck className="mr-2 h-4 w-4" />
-            Assessments
+            {t('pages.studentPortalTabAssessments')}
           </TabsTrigger>
           <TabsTrigger value="grades">
             <GraduationCap className="mr-2 h-4 w-4" />
-            Grades
+            {t('pages.studentPortalTabGrades')}
           </TabsTrigger>
           <TabsTrigger value="certificates">
             <Award className="mr-2 h-4 w-4" />
-            Certificates
+            {t('pages.studentPortalTabCertificates')}
           </TabsTrigger>
           <TabsTrigger value="financial">
             <DollarSign className="mr-2 h-4 w-4" />
-            Financial
+            {t('pages.studentPortalTabFinancial')}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="enrollments">
           <Card>
             <CardHeader>
-              <CardTitle>My Enrollments</CardTitle>
+              <CardTitle>{t('pages.studentPortalCardEnrollmentsTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               {enrollments.length === 0 && <ExampleBanner />}
               <div className="space-y-4">
                 {displayEnrollments.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No enrollments found</p>
+                  <p className="text-muted-foreground text-center py-8">{t('pages.studentPortalEnrollmentsNoneFound')}</p>
                 ) : (
                   displayEnrollments.map((enrollment: any) => (
                     <div key={enrollment.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div>
-                        <p className="font-medium">Cohort: {enrollment.cohort_name || enrollment.cohort}</p>
+                        <p className="font-medium">{t('pages.studentPortalEnrollmentsCohort', { cohort: enrollment.cohort_name || enrollment.cohort })}</p>
                         <p className="text-sm text-muted-foreground">
-                          Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                          {t('pages.studentPortalEnrollmentsEnrolled', { date: new Date(enrollment.enrolled_at).toLocaleDateString() })}
                         </p>
                       </div>
                       <Badge variant={getStatusVariant(enrollment.status)}>{enrollment.status}</Badge>
@@ -157,20 +159,20 @@ export default function StudentPortal() {
         <TabsContent value="attendance">
           <Card>
             <CardHeader>
-              <CardTitle>My Attendance</CardTitle>
+              <CardTitle>{t('pages.studentPortalCardAttendanceTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               {attendance.length === 0 && <ExampleBanner />}
               <div className="space-y-4">
                 {displayAttendance.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No attendance records found</p>
+                  <p className="text-muted-foreground text-center py-8">{t('pages.studentPortalAttendanceNoneFound')}</p>
                 ) : (
                   displayAttendance.map((record: any) => (
                     <div key={record.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div>
-                        <p className="font-medium">{record.session_cohort || 'Session'}</p>
+                        <p className="font-medium">{record.session_cohort || t('pages.studentPortalAttendanceSession')}</p>
                         <p className="text-sm text-muted-foreground">
-                          {record.session_start ? format(new Date(record.session_start), 'PPp') : 'Date not available'}
+                          {record.session_start ? format(new Date(record.session_start), 'PPp') : t('pages.studentPortalAttendanceDateNotAvailable')}
                         </p>
                       </div>
                       <Badge variant={getStatusVariant(record.status)}>{record.status_display || record.status}</Badge>
@@ -185,13 +187,13 @@ export default function StudentPortal() {
         <TabsContent value="assessments">
           <Card>
             <CardHeader>
-              <CardTitle>My Assessments</CardTitle>
+              <CardTitle>{t('pages.studentPortalCardAssessmentsTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               {assessments.length === 0 && <ExampleBanner />}
               <div className="space-y-4">
                 {displayAssessments.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No assessments found</p>
+                  <p className="text-muted-foreground text-center py-8">{t('pages.studentPortalAssessmentsNoneFound')}</p>
                 ) : (
                   displayAssessments.map((assessment: any) => (
                     <div key={assessment.id} className="p-4 border border-border rounded-lg">
@@ -201,9 +203,9 @@ export default function StudentPortal() {
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">{assessment.description}</p>
                       <div className="flex items-center gap-4 text-sm">
-                        <span>Max Score: {assessment.max_score}</span>
+                        <span>{t('pages.studentPortalAssessmentsMaxScore', { score: assessment.max_score })}</span>
                         {assessment.due_date && (
-                          <span>Due: {format(new Date(assessment.due_date), 'PPp')}</span>
+                          <span>{t('pages.studentPortalAssessmentsDue', { date: format(new Date(assessment.due_date), 'PPp') })}</span>
                         )}
                       </div>
                     </div>
@@ -217,20 +219,20 @@ export default function StudentPortal() {
         <TabsContent value="grades">
           <Card>
             <CardHeader>
-              <CardTitle>My Grades</CardTitle>
+              <CardTitle>{t('pages.studentPortalCardGradesTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               {grades.length === 0 && <ExampleBanner />}
               <div className="space-y-4">
                 {displayGrades.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No grades found</p>
+                  <p className="text-muted-foreground text-center py-8">{t('pages.studentPortalGradesNoneFound')}</p>
                 ) : (
                   displayGrades.map((grade: any) => (
                     <div key={grade.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div>
-                        <p className="font-medium">{grade.assessment_title || 'Assessment'}</p>
+                        <p className="font-medium">{grade.assessment_title || t('pages.studentPortalGradesAssessment')}</p>
                         <p className="text-sm text-muted-foreground">
-                          Score: {grade.score} / {grade.max_score} ({grade.percentage}%)
+                          {t('pages.studentPortalGradesScore', { score: grade.score, max: grade.max_score, percentage: grade.percentage })}
                         </p>
                       </div>
                       <div className="text-right">
@@ -250,23 +252,23 @@ export default function StudentPortal() {
         <TabsContent value="certificates">
           <Card>
             <CardHeader>
-              <CardTitle>My Certificates</CardTitle>
+              <CardTitle>{t('pages.studentPortalCardCertificatesTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               {certificates.length === 0 && <ExampleBanner />}
               <div className="space-y-4">
                 {displayCertificates.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No certificates found</p>
+                  <p className="text-muted-foreground text-center py-8">{t('pages.studentPortalCertificatesNoneFound')}</p>
                 ) : (
                   displayCertificates.map((certificate: any) => (
                     <div key={certificate.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div>
-                        <p className="font-medium">Serial: {certificate.serial}</p>
+                        <p className="font-medium">{t('pages.studentPortalCertificatesSerial', { serial: certificate.serial })}</p>
                         <p className="text-sm text-muted-foreground">
-                          Cohort: {certificate.cohort_name || certificate.cohort}
+                          {t('pages.studentPortalCertificatesCohort', { cohort: certificate.cohort_name || certificate.cohort })}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Issued: {certificate.issued_at ? format(new Date(certificate.issued_at), 'PP') : 'N/A'}
+                          {t('pages.studentPortalCertificatesIssued', { date: certificate.issued_at ? format(new Date(certificate.issued_at), 'PP') : t('pages.studentPortalNotAvailable') })}
                         </p>
                       </div>
                       <Badge variant={getStatusVariant(certificate.status)}>{certificate.status}</Badge>
@@ -283,8 +285,8 @@ export default function StudentPortal() {
             {/* Outstanding Balance Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Outstanding Balance</CardTitle>
-                <CardDescription>Your total outstanding balance across all invoices</CardDescription>
+                <CardTitle>{t('pages.studentPortalCardBalanceTitle')}</CardTitle>
+                <CardDescription>{t('pages.studentPortalCardBalanceDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {balanceLoading ? (
@@ -300,9 +302,9 @@ export default function StudentPortal() {
                       <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
                         <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
                         <div>
-                          <p className="text-sm font-medium text-destructive">Outstanding Balance</p>
+                          <p className="text-sm font-medium text-destructive">{t('pages.studentPortalBalanceOutstanding')}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            You have an outstanding balance. Please make a payment to avoid any service interruptions.
+                            {t('pages.studentPortalBalanceOutstandingMessage')}
                           </p>
                         </div>
                       </div>
@@ -310,16 +312,16 @@ export default function StudentPortal() {
                       <div className="flex items-start gap-2 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md">
                         <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
                         <div>
-                          <p className="text-sm font-medium text-green-600">All Paid</p>
+                          <p className="text-sm font-medium text-green-600">{t('pages.studentPortalBalanceAllPaid')}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            You have no outstanding balance. Great job staying on top of your payments!
+                            {t('pages.studentPortalBalanceAllPaidMessage')}
                           </p>
                         </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-center py-8">Unable to load balance information</p>
+                  <p className="text-muted-foreground text-center py-8">{t('pages.studentPortalBalanceUnableToLoad')}</p>
                 )}
               </CardContent>
             </Card>
@@ -327,8 +329,8 @@ export default function StudentPortal() {
             {/* Payment History */}
             <Card>
               <CardHeader>
-                <CardTitle>Payment History</CardTitle>
-                <CardDescription>Your recent payments and invoices</CardDescription>
+                <CardTitle>{t('pages.studentPortalCardPaymentHistoryTitle')}</CardTitle>
+                <CardDescription>{t('pages.studentPortalCardPaymentHistoryDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {paymentsLoading ? (
@@ -337,18 +339,18 @@ export default function StudentPortal() {
                   </div>
                 ) : sortedPayments.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground">No payment history available</p>
+                    <p className="text-muted-foreground">{t('pages.studentPortalPaymentHistoryNone')}</p>
                   </div>
                 ) : (
                   <div className="border rounded-md">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Reference</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead>{t('pages.studentPortalPaymentHistoryColumnDate')}</TableHead>
+                          <TableHead>{t('pages.studentPortalPaymentHistoryColumnType')}</TableHead>
+                          <TableHead>{t('pages.studentPortalPaymentHistoryColumnReference')}</TableHead>
+                          <TableHead>{t('pages.studentPortalPaymentHistoryColumnAmount')}</TableHead>
+                          <TableHead>{t('pages.studentPortalPaymentHistoryColumnStatus')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -365,7 +367,7 @@ export default function StudentPortal() {
                             ? formatCurrencyString(item.amount, item.currency || 'USD')
                             : formatCurrencyString(item.total_amount || item.amount, item.currency || 'USD');
                           const status = item.status || 'PENDING';
-                          const type = isPayment ? 'Payment' : isInvoice ? 'Invoice' : 'Transaction';
+                          const type = isPayment ? t('pages.studentPortalPaymentHistoryTypePayment') : isInvoice ? t('pages.studentPortalPaymentHistoryTypeInvoice') : t('pages.studentPortalPaymentHistoryTypeTransaction');
 
                           return (
                             <TableRow key={item.id}>
@@ -400,8 +402,8 @@ export default function StudentPortal() {
             {sortedPayments.some((item: any) => item.invoice_number !== undefined) && (
               <Card>
                 <CardHeader>
-                  <CardTitle>My Invoices</CardTitle>
-                  <CardDescription>View and manage your invoices</CardDescription>
+                <CardTitle>{t('pages.studentPortalCardInvoicesTitle')}</CardTitle>
+                <CardDescription>{t('pages.studentPortalCardInvoicesDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -412,11 +414,11 @@ export default function StudentPortal() {
                           <div className="flex items-center justify-between mb-2">
                             <div>
                               <p className="font-medium">
-                                Invoice #{invoice.invoice_number || invoice.id.slice(0, 8)}
+                                {t('pages.studentPortalInvoicesNumber', { number: invoice.invoice_number || invoice.id.slice(0, 8) })}
                               </p>
                               {invoice.cohort_name && (
                                 <p className="text-sm text-muted-foreground">
-                                  Cohort: {invoice.cohort_name}
+                                  {t('pages.studentPortalInvoicesCohort', { cohort: invoice.cohort_name })}
                                 </p>
                               )}
                             </div>
@@ -426,14 +428,14 @@ export default function StudentPortal() {
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
                             <div>
-                              <p className="text-muted-foreground">Total Amount</p>
+                              <p className="text-muted-foreground">{t('pages.studentPortalInvoicesTotalAmount')}</p>
                               <p className="font-medium">
                                 {formatCurrencyString(invoice.total_amount, invoice.currency || 'USD')}
                               </p>
                             </div>
                             {invoice.paid_amount && (
                               <div>
-                                <p className="text-muted-foreground">Paid</p>
+                                <p className="text-muted-foreground">{t('pages.studentPortalInvoicesPaid')}</p>
                                 <p className="font-medium text-green-600">
                                   {formatCurrencyString(invoice.paid_amount, invoice.currency || 'USD')}
                                 </p>
@@ -441,19 +443,19 @@ export default function StudentPortal() {
                             )}
                             {invoice.outstanding_amount && parseFloat(invoice.outstanding_amount) > 0 && (
                               <div>
-                                <p className="text-muted-foreground">Outstanding</p>
+                                <p className="text-muted-foreground">{t('pages.studentPortalInvoicesOutstanding')}</p>
                                 <p className="font-medium text-destructive">
                                   {formatCurrencyString(invoice.outstanding_amount, invoice.currency || 'USD')}
                                 </p>
                               </div>
                             )}
                             <div>
-                              <p className="text-muted-foreground">Due Date</p>
+                              <p className="text-muted-foreground">{t('pages.studentPortalInvoicesDueDate')}</p>
                               <p className="font-medium">
-                                {invoice.due_date ? format(new Date(invoice.due_date), 'PP') : 'N/A'}
+                                {invoice.due_date ? format(new Date(invoice.due_date), 'PP') : t('pages.studentPortalNotAvailable')}
                               </p>
                               {invoice.due_date && new Date(invoice.due_date) < new Date() && invoice.status !== 'PAID' && (
-                                <p className="text-xs text-destructive mt-1">Overdue</p>
+                                <p className="text-xs text-destructive mt-1">{t('pages.studentPortalInvoicesOverdue')}</p>
                               )}
                             </div>
                           </div>

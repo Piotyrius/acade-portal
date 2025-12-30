@@ -1,3 +1,131 @@
+<<<<<<< Updated upstream
+import { useState, useEffect } from 'react';
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
+import {
+  LayoutDashboard,
+  BookOpen,
+  UserPlus,
+  ClipboardCheck,
+  FileCheck,
+  Award,
+  Clock,
+  Image,
+  FileText,
+  DollarSign,
+  CreditCard,
+  Users,
+  Calendar,
+  Archive,
+  Building2,
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+interface CommandAction {
+  id: string;
+  labelKey: string;
+  icon: any;
+  href: string;
+  keywords?: string[];
+  roles?: string[];
+}
+
+interface CommandPaletteProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { t } = useTranslation('common');
+
+  const commands: CommandAction[] = [
+    { id: 'dashboard', labelKey: 'layout.commandPaletteDashboard', icon: LayoutDashboard, href: '/dashboard', keywords: ['home', 'main'] },
+    { id: 'programs', labelKey: 'layout.commandPalettePrograms', icon: BookOpen, href: '/catalog/programs', keywords: ['course', 'program'], roles: ['ADMIN'] },
+    { id: 'sessions', labelKey: 'layout.commandPaletteSessions', icon: Calendar, href: '/catalog/sessions', keywords: ['class', 'schedule'], roles: ['ADMIN', 'LECTURER'] },
+    { id: 'admissions', labelKey: 'layout.commandPaletteAdmissions', icon: UserPlus, href: '/admissions/applications', keywords: ['application', 'enroll'], roles: ['ADMIN'] },
+    { id: 'attendance', labelKey: 'layout.commandPaletteAttendance', icon: ClipboardCheck, href: '/attendance/list', keywords: ['presence', 'check'], roles: ['ADMIN', 'LECTURER'] },
+    { id: 'assessment', labelKey: 'layout.commandPaletteAssessment', icon: FileCheck, href: '/assessment', keywords: ['exam', 'test', 'quiz', 'grade'] },
+    { id: 'certificates', labelKey: 'layout.commandPaletteCertificates', icon: Award, href: '/certificates/list', keywords: ['cert', 'diploma'] },
+    { id: 'timekeeping', labelKey: 'layout.commandPaletteTimekeeping', icon: Clock, href: '/timekeeping', keywords: ['hours', 'timesheet', 'worklog'], roles: ['ADMIN', 'LECTURER'] },
+    { id: 'gallery', labelKey: 'layout.commandPaletteGallery', icon: Image, href: '/gallery/mine', keywords: ['portfolio', 'works'] },
+    { id: 'documents', labelKey: 'layout.commandPaletteDocuments', icon: FileText, href: '/documents', keywords: ['files', 'docs'] },
+    { id: 'reporting', labelKey: 'layout.commandPaletteReporting', icon: FileText, href: '/reporting', keywords: ['reports', 'analytics', 'export'], roles: ['ADMIN'] },
+    { id: 'payments', labelKey: 'layout.commandPalettePayments', icon: CreditCard, href: '/payments', keywords: ['invoice', 'payment', 'billing'], roles: ['ADMIN'] },
+    { id: 'users', labelKey: 'layout.commandPaletteUsers', icon: Users, href: '/users', keywords: ['people', 'students', 'lecturers'], roles: ['ADMIN'] },
+    { id: 'archive', labelKey: 'layout.commandPaletteArchive', icon: Archive, href: '/archive', keywords: ['old', 'deleted'], roles: ['ADMIN'] },
+  ];
+
+  const filteredCommands = commands.filter((cmd) => {
+    if (cmd.roles && user?.role) {
+      return cmd.roles.includes(user.role);
+    }
+    return true;
+  });
+
+  const handleSelect = (href: string) => {
+    navigate(href);
+    onOpenChange(false);
+  };
+
+  return (
+    <CommandDialog open={open} onOpenChange={onOpenChange}>
+      <CommandInput placeholder={t('layout.commandPalettePlaceholder')} />
+      <CommandList>
+        <CommandEmpty>{t('layout.commandPaletteNoResults')}</CommandEmpty>
+        <CommandGroup heading={t('layout.commandPaletteNavigation')}>
+          {filteredCommands.map((cmd) => {
+            const Icon = cmd.icon;
+            const label = t(cmd.labelKey);
+            return (
+              <CommandItem
+                key={cmd.id}
+                value={`${label} ${cmd.keywords?.join(' ') || ''}`}
+                onSelect={() => handleSelect(cmd.href)}
+              >
+                <Icon className="mr-2 h-4 w-4" />
+                <span>{label}</span>
+              </CommandItem>
+            );
+          })}
+        </CommandGroup>
+      </CommandList>
+    </CommandDialog>
+  );
+}
+
+// Hook to use command palette with keyboard shortcut
+export function useCommandPalette() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
+
+  return { open, setOpen };
+}
+
+
+
+=======
 import { useState, useEffect } from 'react';
 import {
   CommandDialog,
@@ -52,6 +180,7 @@ const commands: CommandAction[] = [
   { id: 'payments', label: 'Payments', icon: CreditCard, href: '/payments', keywords: ['invoice', 'payment', 'billing'], roles: ['ADMIN'] },
   { id: 'users', label: 'Users', icon: Users, href: '/users', keywords: ['people', 'students', 'lecturers'], roles: ['ADMIN'] },
   { id: 'archive', label: 'Archive', icon: Archive, href: '/archive', keywords: ['old', 'deleted'], roles: ['ADMIN'] },
+  { id: 'subscriptions', label: 'Subscriptions', icon: Building2, href: '/subscriptions/subscriptions', keywords: ['subscription', 'plan'], roles: ['ADMIN'] },
 ];
 
 interface CommandPaletteProps {
@@ -121,3 +250,5 @@ export function useCommandPalette() {
 
 
 
+
+>>>>>>> Stashed changes

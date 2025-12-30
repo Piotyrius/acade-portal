@@ -92,10 +92,10 @@ export default function Applications() {
       updateApplication(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['applications'] });
-      toast({ title: 'Updated', description: 'Application updated' });
+      toast({ title: t('pages.admissionsApplicationsToastUpdateTitle'), description: t('pages.admissionsApplicationsToastUpdateDescription') });
     },
     onError: (err) =>
-      toast({ title: 'Error', description: getErrorMessage(err), variant: 'destructive' }),
+      toast({ title: t('pages.admissionsApplicationsToastErrorTitle'), description: getErrorMessage(err), variant: 'destructive' }),
   });
 
   // ✅ THIS is the REAL ACCEPT - Now uses course_id instead of cohort_id
@@ -106,7 +106,7 @@ export default function Applications() {
       qc.invalidateQueries({ queryKey: ['applications'] });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
       qc.invalidateQueries({ queryKey: ['cohorts'] });
-      toast({ title: 'Accepted', description: 'Enrollment created and invoice generated automatically' });
+      toast({ title: t('pages.admissionsApplicationsToastAcceptTitle'), description: t('pages.admissionsApplicationsToastAcceptDescription') });
       setAcceptDialogOpen(false);
       setSelectedApp(null);
       setSelectedCourse('');
@@ -114,7 +114,7 @@ export default function Applications() {
       setSelectedDiscountIds([]);
     },
     onError: (err) =>
-      toast({ title: 'Error', description: getErrorMessage(err), variant: 'destructive' }),
+      toast({ title: t('pages.admissionsApplicationsToastErrorTitle'), description: getErrorMessage(err), variant: 'destructive' }),
   });
 
   /* ===================== HANDLERS ===================== */
@@ -146,8 +146,8 @@ export default function Applications() {
       qc.invalidateQueries({ queryKey: ['invoices'] });
 
       toast({
-        title: 'Enrollment created',
-        description: 'Enrollment created and invoice generated automatically.',
+        title: t('pages.admissionsApplicationsToastEnrollmentCreatedTitle'),
+        description: t('pages.admissionsApplicationsToastEnrollmentCreatedDescription'),
       });
 
       setAcceptDialogOpen(false);
@@ -158,7 +158,7 @@ export default function Applications() {
       setAcceptStep(1);
     } catch (err) {
       toast({
-        title: 'Error',
+        title: t('pages.admissionsApplicationsToastErrorTitle'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -309,26 +309,36 @@ export default function Applications() {
                   <p className="font-medium text-base">{app.name}</p>
                   <p className="text-sm text-muted-foreground">{app.email}</p>
 
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+                  <div className="flex flex-wrap items-center gap-2 text-xs mt-1">
                     {/* Primary phone, but only if it isn't already present in additional phones */}
                     {(!app.phones ||
                       !app.phones.some((p) => p.phone === app.phone)) && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
                         <Phone className="h-3 w-3" />
                         {app.phone}
                       </span>
                     )}
                     {app.phones && app.phones.length > 0 && (
                       <span className="inline-flex flex-wrap gap-1">
-                        {app.phones.map((p, idx) => (
-                          <span
-                            key={p.id ?? `${p.phone}-${idx}`}
-                            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5"
-                          >
-                            <Phone className="h-3 w-3" />
-                            {p.name ? `${p.name}: ${p.phone}` : p.phone}
-                          </span>
-                        ))}
+                        {app.phones.map((p, idx) => {
+                          const isParent = p.name?.toLowerCase().includes('parent') || 
+                                          p.name?.toLowerCase().includes('guardian') ||
+                                          p.name?.toLowerCase().includes('მშობელი') ||
+                                          p.name?.toLowerCase().includes('родитель');
+                          return (
+                            <span
+                              key={p.id ?? `${p.phone}-${idx}`}
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
+                                isParent 
+                                  ? 'bg-primary/10 text-primary font-medium' 
+                                  : 'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              <Phone className="h-3 w-3" />
+                              {p.name ? `${p.name}: ${p.phone}` : p.phone}
+                            </span>
+                          );
+                        })}
                       </span>
                     )}
                   </div>
@@ -370,10 +380,12 @@ export default function Applications() {
                         </span>
                       )}
                       {app.notes && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 max-w-xs truncate">
-                          <Info className="h-3 w-3" />
-                          {app.notes}
-                        </span>
+                        <div className="w-full">
+                          <div className="inline-flex items-start gap-1 rounded-md bg-muted px-2 py-1.5 text-xs">
+                            <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                            <span className="break-words">{app.notes}</span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
@@ -389,7 +401,7 @@ export default function Applications() {
                         : 'secondary'
                     }
                   >
-                    {t(`pages.admissionsStatus.${app.status}`, { defaultValue: app.status })}
+                    {app.status}
                   </Badge>
 
                   {(app.status === 'NEW' || app.status === 'IN_REVIEW') && (
@@ -400,7 +412,7 @@ export default function Applications() {
                         onClick={() => handleOpenAccept(app)}
                       >
                         <Check className="h-4 w-4 mr-1" />
-                        {t('pages.admissionsAcceptButton')}
+                        {t('pages.admissionsApplicationsButtonAccept')}
                       </Button>
                       <Button
                         size="sm"
@@ -408,16 +420,16 @@ export default function Applications() {
                         onClick={() => handleReject(app.id)}
                       >
                         <X className="h-4 w-4 mr-1" />
-                        {t('pages.admissionsRejectButton')}
+                        {t('pages.admissionsApplicationsButtonReject')}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => handleOpenEditProgram(app)}
-                        title={t('pages.admissionsEditProgramTitle')}
+                        title={t('pages.admissionsApplicationsButtonChangeProgram')}
                       >
                         <Pencil className="h-4 w-4 mr-1" />
-                        {t('pages.admissionsEditProgramButton')}
+                        {t('pages.admissionsApplicationsButtonEditProgram')}
                       </Button>
                     </>
                   )}
@@ -432,12 +444,14 @@ export default function Applications() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            {t('pages.admissionsShowing')} {filteredApplications.length > 0
+            {t('pages.admissionsApplicationsPaginationShowing')}{' '}
+            {filteredApplications.length > 0
               ? `${(page - 1) * pageSize + 1}-${Math.min(
                   filteredApplications.length,
                   page * pageSize
                 )}`
-              : '0'} {t('of')} {filteredApplications.length} {t('Applications')}
+              : '0'}{' '}
+            {t('pages.admissionsApplicationsPaginationOf')} {filteredApplications.length} {t('pages.admissionsApplicationsPaginationApplications')}
           </div>
           <div className="flex gap-2">
             <Button
@@ -446,7 +460,7 @@ export default function Applications() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              {t('previous')}
+              {t('pages.admissionsApplicationsPaginationPrevious')}
             </Button>
             <Button
               variant="outline"
@@ -454,7 +468,7 @@ export default function Applications() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >
-              {t('next')}
+              {t('pages.admissionsApplicationsPaginationNext')}
             </Button>
           </div>
         </div>
@@ -476,15 +490,15 @@ export default function Applications() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.admissionsCreateEnrollmentTitle')}</DialogTitle>
+            <DialogTitle>{t('pages.admissionsApplicationsDialogCreateEnrollmentTitle')}</DialogTitle>
             <DialogDescription>
-              {t('pages.admissionsCreateEnrollmentDescription', { name: selectedApp?.name })}
+              {t('pages.admissionsApplicationsDialogCreateEnrollmentDescription', { name: selectedApp?.name || '' })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t('pages.admissionsCourseLabel')}</Label>
+              <Label>{t('pages.admissionsApplicationsDialogCourseLabel')}</Label>
               <Select 
                 value={selectedCourse || defaultCourse} 
                 onValueChange={(value) => {
@@ -492,7 +506,7 @@ export default function Applications() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('pages.admissionsSelectCoursePlaceholder')} />
+                  <SelectValue placeholder={t('pages.admissionsApplicationsSelectCoursePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {coursesForProgram.map((c) => (
@@ -505,10 +519,10 @@ export default function Applications() {
             </div>
 
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>• {t('pages.admissionsAutoCreateCohort')}</p>
-              <p>• {t('pages.admissionsAutoInvoice')}</p>
-              <p>• {t('pages.admissionsPaymentDue')}</p>
-              <p>• {t('pages.admissionsCourseChangeInfo')}</p>
+              <p>• A cohort will be automatically created for this course if needed</p>
+              <p>• An invoice will be automatically generated with default payment plan (Full Payment)</p>
+              <p>• Payment due date will be set to 2-3 weeks from enrollment</p>
+              <p>• You can change the course assignment later if needed (before cohort starts)</p>
             </div>
           </div>
 
@@ -517,14 +531,14 @@ export default function Applications() {
               variant="outline"
               onClick={() => setAcceptDialogOpen(false)}
             >
-              {t('cancel')}
+              Cancel
             </Button>
 
             <Button
               onClick={handleAcceptAndBill}
               disabled={(!selectedCourse && !defaultCourse) || isSubmittingFlow}
             >
-              {isSubmittingFlow ? t('creating') : t('pages.admissionsCreateEnrollmentCreateButton')}
+              {isSubmittingFlow ? 'Creating...' : 'Create enrollment'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -543,21 +557,21 @@ export default function Applications() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.admissionsEditProgramTitle')}</DialogTitle>
+            <DialogTitle>Edit program</DialogTitle>
             <DialogDescription>
-              {t('pages.admissionsEditProgramDescription', { name: editApp?.name })}
+              Change the program for {editApp?.name}. Use this if the applicant chose a different track.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t('pages.admissionsProgramLabel')}</Label>
+              <Label>Program</Label>
               <Select
                 value={editProgramId}
                 onValueChange={(value) => setEditProgramId(value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('pages.admissionsSelectProgramPlaceholder')} />
+                  <SelectValue placeholder={t('pages.admissionsApplicationsSelectProgramPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {programs.map((p) => (
@@ -575,13 +589,13 @@ export default function Applications() {
               variant="outline"
               onClick={() => setEditDialogOpen(false)}
             >
-              {t('cancel')}
+              Cancel
             </Button>
             <Button
               onClick={handleSaveEditProgram}
               disabled={!editProgramId || editProgramId === editApp?.program || updateMutation.isPending}
             >
-              {t('pages.admissionsSave')}
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>

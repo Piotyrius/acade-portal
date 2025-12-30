@@ -22,13 +22,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import './Timekeeping.css'
+import './Timekeeping.css';
 import { useTranslation } from 'react-i18next';
 
 export default function Rates() {
+  const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const { toast } = useToast();
-  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRate, setEditingRate] = useState<RateDto | null>(null);
@@ -57,7 +57,10 @@ export default function Rates() {
     mutationFn: createRate,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rates'] });
-      toast({ title: t('pages.ratesCreateSuccessTitle', 'Success'), description: t('pages.ratesCreateSuccessDescription', 'Rate created successfully') });
+      toast({
+        title: 'Success',
+        description: 'Rate created successfully',
+      });
       setIsDialogOpen(false);
       resetForm();
     },
@@ -70,7 +73,10 @@ export default function Rates() {
     mutationFn: ({ id, data }: { id: string; data: Partial<RateDto> }) => updateRate(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rates'] });
-      toast({ title: t('pages.ratesUpdateSuccessTitle', 'Success'), description: t('pages.ratesUpdateSuccessDescription', 'Rate updated successfully') });
+      toast({
+        title: 'Success',
+        description: 'Rate updated successfully',
+      });
       setIsDialogOpen(false);
       setEditingRate(null);
       resetForm();
@@ -84,7 +90,10 @@ export default function Rates() {
     mutationFn: deleteRate,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rates'] });
-      toast({ title: t('pages.ratesDeleteSuccessTitle', 'Deleted'), description: t('pages.ratesDeleteSuccessDescription', 'Rate deleted successfully') });
+      toast({
+        title: 'Success',
+        description: 'Rate deleted successfully',
+      });
     },
     onError: (error) => {
       toast({ title: 'Error', description: getErrorMessage(error), variant: 'destructive' });
@@ -117,7 +126,7 @@ export default function Rates() {
     if (!formData.lecturer || !formData.per_hour_minor || isNaN(perHourMinor)) {
       toast({
         title: 'Error',
-        description: 'Lecturer and hourly rate are required',
+        description: t('pages.ratesErrorMissing'),
         variant: 'destructive',
       });
       return;
@@ -138,7 +147,7 @@ export default function Rates() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this rate?')) {
+    if (confirm(t('pages.ratesDeleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -147,8 +156,12 @@ export default function Rates() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.ratesTitle', 'Rates')}</h2>
-          <p className="text-muted-foreground">{t('pages.ratesNoPermission', "You don't have permission to view rates")}</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.ratesTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('pages.ratesNoPermission')}
+          </p>
         </div>
       </div>
     );
@@ -158,13 +171,17 @@ export default function Rates() {
     <div className="space-y-6">
       <div className="flex items-center justify-between rates_header_wrapper">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('pages.ratesTitle', 'Rates')}</h2>
-          <p className="text-muted-foreground">{t('pages.ratesSubtitle', 'Manage lecturer hourly rates')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('pages.ratesTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('pages.ratesSubtitle')}
+          </p>
         </div>
         <div className="flex gap-2 rates_add_btn_wrapper">
           <Button onClick={() => handleOpenDialog()} className='rates_add_btn'>
             <Plus className="mr-2 h-4 w-4" />
-            {t('pages.ratesAddCta', 'Add Rate')}
+            {t('pages.ratesCreate')}
           </Button>
         </div>
       </div>
@@ -173,12 +190,14 @@ export default function Rates() {
       <Card>
 
         <CardHeader>
-          <CardTitle>{t('pages.ratesCardTitle', 'Lecturer Rates')}</CardTitle>
+          <CardTitle>{t('pages.ratesCardTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="gap-2 rates_Card">
             {displayRates.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">{t('pages.ratesNoResults', 'No rates found')}</p>
+                <p className="text-muted-foreground text-center py-8">
+                  {t('pages.ratesNoneFound')}
+                </p>
             ) : (
               displayRates.map((rate: RateDto) => {
                 const lecturer = lecturers.find((l: any) => l.id === rate.lecturer);
@@ -192,7 +211,9 @@ export default function Rates() {
                         </div>
                         <div>
                           <p className="font-medium">
-                            {lecturer ? `${lecturer.first_name} ${lecturer.last_name}` : t('pages.ratesUnknownLecturer', 'Unknown Lecturer')}
+                            {lecturer
+                              ? `${lecturer.first_name} ${lecturer.last_name}`
+                              : t('pages.ratesUnknownLecturer')}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {(rate.per_hour_minor / 100).toFixed(2)} {rate.currency}/hour
@@ -203,11 +224,13 @@ export default function Rates() {
                       <div className="flex flex-col items-center gap-2">
                         
                         <p className="text-xs text-muted-foreground">
-                          Created: {new Date(rate.created_at).toLocaleDateString()}
+                          {t('pages.ratesCreatedLabel')}: {new Date(rate.created_at).toLocaleDateString()}
                         </p>
 
                         <Badge variant={rate.active ? 'default' : 'secondary'} className='rates_active'>
-                          {rate.active ? t('pages.ratesActive', 'Active') : t('pages.ratesInactive', 'Inactive')}
+                          {rate.active
+                            ? t('pages.ratesStatusActive')
+                            : t('pages.ratesStatusInactive')}
                         </Badge>
 
                       </div>
@@ -233,20 +256,26 @@ export default function Rates() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingRate ? t('pages.ratesDialogTitleEdit', 'Edit Rate') : t('pages.ratesDialogTitleCreate', 'Add Rate')}</DialogTitle>
+            <DialogTitle>
+              {editingRate ? t('pages.ratesDialogTitleEdit') : t('pages.ratesDialogTitleCreate')}
+            </DialogTitle>
             <DialogDescription>
-              {editingRate ? t('pages.ratesDialogDescEdit', 'Update the lecturer rate') : t('pages.ratesDialogDescCreate', 'Set hourly rate for a lecturer')}
+              {editingRate
+                ? t('pages.ratesDialogDescriptionEdit')
+                : t('pages.ratesDialogDescriptionCreate')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="lecturer">{t('pages.ratesLabelLecturer', 'Lecturer *')}</Label>
+                <Label htmlFor="lecturer">
+                  {t('pages.ratesFieldLecturer')} *
+                </Label>
                 <Select value={formData.lecturer} onValueChange={(value) => setFormData({ ...formData, lecturer: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder={t('pages.ratesSelectLecturerPlaceholder', 'Select lecturer')} />
+                    <SelectValue placeholder={t('pages.ratesFieldLecturerPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {lecturers.map((lecturer: any) => (
@@ -258,7 +287,9 @@ export default function Rates() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="per_hour_minor">{t('pages.ratesLabelHourlyRate', 'Hourly Rate (in major units) *')}</Label>
+                <Label htmlFor="per_hour_minor">
+                  {t('pages.ratesFieldPerHour')} *
+                </Label>
                 <Input
                   id="per_hour_minor"
                   type="number"
@@ -266,13 +297,15 @@ export default function Rates() {
                   min="0"
                   value={formData.per_hour_minor}
                   onChange={(e) => setFormData({ ...formData, per_hour_minor: e.target.value })}
-                  placeholder={t('pages.ratesHourlyRatePlaceholder', 'e.g., 50.00')}
+                  placeholder="e.g., 50.00"
                   required
                 />
-                <p className="text-xs text-muted-foreground">{t('pages.ratesHourlyRateHint', 'Enter amount in major currency units (e.g., 50.00 for $50/hour)')}</p>
+                <p className="text-xs text-muted-foreground">Enter amount in major currency units (e.g., 50.00 for $50/hour)</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="currency">{t('pages.ratesLabelCurrency', 'Currency')}</Label>
+                <Label htmlFor="currency">
+                  {t('pages.ratesFieldCurrency')}
+                </Label>
                 <Select
                   value={formData.currency}
                   onValueChange={(value) => setFormData({ ...formData, currency: value })}
@@ -296,16 +329,22 @@ export default function Rates() {
                   className="rounded border-gray-300"
                 />
                 <Label htmlFor="active" className="cursor-pointer">
-                  {t('pages.ratesActiveLabel', 'Active')}
+                  {t('pages.ratesFieldActive')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                {t('cancel')}
+                {t('pages.ratesCancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingRate ? (updateMutation.isPending ? t('updating') : t('update')) : createMutation.isPending ? t('creating') : t('create')}
+                {editingRate
+                  ? updateMutation.isPending
+                    ? t('pages.ratesButtonUpdating')
+                    : t('pages.ratesButtonUpdate')
+                  : createMutation.isPending
+                  ? t('pages.ratesButtonCreating')
+                  : t('pages.ratesButtonCreate')}
               </Button>
             </DialogFooter>
           </form>
