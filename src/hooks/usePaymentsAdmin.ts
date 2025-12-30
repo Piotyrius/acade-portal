@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import {
   applyDiscountsToInvoice,
   createInvoiceForEnrollment,
@@ -13,6 +14,7 @@ import { getErrorMessage } from '@/lib/errors';
 export function usePaymentsAdmin() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const createInvoiceFromEnrollment = useMutation({
     mutationFn: (params: {
