@@ -1,6 +1,0 @@
-# Render Static Site SPA Routing
-# This file tells Render to serve index.html for all routes
-# so that React Router can handle client-side routing
-
-/*    /index.html   200
-
