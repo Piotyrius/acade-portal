@@ -1,0 +1,354 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Upload, FileText, Download, Eye, X, File } from 'lucide-react';
+import { exampleSubmissions } from '@/utils/exampleData';
+import { ExampleBanner } from '@/components/ExampleBanner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getSubmissions, createSubmission, updateSubmission, SubmissionDto } from '@/api/endpoints/assessment';
+import { getAssessments } from '@/api/endpoints/assessment';
+import { useAuthStore } from '@/store/authStore';
+import { useState, useRef } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { getErrorMessage } from '@/lib/errors';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+
+export default function Submissions() {
+  const { t } = useTranslation('common');
+  const { user } = useAuthStore();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedAssessment, setSelectedAssessment] = useState<string>('all');
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState({
+    assessment: '',
+    text: '',
+    file: null as File | null,
+  });
+
+  const { data: submissions = [] } = useQuery({
+    queryKey: ['submissions'],
+    queryFn: () => getSubmissions(),
+  });
+
+  const { data: assessments = [] } = useQuery({
+    queryKey: ['assessments'],
+    queryFn: () => getAssessments(),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (payload: { assessment: string; text?: string; file?: File }) =>
+      createSubmission(payload.assessment, { text: payload.text, file: payload.file }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['submissions'] });
+      toast({ title: t('pages.submissionsToastCreateTitle'), description: t('pages.submissionsToastCreateDescription') });
+      setIsDialogOpen(false);
+      setFormData({ assessment: '', text: '', file: null });
+    },
+    onError: (error) => {
+      toast({ title: t('pages.submissionsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<SubmissionDto> }) => updateSubmission(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['submissions'] });
+      toast({ title: t('pages.submissionsToastUpdateTitle'), description: t('pages.submissionsToastUpdateDescription') });
+    },
+    onError: (error) => {
+      toast({ title: t('pages.submissionsToastErrorTitle'), description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.assessment) {
+      toast({
+        title: t('pages.submissionsToastErrorTitle'),
+        description: t('pages.submissionsErrorAssessmentRequired'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.text && !formData.file) {
+      toast({
+        title: t('pages.submissionsToastErrorTitle'),
+        description: t('pages.submissionsErrorTextOrFileRequired'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    createMutation.mutate({
+      assessment: formData.assessment,
+      text: formData.text || undefined,
+      file: formData.file || undefined,
+    });
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFormData({ ...formData, file: e.dataTransfer.files[0] });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({ ...formData, file: e.target.files[0] });
+    }
+  };
+
+  const removeFile = () => {
+    setFormData({ ...formData, file: null });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const displaySubmissions = submissions.length === 0 ? exampleSubmissions.slice(0, 1) : submissions;
+  const filteredSubmissions = selectedAssessment && selectedAssessment !== 'all'
+    ? displaySubmissions.filter((s: any) => s.assessment === selectedAssessment)
+    : displaySubmissions;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between submissions_header_wrapper">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">{t('pages.submissionsTitle')}</h2>
+          <p className="text-muted-foreground">{t('pages.submissionsSubtitle')}</p>
+        </div>
+        <div className="flex gap-2 select_wrapper">
+          <Select value={selectedAssessment} onValueChange={setSelectedAssessment}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('pages.submissionsFilterPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.submissionsFilterAll')}</SelectItem>
+              {assessments.map((assessment: any) => (
+                <SelectItem key={assessment.id} value={assessment.id}>
+                  {assessment.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2">
+            {user?.role === 'STUDENT' && (
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('pages.submissionsButtonSubmit')}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {submissions.length === 0 && <ExampleBanner />}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('pages.submissionsTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {filteredSubmissions.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">{t('pages.submissionsNoneFound')}</p>
+            ) : (
+              filteredSubmissions.map((submission: any) => {
+                const assessment = assessments.find((a: any) => a.id === submission.assessment);
+                return (
+                  <div key={submission.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-primary/10 p-2 submissions_file_icon">
+                        <FileText className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{assessment?.title || t('pages.submissionsUnknownAssessment')}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {t('pages.submissionsStudentLabel')}: {submission.student ? (
+                            <button
+                              onClick={() => navigate(`/users/${submission.student}`)}
+                              className="hover:text-primary hover:underline cursor-pointer"
+                            >
+                              {submission.student_name || submission.student}
+                            </button>
+                          ) : (
+                            <span>{submission.student_name || submission.student}</span>
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t('pages.submissionsSubmittedLabel')}: {new Date(submission.submitted_at).toLocaleString()}
+                        </p>
+                        {submission.text && (
+                          <p className="text-sm text-muted-foreground mt-1">{submission.text.substring(0, 100)}...</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {submission.late_flag && <Badge variant="destructive">{t('pages.submissionsBadgeLate')}</Badge>}
+                      {submission.file && (
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={submission.file} download target="_blank" rel="noopener noreferrer">
+                            <Download className="mr-2 h-4 w-4" />
+                            {t('pages.submissionsButtonDownload')}
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {user?.role === 'STUDENT' && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('pages.submissionsDialogTitle')}</DialogTitle>
+              <DialogDescription>{t('pages.submissionsDialogDescription')}</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="assessment">{t('pages.submissionsDialogFieldAssessment')}</Label>
+                  <Select
+                    value={formData.assessment}
+                    onValueChange={(value) => setFormData({ ...formData, assessment: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('pages.submissionsDialogFieldAssessmentPlaceholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {assessments
+                        .filter((a: any) => a.published)
+                        .map((assessment: any) => (
+                          <SelectItem key={assessment.id} value={assessment.id}>
+                            {assessment.title}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="text">{t('pages.submissionsDialogFieldText')}</Label>
+                  <Textarea
+                    id="text"
+                    value={formData.text}
+                    onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                    rows={5}
+                    placeholder={t('pages.submissionsDialogFieldTextPlaceholder')}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="file">{t('pages.submissionsDialogFieldFile')}</Label>
+                  <div
+                    className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+                      dragActive
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      id="file"
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    {formData.file ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-primary/10 p-2">
+                            <File className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{formData.file.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(formData.file.size / 1024).toFixed(2)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={removeFile}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">
+                            {t('pages.submissionsFileUploadDragDrop')}{' '}
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="text-primary hover:underline"
+                            >
+                              {t('pages.submissionsFileUploadBrowse')}
+                            </button>
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t('pages.submissionsFileUploadSupported')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  {t('pages.submissionsDialogCancel')}
+                </Button>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? t('pages.submissionsDialogButtonSubmitting') : t('pages.submissionsDialogButtonSubmit')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+

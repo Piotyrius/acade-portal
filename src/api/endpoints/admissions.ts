@@ -1,0 +1,202 @@
+import api from '@/api/client';
+import { ApplicationDto, EnrollmentDto } from '@/api/types';
+import { ensureArray } from '@/api/utils';
+
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+// Applications (Public - no auth required)
+export async function submitPublicApplication(payload: Partial<ApplicationDto>): Promise<ApplicationDto> {
+  const { data } = await api.post('/api/v1/admissions/applications/', payload);
+  return data;
+}
+
+// Applications (Authenticated - simple list, first page only)
+export async function getApplications(programId?: string, status?: string): Promise<ApplicationDto[]> {
+  const params: Record<string, string> = {};
+  if (programId) params.program = programId;
+  if (status) params.status = status;
+  const { data } = await api.get('/api/v1/admissions/applications/', { params });
+  return ensureArray(data);
+}
+
+// Applications (Authenticated - paginated, used for recruiter UI)
+export async function getApplicationsPaginated(params?: {
+  program?: string;
+  status?: string;
+  search?: string;
+  ordering?: string;
+  page?: number;
+}): Promise<PaginatedResponse<ApplicationDto>> {
+  const { data } = await api.get('/api/v1/admissions/applications/', { params });
+
+  // Be defensive: some environments may return an array (no pagination).
+  if (Array.isArray(data)) {
+    return {
+      count: data.length,
+      next: null,
+      previous: null,
+      results: ensureArray<ApplicationDto>(data),
+    };
+  }
+
+  return {
+    count: typeof data?.count === 'number' ? data.count : ensureArray<ApplicationDto>(data?.results).length,
+    next: data?.next ?? null,
+    previous: data?.previous ?? null,
+    results: ensureArray<ApplicationDto>(data?.results),
+  };
+}
+
+export async function getApplication(id: string): Promise<ApplicationDto> {
+  const { data } = await api.get(`/api/v1/admissions/applications/${id}/`);
+  return data;
+}
+
+export async function createApplication(payload: Partial<ApplicationDto>): Promise<ApplicationDto> {
+  const { data } = await api.post('/api/v1/admissions/applications/', payload);
+  return data;
+}
+
+export async function updateApplication(id: string, payload: Partial<ApplicationDto>): Promise<ApplicationDto> {
+  const { data } = await api.patch(`/api/v1/admissions/applications/${id}/`, payload);
+  return data;
+}
+
+export async function acceptApplication(id: string, courseId?: string): Promise<EnrollmentDto> {
+  const payload: { course_id?: string } = {};
+  if (courseId) {
+    payload.course_id = courseId;
+  }
+  const { data } = await api.post(`/api/v1/admissions/applications/${id}/accept/`, payload);
+  return data;
+}
+
+export async function changeEnrollmentCourse(id: string, courseId: string): Promise<EnrollmentDto> {
+  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/change_course/`, {
+    course_id: courseId,
+  });
+  return data;
+}
+
+// Enrollments
+export async function getEnrollments(cohortId?: string, status?: string): Promise<EnrollmentDto[]> {
+  const params: Record<string, string> = {};
+  if (cohortId) params.cohort = cohortId;
+  if (status) params.status = status;
+  const { data } = await api.get('/api/v1/admissions/enrollments/', { params });
+  return ensureArray(data);
+}
+
+export async function getEnrollmentsPaginated(params?: {
+  cohort?: string;
+  student?: string;
+  status?: string;
+  search?: string;
+  ordering?: string;
+  page?: number;
+}): Promise<PaginatedResponse<EnrollmentDto>> {
+  const { data } = await api.get('/api/v1/admissions/enrollments/', { params });
+
+  // Be defensive: some environments may return an array (no pagination).
+  if (Array.isArray(data)) {
+    return {
+      count: data.length,
+      next: null,
+      previous: null,
+      results: ensureArray(data),
+    };
+  }
+
+  return {
+    count: typeof data?.count === 'number' ? data.count : ensureArray(data?.results).length,
+    next: data?.next ?? null,
+    previous: data?.previous ?? null,
+    results: ensureArray(data?.results),
+  };
+}
+
+export async function getEnrollment(id: string): Promise<EnrollmentDto> {
+  const { data } = await api.get(`/api/v1/admissions/enrollments/${id}/`);
+  return data;
+}
+
+export async function createEnrollment(payload: Partial<EnrollmentDto>): Promise<EnrollmentDto> {
+  const { data } = await api.post('/api/v1/admissions/enrollments/', payload);
+  return data;
+}
+
+export async function updateEnrollment(id: string, payload: Partial<EnrollmentDto>): Promise<EnrollmentDto> {
+  const { data } = await api.patch(`/api/v1/admissions/enrollments/${id}/`, payload);
+  return data;
+}
+
+export async function activateEnrollment(
+  id: string,
+  payload: {
+    status?: string;
+    completed_at?: string | null;
+    notes?: string;
+    organization?: string;
+    cohort: string;
+    student: string;
+  }
+): Promise<EnrollmentDto> {
+  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/activate/`, payload);
+  return data;
+}
+
+export async function withdrawEnrollment(
+  id: string,
+  payload: {
+    status?: string;
+    completed_at?: string | null;
+    notes?: string;
+    organization?: string;
+    cohort: string;
+    student: string;
+  }
+): Promise<EnrollmentDto> {
+  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/withdraw/`, payload);
+  return data;
+}
+
+export async function completeEnrollment(
+  id: string,
+  payload: {
+    status?: string;
+    completed_at?: string | null;
+    notes?: string;
+    organization?: string;
+    cohort: string;
+    student: string;
+  }
+): Promise<EnrollmentDto> {
+  const { data } = await api.post(`/api/v1/admissions/enrollments/${id}/complete/`, payload);
+  return data;
+}
+
+export async function getWaitlist(): Promise<EnrollmentDto[]> {
+  const { data } = await api.get('/api/v1/admissions/enrollments/waitlist/');
+  return ensureArray(data);
+}
+
+export async function bulkActivateEnrollments(ids: string[]): Promise<{ activated: number; errors: string[] }> {
+  console.log('🔵 Bulk Activate Request:', { enrollment_ids: ids });
+  const { data } = await api.post('/api/v1/admissions/enrollments/bulk_activate/', { enrollment_ids: ids });
+  console.log('✅ Bulk Activate Response:', data);
+  return data;
+}
+
+
+
+
+
+
+
+
+
